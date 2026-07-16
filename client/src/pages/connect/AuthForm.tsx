@@ -228,7 +228,7 @@ export const AuthForm = () => {
       );
 
       // set title
-      document.title = authReq.address ? `${authReq.address} - Attu` : 'Attu';
+      document.title = authReq.address ? `${authReq.address} - PhiGent` : 'PhiGent';
 
       // redirect to homepage
       navigate('/');

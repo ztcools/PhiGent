@@ -8,6 +8,7 @@ const navTrans = {
   user: '用户和角色',
   database: '数据库',
   play: 'Play(beta)',
+  indexTree: '索引树',
 };
 
 export default navTrans;

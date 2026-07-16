@@ -18,6 +18,8 @@ const homeTrans = {
   queryNodes: 'Query Nodes',
   indexNodes: 'Index Nodes',
   createdTime: 'Created Time',
+  indexTree: 'Index Tree',
+  branches: 'Branches',
 };
 
 export default homeTrans;

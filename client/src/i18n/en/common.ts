@@ -1,6 +1,6 @@
 const commonTrans = {
   attu: {
-    admin: 'Attu',
+    admin: 'PhiGent',
     address: 'Milvus Address',
     fileIssue: 'Open an Issue',
     fileMilvusIssue: 'Open a Milvus Issue',
@@ -17,15 +17,14 @@ const commonTrans = {
     prometheusAddress: 'Prometheus Address',
     prometheusInstance: 'Prometheus Instance',
     prometheusNamespace: 'Prometheus Namespace',
-    connectionTip:
-      'Self-hosted Milvus or Zilliz Cloud Dedicated cluster are supported.',
+    connectionTip: 'Self-hosted Milvus is supported.',
     checkHealth: 'Check Health',
     version: 'Version',
     clearHistory: 'Clear All History',
     officeHours: 'Office Hours',
     docs: 'Docs',
     community: 'Community',
-    dockerWarning: 'Attu is running in a container, "127.0.0.1" or "localhost" refers to the Attu container itself. Please use the IP address or hostname of the Milvus server that Attu can access.',
+    dockerWarning: 'PhiGent is running in a container, "127.0.0.1" or "localhost" refers to the PhiGent container itself. Please use the IP address or hostname of the Milvus server that PhiGent can access.',
   },
   status: {
     loaded: 'Loaded',

@@ -8,6 +8,7 @@ const navTrans = {
   user: 'User and Role',
   database: 'Database',
   play: 'Play(beta)',
+  indexTree: 'Index Tree',
 };
 
 export default navTrans;

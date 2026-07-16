@@ -6,6 +6,7 @@ import Users from '@/pages/user/UsersAndRoles';
 import System from '@/pages/system/SystemView';
 import Play from '@/pages/play/Play';
 import Overview from '@/pages/home/Home';
+import IndexTree from '@/pages/index-tree/IndexTree';
 
 // Route path constants
 export const ROUTE_PATHS = {
@@ -18,6 +19,7 @@ export const ROUTE_PATHS = {
   PRIVILEGE_GROUPS: 'privilege-groups',
   PLAY: 'play',
   SYSTEM: 'system',
+  INDEX_TREE: 'index-tree',
   CONNECT: 'connect',
 } as const;
 
@@ -157,7 +159,7 @@ const otherRoutes: RouteItem[] = [
     element: Overview,
     showInMenu: true,
     menuConfig: {
-      icon: icons.attu,
+      icon: icons.navOverview,
       label: 'overview',
       key: 'overview',
     },
@@ -192,6 +194,21 @@ const otherRoutes: RouteItem[] = [
     routerType: ROUTE_PATHS.SYSTEM,
     navConfig: {
       navTitleKey: 'system',
+    },
+    showWhenNotManaged: true,
+  },
+  {
+    path: ROUTE_PATHS.INDEX_TREE,
+    element: IndexTree,
+    showInMenu: true,
+    menuConfig: {
+      icon: icons.list,
+      label: 'indexTree',
+      key: 'index-tree',
+    },
+    routerType: ROUTE_PATHS.INDEX_TREE,
+    navConfig: {
+      navTitleKey: 'indexTree',
     },
     showWhenNotManaged: true,
   },

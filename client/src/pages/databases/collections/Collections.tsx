@@ -30,6 +30,24 @@ import type {
 import type { CollectionObject } from '@server/types';
 import { Root } from '../StyledComponents';
 
+const codebaseLabel = (
+  collectionName: string,
+  description?: string
+): string => {
+  if (!description || !description.startsWith('codebasePath:')) {
+    return collectionName;
+  }
+  const identity = description.slice('codebasePath:'.length).split('|')[0];
+  const lastColon = identity.lastIndexOf(':');
+  const isUrl = /:\/\//.test(identity) || /^git@/.test(identity);
+  const urlPart = isUrl && lastColon > 0 ? identity.slice(0, lastColon) : identity;
+  const branch = isUrl && lastColon > 0 ? identity.slice(lastColon + 1) : '';
+  const repo =
+    urlPart.replace(/\.git$/i, '').split(/[/:]/).filter(Boolean).pop() ||
+    collectionName;
+  return branch ? `${repo}:${branch}` : repo;
+};
+
 const Collections = () => {
   const { isManaged } = useContext(authContext);
   const {
@@ -61,8 +79,13 @@ const Collections = () => {
 
   const formatCollections = useMemo(() => {
     const filteredCollections = search
-      ? collections.filter(collection =>
-          collection.collection_name.includes(search)
+      ? collections.filter(
+          collection =>
+            collection.collection_name.includes(search) ||
+            codebaseLabel(
+              collection.collection_name,
+              (collection as { description?: string }).description
+            ).includes(search)
         )
       : collections;
 
@@ -312,9 +335,14 @@ const Collections = () => {
       disablePadding: true,
       sortBy: 'collection_name',
       sortType: 'string',
-      formatter({ collection_name }) {
+      formatter(col) {
+        const { collection_name, description } = col as {
+          collection_name: string;
+          description?: string;
+        };
+        const displayName = codebaseLabel(collection_name, description);
         return (
-          <Box sx={{ maxWidth: '120px' }}>
+          <Box sx={{ maxWidth: '160px' }}>
             <Link
               to={`/databases/${database}/${collection_name}/overview`}
               style={{
@@ -326,10 +354,10 @@ const Collections = () => {
                 whiteSpace: 'nowrap',
                 textDecoration: 'none',
               }}
-              title={collection_name}
+              title={`${displayName}\n${collection_name}`}
             >
               <Highlighter
-                textToHighlight={collection_name}
+                textToHighlight={displayName}
                 searchWords={[search]}
                 highlightStyle={{
                   color: '#1976d2',

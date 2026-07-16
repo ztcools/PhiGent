@@ -1,32 +1,19 @@
-import { useEffect, useState, useContext } from 'react';
+import { useContext } from 'react';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
 import Icons from '@/components/icons/Icons';
 import { AuthForm } from './AuthForm';
 import CustomButton from '@/components/customButton/CustomButton';
-import { MilvusService } from '@/http';
 import Box from '@mui/material/Box';
 import type { Theme } from '@mui/material/styles';
 import { ColorModeContext } from '@/context';
 import { IconButton } from '@mui/material';
-import {
-  ATTU_SOURCE_CODE,
-  ATTU_ISSUES,
-  ATTU_DISCORD,
-  ATTU_OFFICE_HOURS,
-} from '@/consts/link';
+import { ATTU_SOURCE_CODE, ATTU_ISSUES } from '@/consts/link';
 
 const ConnectContainer = () => {
-  const [version, setVersion] = useState('loading');
   const { t: commonTrans } = useTranslation();
   const { t: btnTrans } = useTranslation('btn');
   const { mode, toggleColorMode } = useContext(ColorModeContext);
-
-  useEffect(() => {
-    MilvusService.getVersion().then((res: any) => {
-      setVersion(res.attu);
-    });
-  }, []);
 
   return (
     <Box
@@ -76,13 +63,15 @@ const ConnectContainer = () => {
           >
             {mode === 'dark' ? <Icons.night /> : <Icons.day />}
           </IconButton>
-          <Icons.attu
+          <Box
+            component="img"
+            src="/phigent-logo.png"
+            alt="PhiGent"
             sx={{
               width: 72,
               height: 'auto',
               marginBottom: (theme: Theme) => theme.spacing(2),
               display: 'block',
-              color: 'primary.main',
             }}
           />
           <Typography
@@ -99,23 +88,6 @@ const ConnectContainer = () => {
           >
             {commonTrans('attu.admin')}
           </Typography>
-          {version && (
-            <Typography
-              component="sub"
-              sx={{
-                marginTop: (theme: Theme) => theme.spacing(1),
-                fontSize: 13,
-                color: (theme: Theme) =>
-                  theme.palette.mode === 'dark'
-                    ? theme.palette.common.white
-                    : 'primary.contrastText',
-                opacity: 0.8,
-                height: 16,
-              }}
-            >
-              {commonTrans('attu.version')}: {version}
-            </Typography>
-          )}
 
           <Box
             sx={{
@@ -160,24 +132,6 @@ const ConnectContainer = () => {
               onClick={() => window.open(ATTU_ISSUES, '_blank')}
             >
               {commonTrans('attu.fileIssue')}
-            </CustomButton>
-
-            <CustomButton
-              startIcon={<Icons.discord />}
-              variant="outlined"
-              onClick={() => window.open(ATTU_DISCORD, '_blank')}
-              fullWidth={true}
-            >
-              {commonTrans('attu.discord')}
-            </CustomButton>
-
-            <CustomButton
-              startIcon={<Icons.calendar />}
-              variant="outlined"
-              onClick={() => window.open(ATTU_OFFICE_HOURS, '_blank')}
-              fullWidth={true}
-            >
-              {commonTrans('attu.officeHours')}
             </CustomButton>
           </Box>
         </Box>

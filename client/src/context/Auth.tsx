@@ -68,7 +68,7 @@ export const AuthProvider = (props: { children: React.ReactNode }) => {
       ATTU_AUTH_REQ,
       JSON.stringify({ ...authReq, password: '', token: '' })
     );
-    document.title = authReq.address ? `${authReq.address} - Attu` : 'Attu';
+    document.title = authReq.address ? `${authReq.address} - PhiGent` : 'PhiGent';
   }, [authReq]);
 
   // login API

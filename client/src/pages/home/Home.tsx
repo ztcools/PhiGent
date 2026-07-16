@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { Typography, Box, Button } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -11,12 +11,21 @@ import {
 import { MILVUS_DEPLOY_MODE } from '@/consts';
 import { useNavigationHook } from '@/hooks';
 import { ROUTE_PATHS } from '@/config/routes';
+import { CollectionService } from '@/http';
 import DatabaseCard from './DatabaseCard';
+import RepoCard, { RepoInfo } from './RepoCard';
 import CreateDatabaseDialog from '../dialogs/CreateDatabaseDialog';
 import icons from '@/components/icons/Icons';
 import SysCard from './SysCard';
 import StatusIcon, { LoadingType } from '@/components/status/StatusIcon';
 import CommunityLinks from '@/pages/home/CommunityLinks';
+
+const INDEX_STATE_COLLECTION = 'code_index_state';
+
+const repoNameOf = (repoUrl: string): string => {
+  const seg = repoUrl.replace(/\.git$/i, '').split(/[/:]/).filter(Boolean).pop();
+  return seg || repoUrl;
+};
 
 const Home = () => {
   useNavigationHook(ROUTE_PATHS.HOME);
@@ -31,6 +40,59 @@ const Home = () => {
   const { data } = useContext(systemContext);
   const { t: homeTrans } = useTranslation('home');
   const { t: databaseTrans } = useTranslation('database');
+
+  const [repos, setRepos] = useState<RepoInfo[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res: any = await CollectionService.queryData(
+          INDEX_STATE_COLLECTION,
+          { expr: 'id != ""', output_fields: ['content'], limit: 16384 }
+        );
+        const rows: any[] = res?.data || res?.results || res || [];
+        const byRepo = new Map<string, RepoInfo>();
+        for (const row of rows) {
+          let s: any;
+          try {
+            s = JSON.parse(row.content);
+          } catch {
+            continue;
+          }
+          if (!s || !s.identity || !s.headCommit) continue;
+          const url = s.repoUrl || '(local)';
+          const isRoot = !s.baseIdentity;
+          const branch = s.repoUrl && s.identity.startsWith(s.repoUrl + ':')
+            ? s.identity.slice(s.repoUrl.length + 1)
+            : s.identity.slice(s.identity.lastIndexOf(':') + 1);
+          const cur = byRepo.get(url) || {
+            repoUrl: url,
+            repoName: repoNameOf(url),
+            branchCount: 0,
+            rootBranch: '',
+            updatedAt: 0,
+          };
+          cur.branchCount += 1;
+          if (isRoot) cur.rootBranch = branch;
+          if (s.updatedAt && s.updatedAt > cur.updatedAt) cur.updatedAt = s.updatedAt;
+          byRepo.set(url, cur);
+        }
+        if (!cancelled) {
+          setRepos(
+            Array.from(byRepo.values()).sort((a, b) =>
+              a.repoName.localeCompare(b.repoName)
+            )
+          );
+        }
+      } catch {
+        if (!cancelled) setRepos([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // calculation diff to the rootCoord create time
   const duration = useMemo(() => {
@@ -182,6 +244,51 @@ const Home = () => {
             </Box>
           )}
         </Box>
+
+        {repos.length > 0 && (
+          <Box
+            sx={{
+              mb: 1.5,
+              px: 0.5,
+              maxWidth: '100%',
+            }}
+          >
+            <Box display="flex" alignItems="center" mb={2}>
+              <Typography
+                variant="h4"
+                sx={{
+                  mr: 1,
+                  position: 'relative',
+                  top: 8,
+                  mb: 2,
+                  color: theme => theme.palette.text.primary,
+                }}
+              >
+                {homeTrans('indexTree')}
+              </Typography>
+              <Typography
+                component="span"
+                variant="subtitle1"
+                color="textSecondary"
+                sx={{ position: 'relative', top: 1, mr: 2 }}
+              >
+                ({repos.length})
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                flexGrow: 0,
+                gap: 1.5,
+              }}
+            >
+              {repos.map(repo => (
+                <RepoCard repo={repo} key={repo.repoUrl} />
+              ))}
+            </Box>
+          </Box>
+        )}
 
         {data?.systemInfo && (
           <>

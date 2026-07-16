@@ -1,6 +1,6 @@
 const commonTrans = {
   attu: {
-    admin: 'Attu',
+    admin: 'PhiGent',
     address: 'Milvus 地址',
     fileIssue: '提交 Issue',
     fileMilvusIssue: '提交 Milvus Issue',
@@ -17,7 +17,7 @@ const commonTrans = {
     prometheusAddress: 'Prometheus 地址',
     prometheusInstance: 'Prometheus 实例',
     prometheusNamespace: 'Prometheus 命名空间',
-    connectionTip: '支持自托管 Milvus 或 Zilliz Cloud Dedicated 集群。',
+    connectionTip: '支持自托管 Milvus。',
     checkHealth: '检查健康状态',
     version: '版本',
     clearHistory: '清除所有历史记录',
@@ -25,7 +25,7 @@ const commonTrans = {
     docs: '文档',
     community: '社区',
     dockerWarning:
-      'Attu 运行在容器内，“127.0.0.1”或“localhost”指向的是 Attu 容器自身。请使用 Attu 容器可以访问的 Milvus 服务器 IP 地址或主机名。',
+      'PhiGent 运行在容器内，“127.0.0.1”或“localhost”指向的是 PhiGent 容器自身。请使用 PhiGent 容器可以访问的 Milvus 服务器 IP 地址或主机名。',
   },
   status: {
     loaded: '已加载',

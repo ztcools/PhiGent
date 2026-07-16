@@ -18,6 +18,8 @@ const homeTrans = {
   queryNodes: '查询节点',
   indexNodes: '索引节点',
   createdTime: '创建时间',
+  indexTree: '索引树',
+  branches: '分支',
 };
 
 export default homeTrans;

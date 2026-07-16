@@ -1,21 +1,8 @@
 {
-  "name": "attu",
+  "name": "phigent",
   "version": "0.1.0",
-  "description": "Attu",
+  "description": "PhiGent - Milvus management console",
   "license": "Apache-2.0",
-  "bugs": "https://github.com/zilliztech/attu/issues",
-  "release": {
-    "branches": [
-      "main",
-      "next",
-      "{name: 'beta', prerelease: true}"
-    ]
-  },
-  "scripts": {
-    "build:ci": "scripts/build-ci.sh",
-    "build:dev": "scripts/build-dev.sh",
-    "build:release": "scripts/build-release.sh"
-  },
   "private": true,
   "dependencies": {},
   "devDependencies": {}
