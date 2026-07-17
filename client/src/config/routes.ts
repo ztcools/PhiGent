@@ -238,16 +238,22 @@ const otherRoutes: RouteItem[] = [
   },
 ];
 
-// Combine all routes
+// Combine all routes. The sidebar menu renders in this order (Milvus WebUI is
+// always appended last in getMenuItems), so the desired top→bottom order is:
+// 主页 → 数据库 → GitLab仓库 → 索引树 → 用户和角色 → 系统视图 → play → (Milvus WebUI)
+const routeByPath = (arr: RouteItem[], path: string): RouteItem =>
+  arr.find(route => route.path === path) as RouteItem;
+
 export const routes: RouteItem[] = [
-  // Home should be first
-  ...otherRoutes.filter(route => route.path === ROUTE_PATHS.HOME),
-  // Then databases
+  routeByPath(otherRoutes, ROUTE_PATHS.HOME),
   ...databaseRoutes,
-  // Then users
+  routeByPath(otherRoutes, ROUTE_PATHS.GITLAB),
+  routeByPath(otherRoutes, ROUTE_PATHS.INDEX_TREE),
   ...userRoutes,
-  // Then other routes (excluding home)
-  ...otherRoutes.filter(route => route.path !== ROUTE_PATHS.HOME),
+  routeByPath(otherRoutes, ROUTE_PATHS.SYSTEM),
+  routeByPath(otherRoutes, ROUTE_PATHS.PLAY),
+  // Non-menu routes (kept for routing only)
+  routeByPath(otherRoutes, ROUTE_PATHS.CONNECT),
 ];
 
 // Helper function to merge navigation config with defaults

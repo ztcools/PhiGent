@@ -3,6 +3,7 @@ export interface GitRepo {
   url: string;
   branch: string;
   hasToken: boolean;
+  auth?: 'https' | 'ssh';
 }
 
 export interface RepoRunStatus {
@@ -17,8 +18,15 @@ export interface RepoRunStatus {
   durationMs: number;
 }
 
+export interface CurrentProgress {
+  repo: string;
+  phase: string;
+  percentage: number;
+}
+
 export interface GitIndexStatus {
   running: boolean;
+  current: CurrentProgress | null;
   lastPassAt: number | null;
   schedule: { dailyHour: number | null; intervalMs: number; nextRunAt: number | null };
   repos: (GitRepo & { lastRun: RepoRunStatus | null })[];
@@ -38,6 +46,9 @@ const json = async (res: Response) => {
 
 export const GitIndexService = {
   status: (): Promise<GitIndexStatus> => fetch(`${base()}/status`).then(json),
+
+  sshKey: (): Promise<{ publicKey: string | null }> =>
+    fetch(`${base()}/ssh-key`).then(json),
 
   addRepo: (repo: { name: string; url: string; branch: string; token?: string }) =>
     fetch(`${base()}/repos`, {

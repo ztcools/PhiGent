@@ -1,7 +1,6 @@
-export {
+export { ShowCollectionsType, MilvusClient } from '@zilliz/milvus2-sdk-node';
+export type {
   KeyValuePair,
-  ShowCollectionsType,
-  MilvusClient,
   ResStatus,
   RerankerObj,
   TypeParamKey,

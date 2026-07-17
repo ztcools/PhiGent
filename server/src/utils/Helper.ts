@@ -139,7 +139,7 @@ export const genDataByType = (field: FieldSchema): any => {
       return Array.from({
         length:
           Number(type_params[0].value) / (data_type === 'BinaryVector' ? 8 : 1),
-      }).map(makeFloat);
+      }).map(makeFloat as any);
     case 'SparseFloatVector':
       return makeRandomSparse(16);
     case 'VarChar':
@@ -150,7 +150,7 @@ export const genDataByType = (field: FieldSchema): any => {
     case 'Array':
       return Array.from({
         length: Number(field.max_capacity),
-      }).map(() => genDataByType({ ...field, data_type: element_type }));
+      }).map(() => genDataByType({ ...field, data_type: element_type as any }));
   }
 };
 
@@ -210,7 +210,7 @@ export const convertFieldSchemaToFieldType = (fieldSchema: FieldSchema) => {
     name: fieldSchema.name,
     description: fieldSchema.description,
     data_type: convertToDataType(fieldSchema.data_type),
-    element_type: convertToDataType(fieldSchema.element_type),
+    element_type: convertToDataType(fieldSchema.element_type as any),
     is_primary_key: fieldSchema.is_primary_key,
     is_partition_key: fieldSchema.is_partition_key,
     autoID: fieldSchema.autoID,
@@ -258,5 +258,5 @@ export const getKeyValueListFromJsonString = (json: string): KeyValuePair[] => {
 export const cloneObj = (obj: any) => JSON.parse(JSON.stringify(obj));
 
 export const isElectron = () => {
-  return process.versions && !!process.versions.electron;
+  return process.versions && !!(process.versions as any).electron;
 };

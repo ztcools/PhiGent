@@ -3,7 +3,7 @@ import { Box, Typography, Button, Chip, CircularProgress } from '@mui/material';
 import dayjs from 'dayjs';
 import { useNavigationHook } from '@/hooks';
 import { ROUTE_PATHS } from '@/config/routes';
-import { CollectionService } from '@/http';
+import { CollectionService, DataService } from '@/http';
 import icons from '@/components/icons/Icons';
 
 const STATE_COLLECTION = 'code_index_state';
@@ -94,20 +94,45 @@ const IndexTree = () => {
 
       const res: any = await CollectionService.queryData(STATE_COLLECTION, {
         expr: 'id != ""',
-        output_fields: ['content', 'relativePath'],
+        output_fields: ['id', 'content', 'relativePath'],
         limit: 16384,
       });
       const rows: any[] = res?.data || res?.results || res || [];
+
+      // A branch is "live" only if its Milvus collection still exists. When a user
+      // drops a collection in attu, its code_index_state row is left behind — filter
+      // those out so the tree stays in sync with the database, and prune the orphan
+      // rows so the shared state table doesn't accumulate stale entries.
+      const codeNameSet = new Set(codeNames);
+      const isLive = (s: BranchState): boolean =>
+        (!!s.collectionName && codeNameSet.has(s.collectionName)) ||
+        map[s.identity] != null ||
+        (!!s.collectionName && map[s.collectionName] != null);
+
       const parsed: BranchState[] = [];
+      const orphanIds: string[] = [];
       for (const row of rows) {
         try {
           const s = JSON.parse(row.content);
-          if (s && s.identity && s.headCommit) parsed.push(s);
+          if (!s || !s.identity || !s.headCommit) continue;
+          if (isLive(s)) parsed.push(s);
+          else if (row.id != null) orphanIds.push(String(row.id));
         } catch {
           /* skip */
         }
       }
       setStates(parsed);
+
+      if (orphanIds.length > 0) {
+        const quoted = orphanIds
+          .map(id => `"${id.replace(/"/g, '\\"')}"`)
+          .join(',');
+        DataService.deleteEntities(STATE_COLLECTION, {
+          expr: `id in [${quoted}]`,
+        }).catch(() => {
+          /* best-effort cleanup */
+        });
+      }
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
