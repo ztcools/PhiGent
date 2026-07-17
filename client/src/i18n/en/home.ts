@@ -20,6 +20,9 @@ const homeTrans = {
   createdTime: 'Created Time',
   indexTree: 'Index Tree',
   branches: 'Branches',
+  gitlabRepos: 'GitLab Repos',
+  addRepo: 'Add Repo',
+  manageRepos: 'Manage',
 };
 
 export default homeTrans;

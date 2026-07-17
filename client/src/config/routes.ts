@@ -7,6 +7,7 @@ import System from '@/pages/system/SystemView';
 import Play from '@/pages/play/Play';
 import Overview from '@/pages/home/Home';
 import IndexTree from '@/pages/index-tree/IndexTree';
+import GitLabRepos from '@/pages/gitlab/GitLabRepos';
 
 // Route path constants
 export const ROUTE_PATHS = {
@@ -20,6 +21,7 @@ export const ROUTE_PATHS = {
   PLAY: 'play',
   SYSTEM: 'system',
   INDEX_TREE: 'index-tree',
+  GITLAB: 'gitlab',
   CONNECT: 'connect',
 } as const;
 
@@ -209,6 +211,21 @@ const otherRoutes: RouteItem[] = [
     routerType: ROUTE_PATHS.INDEX_TREE,
     navConfig: {
       navTitleKey: 'indexTree',
+    },
+    showWhenNotManaged: true,
+  },
+  {
+    path: ROUTE_PATHS.GITLAB,
+    element: GitLabRepos,
+    showInMenu: true,
+    menuConfig: {
+      icon: icons.source,
+      label: 'gitlab',
+      key: 'gitlab',
+    },
+    routerType: ROUTE_PATHS.GITLAB,
+    navConfig: {
+      navTitleKey: 'gitlab',
     },
     showWhenNotManaged: true,
   },

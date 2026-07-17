@@ -5,6 +5,13 @@ import { checkIndexing, checkLoading } from '@server/utils/Shared';
 import { authContext } from '@/context';
 import type { CollectionObject, CollectionFullObject } from '@server/types';
 
+// Infrastructure collections (shared index state + embedding cache) are hidden
+// everywhere so counts/lists show only real code collections (repos / branches).
+const isInfraCollection = (name: string) =>
+  name === 'code_index_state' || name.startsWith('embedding_cache_');
+const excludeInfra = <T extends { collection_name: string }>(list: T[]): T[] =>
+  list.filter(c => !isInfraCollection(c.collection_name));
+
 export function useCollectionsManagement(database: string) {
   const [collections, setCollections] = useState<CollectionObject[]>([]);
   const { isAuth } = useContext(authContext);
@@ -55,11 +62,12 @@ export function useCollectionsManagement(database: string) {
       ) {
         return;
       }
-      detectLoadingIndexing(updated);
+      const updatedFiltered = excludeInfra(updated);
+      detectLoadingIndexing(updatedFiltered);
       setCollections(prev => {
         // merge collections
         const prevMap = new Map(prev.map(c => [c.id, c]));
-        updated.forEach(c => {
+        updatedFiltered.forEach(c => {
           prevMap.set(c.id, c);
         });
         let merged = Array.from(prevMap.values());
@@ -69,7 +77,7 @@ export function useCollectionsManagement(database: string) {
             c => !deletedNames.includes(c.collection_name)
           );
         }
-        const newCollections = updated.filter(
+        const newCollections = updatedFiltered.filter(
           c => !prev.some(p => p.collection_name === c.collection_name)
         );
         // sort collections
@@ -135,7 +143,7 @@ export function useCollectionsManagement(database: string) {
       setLoading(true);
 
       setCollections([]);
-      const res = await CollectionService.getAllCollections();
+      const res = excludeInfra(await CollectionService.getAllCollections());
       if (currentRequestId === requestIdRef.current) {
         detectLoadingIndexing(res);
         setCollections(res);

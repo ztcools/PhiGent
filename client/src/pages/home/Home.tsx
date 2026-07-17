@@ -1,5 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { Typography, Box, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import {
@@ -14,6 +15,8 @@ import { ROUTE_PATHS } from '@/config/routes';
 import { CollectionService } from '@/http';
 import DatabaseCard from './DatabaseCard';
 import RepoCard, { RepoInfo } from './RepoCard';
+import GitRepoCard from './GitRepoCard';
+import { GitIndexService, GitRepo, RepoRunStatus } from '@/pages/gitlab/service';
 import CreateDatabaseDialog from '../dialogs/CreateDatabaseDialog';
 import icons from '@/components/icons/Icons';
 import SysCard from './SysCard';
@@ -29,6 +32,7 @@ const repoNameOf = (repoUrl: string): string => {
 
 const Home = () => {
   useNavigationHook(ROUTE_PATHS.HOME);
+  const navigate = useNavigate();
   const {
     databases,
     database,
@@ -42,11 +46,36 @@ const Home = () => {
   const { t: databaseTrans } = useTranslation('database');
 
   const [repos, setRepos] = useState<RepoInfo[]>([]);
+  const [gitRepos, setGitRepos] = useState<(GitRepo & { lastRun: RepoRunStatus | null })[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        const s = await GitIndexService.status();
+        if (!cancelled) setGitRepos(s.repos || []);
+      } catch {
+        if (!cancelled) setGitRepos([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // Skip querying code_index_state when it doesn't exist yet (fresh Milvus),
+        // otherwise attu pops a global "collection not found" error toast.
+        const names: string[] = await CollectionService.getCollectionsNames({
+          db_name: 'default',
+        }).catch(() => []);
+        if (!names.includes(INDEX_STATE_COLLECTION)) {
+          if (!cancelled) setRepos([]);
+          return;
+        }
         const res: any = await CollectionService.queryData(
           INDEX_STATE_COLLECTION,
           { expr: 'id != ""', output_fields: ['content'], limit: 16384 }
@@ -289,6 +318,62 @@ const Home = () => {
             </Box>
           </Box>
         )}
+
+        <Box sx={{ mb: 1.5, px: 0.5, maxWidth: '100%' }}>
+          <Box display="flex" alignItems="center" mb={2}>
+            <Typography
+              variant="h4"
+              sx={{
+                mr: 1,
+                position: 'relative',
+                top: 8,
+                mb: 2,
+                color: theme => theme.palette.text.primary,
+              }}
+            >
+              {homeTrans('gitlabRepos')}
+            </Typography>
+            <Typography
+              component="span"
+              variant="subtitle1"
+              color="textSecondary"
+              sx={{ position: 'relative', top: 1, mr: 2 }}
+            >
+              ({gitRepos.length})
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', flexGrow: 0, gap: 1.5 }}>
+            {gitRepos.map(repo => (
+              <GitRepoCard repo={repo} key={repo.name} />
+            ))}
+            <Box
+              component="section"
+              onClick={() => navigate('/gitlab')}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 1,
+                minWidth: '140px',
+                minHeight: '128px',
+                cursor: 'pointer',
+                borderRadius: 2,
+                border: theme => `1px dashed ${theme.palette.divider}`,
+                color: theme => theme.palette.text.secondary,
+                '&:hover': {
+                  borderColor: theme => theme.palette.primary.main,
+                  color: theme => theme.palette.primary.main,
+                },
+              }}
+            >
+              <PlusIcon sx={{ fontSize: 28 }} />
+              <Typography sx={{ fontSize: 13 }}>
+                {gitRepos.length > 0 ? homeTrans('manageRepos') : homeTrans('addRepo')}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
 
         {data?.systemInfo && (
           <>

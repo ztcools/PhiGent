@@ -23,7 +23,10 @@ interface TreeNode {
   state: BranchState;
   depth: number;
   rowCount?: number;
+  tracked?: string;
 }
+
+const ROOT_BRANCHES = ['main', 'master'];
 
 const repoLabel = (repoUrl?: string): string => {
   if (!repoUrl) return '(local)';
@@ -50,6 +53,45 @@ const IndexTree = () => {
     setLoading(true);
     setError('');
     try {
+      // Row counts + existence check in one call (avoids querying a non-existent
+      // code_index_state on a fresh Milvus, which would pop a global error toast).
+      // Existence check via names (getAllCollections only returns lazy objects
+      // without rowCount/description), then fetch full details for code collections
+      // to map row counts by branch identity (from `codebasePath:<identity>` desc)
+      // and by collection name.
+      const names: string[] = await CollectionService.getCollectionsNames({
+        db_name: 'default',
+      }).catch(() => [] as string[]);
+      const hasStateCollection = names.includes(STATE_COLLECTION);
+
+      const map: Record<string, number> = {};
+      const codeNames = names.filter(
+        n => n !== STATE_COLLECTION && !n.startsWith('embedding_cache_')
+      );
+      if (codeNames.length > 0) {
+        try {
+          const full: any[] = await CollectionService.getCollections({
+            db_name: 'default',
+            collections: codeNames,
+          });
+          for (const c of full) {
+            if (c.collection_name != null && c.rowCount != null) map[c.collection_name] = c.rowCount;
+            const desc: string = c.description || '';
+            if (desc.startsWith('codebasePath:') && c.rowCount != null) {
+              map[desc.slice('codebasePath:'.length).split('|')[0]] = c.rowCount;
+            }
+          }
+        } catch {
+          /* best-effort */
+        }
+      }
+      setCounts(map);
+
+      if (!hasStateCollection) {
+        setStates([]);
+        return;
+      }
+
       const res: any = await CollectionService.queryData(STATE_COLLECTION, {
         expr: 'id != ""',
         output_fields: ['content', 'relativePath'],
@@ -66,17 +108,6 @@ const IndexTree = () => {
         }
       }
       setStates(parsed);
-
-      try {
-        const cols: any[] = await CollectionService.getAllCollections();
-        const map: Record<string, number> = {};
-        for (const c of cols) {
-          if (c.collection_name != null && c.rowCount != null) map[c.collection_name] = c.rowCount;
-        }
-        setCounts(map);
-      } catch {
-        /* row counts are best-effort */
-      }
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
@@ -100,30 +131,49 @@ const IndexTree = () => {
     const result: { repoUrl: string; nodes: TreeNode[] }[] = [];
     for (const [repoUrl, list] of byRepo) {
       const byIdentity = new Map(list.map(s => [s.identity, s]));
+      const nameOf = (s: BranchState) => branchOf(s.identity, s.repoUrl).toLowerCase();
+
+      // The repo root is ALWAYS the main/master branch when present, so a feature
+      // branch indexed before main (a temporary root) never displaces main. Fall
+      // back to a base=null branch, then the first.
+      const root =
+        ROOT_BRANCHES.map(rb => list.find(s => nameOf(s) === rb)).find(Boolean) ||
+        list.find(s => !s.baseIdentity) ||
+        list[0];
+
+      // A "secondary root" is a base=null (or parent-less) branch that ISN'T the
+      // chosen root — e.g. `b` indexed before main. Its descendants re-attach to
+      // the real root so the tree shows main on top with everything under it.
+      const resolvedParent = (s: BranchState): string | null =>
+        s.parentIdentity && byIdentity.has(s.parentIdentity) && s.parentIdentity !== s.identity
+          ? s.parentIdentity
+          : null;
+      const isSecondaryRoot = (s: BranchState) =>
+        s.identity !== root.identity && !resolvedParent(s);
+
       const childrenOf = new Map<string, BranchState[]>();
-      const roots: BranchState[] = [];
       for (const s of list) {
-        const parent = s.parentIdentity && byIdentity.has(s.parentIdentity) ? s.parentIdentity : null;
-        // A root = no base (main / acting-main) OR its parent isn't in this repo set.
-        if (!s.baseIdentity || !parent) {
-          roots.push(s);
-        } else {
-          if (!childrenOf.has(parent)) childrenOf.set(parent, []);
-          childrenOf.get(parent)!.push(s);
-        }
+        if (s.identity === root.identity) continue;
+        let parentId = resolvedParent(s);
+        if (!parentId || isSecondaryRoot(byIdentity.get(parentId)!)) parentId = root.identity;
+        if (!childrenOf.has(parentId)) childrenOf.set(parentId, []);
+        childrenOf.get(parentId)!.push(s);
       }
 
       const nodes: TreeNode[] = [];
-      const walk = (s: BranchState, depth: number) => {
-        nodes.push({ state: s, depth, rowCount: s.collectionName ? counts[s.collectionName] : undefined });
+      const walk = (s: BranchState, depth: number, parentBranch: string) => {
+        nodes.push({
+          state: s,
+          depth,
+          rowCount: counts[s.identity] ?? (s.collectionName ? counts[s.collectionName] : undefined),
+          tracked: parentBranch,
+        });
         const kids = (childrenOf.get(s.identity) || []).sort((a, b) =>
           branchOf(a.identity, a.repoUrl).localeCompare(branchOf(b.identity, b.repoUrl))
         );
-        for (const k of kids) walk(k, depth + 1);
+        for (const k of kids) walk(k, depth + 1, branchOf(s.identity, s.repoUrl));
       };
-      roots
-        .sort((a, b) => branchOf(a.identity, a.repoUrl).localeCompare(branchOf(b.identity, b.repoUrl)))
-        .forEach(r => walk(r, 0));
+      walk(root, 0, '');
       result.push({ repoUrl, nodes });
     }
     result.sort((a, b) => repoLabel(a.repoUrl).localeCompare(repoLabel(b.repoUrl)));
@@ -212,9 +262,7 @@ const IndexTree = () => {
           {group.nodes.map(node => {
             const branch = branchOf(node.state.identity, node.state.repoUrl);
             const isRoot = node.depth === 0;
-            const tracked = node.state.parentIdentity
-              ? branchOf(node.state.parentIdentity, node.state.repoUrl)
-              : '';
+            const tracked = node.tracked || '';
             return (
               <Box
                 key={node.state.identity}

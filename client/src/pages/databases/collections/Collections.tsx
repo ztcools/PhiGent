@@ -78,8 +78,14 @@ const Collections = () => {
   const QuestionIcon = icons.question;
 
   const formatCollections = useMemo(() => {
+    // Hide infrastructure collections (shared index state + embedding cache) so the
+    // list shows only real code collections (repos / branches).
+    const isInfra = (name: string) =>
+      name === 'code_index_state' || name.startsWith('embedding_cache_');
+    const visible = collections.filter(c => !isInfra(c.collection_name));
+
     const filteredCollections = search
-      ? collections.filter(
+      ? visible.filter(
           collection =>
             collection.collection_name.includes(search) ||
             codebaseLabel(
@@ -87,7 +93,7 @@ const Collections = () => {
               (collection as { description?: string }).description
             ).includes(search)
         )
-      : collections;
+      : visible;
 
     return filteredCollections;
   }, [search, collections]);

@@ -68,6 +68,10 @@ app.use(cors());
 app.use(
   helmet({
     contentSecurityPolicy: false,
+    // HTTP(非 HTTPS)内网部署下 COOP 头会被浏览器忽略并告警,直接关闭。
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
   })
 );
 // limit json file size
