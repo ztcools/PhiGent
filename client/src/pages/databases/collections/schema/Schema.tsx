@@ -5,7 +5,7 @@ import AttuGrid from '@/components/grid/Grid';
 import { ColDefinitionsType } from '@/components/grid/Types';
 import { useTranslation } from 'react-i18next';
 import Icons from '@/components/icons/Icons';
-import { formatFieldType, formatNumber, findKeyValue } from '@/utils';
+import { formatFieldType, formatNumber, findKeyValue, copyToCommand } from '@/utils';
 import { dataContext, rootContext, systemContext } from '@/context';
 import IndexTypeElement from './IndexTypeElement';
 import { getLabelDisplayedRows } from '@/pages/search/Utils';
@@ -123,7 +123,7 @@ const Overview = () => {
                       f.type_params,
                       'analyzer_params'
                     );
-                    navigator.clipboard.writeText(textToCopy as string);
+                    copyToCommand(textToCopy as string);
                   }}
                 />
               </Tooltip>
@@ -165,7 +165,7 @@ const Overview = () => {
                     }`}
                   onClick={() => {
                     const textToCopy = JSON.stringify(f.function);
-                    navigator.clipboard.writeText(textToCopy as string);
+                    copyToCommand(textToCopy as string);
                   }}
                 />
               </Tooltip>

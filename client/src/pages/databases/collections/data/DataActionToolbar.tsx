@@ -9,7 +9,7 @@ import EditJSONDialog from '@/pages/dialogs/EditJSONDialog';
 import EmptyDataDialog from '@/pages/dialogs/EmptyDataDialog';
 import ImportSampleDialog from '@/pages/dialogs/ImportSampleDialog';
 import DataListView from '@/components/DataListView/DataListView';
-import { saveCsvAs } from '@/utils';
+import { saveCsvAs, copyToCommand } from '@/utils';
 import { DataTypeStringEnum, ConsistencyLevelEnum } from '@/consts';
 import type { QueryState } from '../../types';
 import { CollectionFullObject } from '@server/types';
@@ -222,13 +222,10 @@ const DataActionToolbar = (props: DataActionToolbarProps) => {
         type: 'button',
         btnVariant: 'text',
         onClick: async () => {
-          let json = JSON.stringify(selectedData);
-          try {
-            await navigator.clipboard.writeText(json);
-            alert(`${selectedData.length} rows copied to clipboard`);
-          } catch (err) {
-            console.error('Failed to copy text: ', err);
-          }
+          const json = JSON.stringify(selectedData);
+          copyToCommand(json, undefined, () =>
+            alert(`${selectedData.length} rows copied to clipboard`)
+          );
         },
         label: btnTrans('copyJson'),
         icon: 'copy',

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
   Typography,
@@ -39,6 +39,7 @@ const GitLabRepos = () => {
   const [sshKey, setSshKey] = useState<string | null>(null);
   const [sshOpen, setSshOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const keyRef = useRef<HTMLPreElement>(null);
   const [editing, setEditing] = useState<GitRepo | null>(null);
   const [editForm, setEditForm] = useState({
     url: '',
@@ -164,12 +165,28 @@ const GitLabRepos = () => {
 
   const copySshKey = async () => {
     if (!sshKey) return;
+    let ok = false;
     try {
-      await navigator.clipboard.writeText(sshKey);
-      setCopied(true);
+      // navigator.clipboard only exists in secure contexts (https / localhost).
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(sshKey);
+        ok = true;
+      } else if (keyRef.current) {
+        // Plain-http fallback: select the visible <pre> inside the dialog and copy.
+        // A Range selection on the on-screen node isn't cleared by the dialog's
+        // focus trap (unlike a body-appended textarea), so the copy actually lands.
+        const range = document.createRange();
+        range.selectNodeContents(keyRef.current);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        ok = document.execCommand('copy');
+        sel?.removeAllRanges();
+      }
     } catch {
-      /* clipboard unavailable */
+      ok = false;
     }
+    setCopied(ok);
   };
 
   const saveSchedule = async () => {
@@ -440,6 +457,7 @@ const GitLabRepos = () => {
           </Typography>
           <Box
             component="pre"
+            ref={keyRef}
             sx={{
               p: 2,
               m: 0,
