@@ -1,10 +1,26 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Box, Typography, Button, Chip, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Button,
+  Chip,
+  Paper,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import { useNavigationHook } from '@/hooks';
 import { ROUTE_PATHS } from '@/config/routes';
 import { CollectionService, DataService } from '@/http';
 import icons from '@/components/icons/Icons';
+import PageContainer from '@/components/layout/PageContainer';
+import PageHeader from '@/components/layout/PageHeader';
 
 const STATE_COLLECTION = 'code_index_state';
 
@@ -42,8 +58,11 @@ const branchOf = (identity: string, repoUrl?: string): string => {
 
 const RefreshIcon = icons.refresh;
 
+const SKELETON_ROWS = 4;
+
 const IndexTree = () => {
   useNavigationHook(ROUTE_PATHS.INDEX_TREE);
+  const { t: navTrans } = useTranslation('nav');
   const [states, setStates] = useState<BranchState[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
@@ -206,25 +225,22 @@ const IndexTree = () => {
   }, [states, counts]);
 
   return (
-    <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          Index Tree
-        </Typography>
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={load}
-          startIcon={<RefreshIcon />}
-          disabled={loading}
-        >
-          Refresh
-        </Button>
-        {loading && <CircularProgress size={18} />}
-      </Box>
-      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-        每个仓库的 main（顶级）为根，特性分支按追踪关系缩进。分支只存相对 main 的 delta。
-      </Typography>
+    <PageContainer>
+      <PageHeader
+        title={navTrans('indexTree')}
+        subtitle="每个仓库的 main（顶级）为根，特性分支按追踪关系缩进。分支只存相对 main 的 delta。"
+        actions={
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={load}
+            startIcon={<RefreshIcon />}
+            disabled={loading}
+          >
+            刷新
+          </Button>
+        }
+      />
 
       {error && (
         <Typography sx={{ color: 'error.main', mb: 2 }}>
@@ -232,17 +248,47 @@ const IndexTree = () => {
         </Typography>
       )}
 
+      {loading && groups.length === 0 && (
+        <Paper
+          variant="outlined"
+          sx={{ borderRadius: 2, overflow: 'hidden', p: 2 }}
+        >
+          <Skeleton variant="text" width={180} height={28} sx={{ mb: 1 }} />
+          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
+            <Skeleton
+              key={i}
+              variant="rectangular"
+              height={36}
+              sx={{ mb: 1, borderRadius: 1 }}
+            />
+          ))}
+        </Paper>
+      )}
+
       {!loading && !error && groups.length === 0 && (
-        <Typography sx={{ color: 'text.secondary' }}>暂无索引记录。</Typography>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 6,
+            textAlign: 'center',
+            color: 'text.secondary',
+            borderStyle: 'dashed',
+          }}
+        >
+          <Typography>暂无索引记录</Typography>
+          <Typography variant="body2" sx={{ mt: 1, color: 'text.disabled' }}>
+            到 GitLab 仓库页 添加仓库并触发一次索引后，这里会显示仓库 / 分支层次。
+          </Typography>
+        </Paper>
       )}
 
       {groups.map(group => (
-        <Box
+        <Paper
           key={group.repoUrl}
+          variant="outlined"
           sx={{
             mb: 3,
-            border: theme => `1px solid ${theme.palette.divider}`,
-            borderRadius: 1,
+            borderRadius: 2,
             overflow: 'hidden',
           }}
         >
@@ -253,78 +299,140 @@ const IndexTree = () => {
               bgcolor: 'action.hover',
               display: 'flex',
               alignItems: 'center',
-              gap: 1,
+              gap: 1.5,
+              borderBottom: theme => `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, flexShrink: 0 }}>
               {repoLabel(group.repoUrl)}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'text.secondary',
+                fontFamily: 'monospace',
+                fontSize: 11,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+              }}
+            >
               {group.repoUrl}
             </Typography>
+            <Chip
+              label={`${group.nodes.length} 分支`}
+              size="small"
+              variant="outlined"
+              sx={{ ml: 'auto', flexShrink: 0 }}
+            />
           </Box>
 
-          {/* header row */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1.2fr 0.8fr 1fr 1.2fr',
-              px: 2,
-              py: 1,
-              borderTop: theme => `1px solid ${theme.palette.divider}`,
-              fontWeight: 600,
-              fontSize: 13,
-              color: 'text.secondary',
-            }}
-          >
-            <span>分支</span>
-            <span>追踪</span>
-            <span>Entities</span>
-            <span>HEAD</span>
-            <span>更新时间</span>
-          </Box>
-
-          {group.nodes.map(node => {
-            const branch = branchOf(node.state.identity, node.state.repoUrl);
-            const isRoot = node.depth === 0;
-            const tracked = node.tracked || '';
-            return (
-              <Box
-                key={node.state.identity}
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '2fr 1.2fr 0.8fr 1fr 1.2fr',
-                  px: 2,
-                  py: 1,
-                  alignItems: 'center',
-                  borderTop: theme => `1px solid ${theme.palette.divider}`,
-                  fontSize: 13,
-                  '&:hover': { bgcolor: 'action.hover' },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', pl: `${node.depth * 24}px`, gap: 1 }}>
-                  {!isRoot && <span style={{ color: '#9aa0a6' }}>└─</span>}
-                  <Typography
-                    sx={{ fontWeight: isRoot ? 600 : 400, fontSize: isRoot ? 15 : 13 }}
-                  >
-                    {branch}
-                  </Typography>
-                  {isRoot && <Chip label="main" size="small" color="primary" variant="outlined" />}
-                </Box>
-                <span style={{ color: tracked ? 'inherit' : '#9aa0a6' }}>{tracked || '—'}</span>
-                <span>{node.rowCount != null ? node.rowCount.toLocaleString() : '—'}</span>
-                <span style={{ fontFamily: 'monospace' }}>
-                  {node.state.headCommit ? node.state.headCommit.slice(0, 8) : '—'}
-                </span>
-                <span style={{ color: '#9aa0a6' }}>
-                  {node.state.updatedAt ? dayjs(node.state.updatedAt).format('MM-DD HH:mm') : '—'}
-                </span>
-              </Box>
-            );
-          })}
-        </Box>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>分支</TableCell>
+                  <TableCell>追踪</TableCell>
+                  <TableCell align="right">Entities</TableCell>
+                  <TableCell>HEAD</TableCell>
+                  <TableCell>更新时间</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {group.nodes.map((node, idx) => {
+                  const branch = branchOf(node.state.identity, node.state.repoUrl);
+                  const isRoot = node.depth === 0;
+                  const tracked = node.tracked || '';
+                  return (
+                    <TableRow
+                      key={node.state.identity}
+                      hover
+                      sx={{
+                        bgcolor: idx % 2 === 1 ? 'action.hover' : 'background.paper',
+                        '&:last-child td': { borderBottom: 0 },
+                      }}
+                    >
+                      <TableCell>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            pl: `${node.depth * 20}px`,
+                            gap: 1,
+                            minWidth: 0,
+                          }}
+                        >
+                          {!isRoot && (
+                            <Box
+                              component="span"
+                              sx={{ color: 'text.disabled', flexShrink: 0 }}
+                            >
+                              └─
+                            </Box>
+                          )}
+                          <Typography
+                            noWrap
+                            sx={{
+                              fontWeight: isRoot ? 600 : 400,
+                              fontSize: isRoot ? 14 : 13,
+                            }}
+                          >
+                            {branch}
+                          </Typography>
+                          {isRoot && (
+                            <Chip
+                              label="main"
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                              sx={{ flexShrink: 0 }}
+                            />
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: tracked ? 'text.primary' : 'text.disabled',
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                        }}
+                      >
+                        {tracked || '—'}
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {node.rowCount != null
+                          ? node.rowCount.toLocaleString()
+                          : '—'}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: 'text.secondary',
+                        }}
+                      >
+                        {node.state.headCommit
+                          ? node.state.headCommit.slice(0, 8)
+                          : '—'}
+                      </TableCell>
+                      <TableCell sx={{ color: 'text.secondary' }}>
+                        {node.state.updatedAt
+                          ? dayjs(node.state.updatedAt).format('MM-DD HH:mm')
+                          : '—'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
       ))}
-    </Box>
+    </PageContainer>
   );
 };
 

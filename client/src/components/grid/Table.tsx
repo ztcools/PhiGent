@@ -397,9 +397,7 @@ const EnhancedTable: FC<TableType> = props => {
               <TableRow>
                 <TableCell
                   sx={theme => ({
-                    paddingTop: theme.spacing(6),
-                    textAlign: 'center',
-                    letterSpacing: '0.5px',
+                    padding: theme.spacing(2, 1),
                     color: theme.palette.text.secondary,
                   })}
                   colSpan={

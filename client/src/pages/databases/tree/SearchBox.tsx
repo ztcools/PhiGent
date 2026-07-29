@@ -52,10 +52,13 @@ const SearchBox: React.FC<SearchBoxProps> = ({
                 size="small"
                 onClick={onClose}
                 edge="end"
+                aria-label="关闭搜索"
                 sx={{
                   padding: '4px',
+                  borderRadius: 1,
+                  transition: 'background-color 0.15s ease-in-out',
                   '&:hover': {
-                    backgroundColor: 'transparent',
+                    backgroundColor: 'action.hover',
                   },
                 }}
               >

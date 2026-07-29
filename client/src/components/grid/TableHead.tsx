@@ -31,10 +31,12 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 
 const StyledTableHeader = styled(Typography)(({ theme }) => ({
   padding: theme.spacing(1.5, 1),
-  fontWeight: 500,
+  fontWeight: 600,
+  color: theme.palette.text.secondary,
   maxHeight: 45,
   minHeight: 20,
-  fontSize: 13,
+  fontSize: 12,
+  letterSpacing: '0.02em',
   overflow: 'hidden',
   whiteSpace: 'nowrap',
 }));

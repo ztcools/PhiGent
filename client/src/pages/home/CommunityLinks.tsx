@@ -24,24 +24,25 @@ const CommunityLinks = () => {
       sx={{
         width: 270,
         backgroundColor: 'background.paper',
-        borderRadius: 1,
-        p: 1.5,
+        borderRadius: 2,
+        p: 2,
         border: '1px solid',
         borderColor: 'divider',
+        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.05)',
       }}
     >
       <Typography
         variant="h6"
         sx={{
           mb: 1.5,
-          fontSize: 16,
+          fontSize: 15,
           fontWeight: 600,
           color: 'text.primary',
         }}
       >
         {t('attu.community')}
       </Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
         {links.map(link => (
           <Link
             key={link.title}
@@ -52,10 +53,15 @@ const CommunityLinks = () => {
               display: 'flex',
               alignItems: 'center',
               gap: 1,
+              px: 1,
+              py: 0.75,
+              borderRadius: 1,
               color: 'text.primary',
               textDecoration: 'none',
+              transition: 'all 0.15s ease-in-out',
               '&:hover': {
                 color: 'primary.main',
+                backgroundColor: 'action.hover',
                 '& .MuiSvgIcon-root': {
                   color: 'primary.main',
                 },

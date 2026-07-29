@@ -1,7 +1,7 @@
 import { Params } from 'react-router-dom';
 import type { CollectionObject, DatabaseObject } from '@server/types';
 
-export type TreeNodeType = 'db' | 'collection' | 'partition' | 'segment' | 'search';
+export type TreeNodeType = 'db' | 'repo' | 'collection' | 'partition' | 'segment' | 'search';
 export type TreeNodeObject = CollectionObject | DatabaseObject | null;
 
 export interface DatabaseTreeItem {

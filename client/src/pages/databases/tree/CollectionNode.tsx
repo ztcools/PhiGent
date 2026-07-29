@@ -8,6 +8,8 @@ import icons from '@/components/icons/Icons';
 
 interface CollectionNodeProps {
   data: CollectionObject;
+  /** 覆盖显示名（分支子节点只显示分支名，缺省用 collection_name） */
+  displayName?: string;
   highlight?: string;
   isSelected?: boolean;
   isContextMenuTarget?: boolean;
@@ -21,6 +23,7 @@ interface CollectionNodeProps {
 
 const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
+  displayName,
   highlight = '',
   isSelected = false,
   isContextMenuTarget = false,
@@ -31,6 +34,7 @@ const CollectionNode: React.FC<CollectionNodeProps> = ({
   onClick,
   onContextMenu,
 }) => {
+  const label = displayName ?? data.collection_name;
   const ExpandIcon = icons.rightArrow;
 
   const handleToggleExpand = (e: React.MouseEvent) => {
@@ -63,7 +67,7 @@ const CollectionNode: React.FC<CollectionNodeProps> = ({
 
       <Tooltip title={data.collection_name} placement="top">
         <Typography noWrap className="collectionName">
-          <HighlightText text={data.collection_name} highlight={highlight} />
+          <HighlightText text={label} highlight={highlight} />
         </Typography>
       </Tooltip>
       <Count>({formatNumber(data.rowCount || 0)})</Count>

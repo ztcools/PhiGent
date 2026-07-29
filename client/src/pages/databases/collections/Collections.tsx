@@ -1,6 +1,6 @@
 import { useContext, useMemo, useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Box, Typography } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Highlighter from 'react-highlight-words';
@@ -11,6 +11,7 @@ import CustomToolBar from '@/components/grid/ToolBar';
 import icons from '@/components/icons/Icons';
 import EmptyCard from '@/components/cards/EmptyCard';
 import StatusAction from '@/pages/databases/collections/StatusAction';
+import EditableDescription from '@/pages/databases/collections/EditableDescription';
 import CustomToolTip from '@/components/customToolTip/CustomToolTip';
 import CreateCollectionDialog from '@/pages/dialogs/CreateCollectionDialog';
 import LoadCollectionDialog from '@/pages/dialogs/LoadCollectionDialog';
@@ -22,6 +23,7 @@ import InsertDialog from '@/pages/dialogs/insert/Dialog';
 import { getLabelDisplayedRows } from '@/pages/search/Utils';
 import { LOADING_STATE } from '@/consts';
 import { formatNumber } from '@/utils';
+import { parseCodeCollection } from '@/utils/codeCollection';
 import Aliases from './Aliases';
 import type {
   ColDefinitionsType,
@@ -34,19 +36,13 @@ const codebaseLabel = (
   collectionName: string,
   description?: string
 ): string => {
-  if (!description || !description.startsWith('codebasePath:')) {
-    return collectionName;
-  }
-  const identity = description.slice('codebasePath:'.length).split('|')[0];
-  const lastColon = identity.lastIndexOf(':');
-  const isUrl = /:\/\//.test(identity) || /^git@/.test(identity);
-  const urlPart = isUrl && lastColon > 0 ? identity.slice(0, lastColon) : identity;
-  const branch = isUrl && lastColon > 0 ? identity.slice(lastColon + 1) : '';
-  const repo =
-    urlPart.replace(/\.git$/i, '').split(/[/:]/).filter(Boolean).pop() ||
-    collectionName;
-  return branch ? `${repo}:${branch}` : repo;
+  const info = parseCodeCollection(collectionName, description);
+  return info.branch ? `${info.repo}:${info.branch}` : info.repo;
 };
+
+/** 解析 collection 的 仓库/分支 归属（层次化展示用） */
+const repoBranchOf = (collectionName: string, description?: string) =>
+  parseCodeCollection(collectionName, description);
 
 const Collections = () => {
   const { isManaged } = useContext(authContext);
@@ -346,7 +342,7 @@ const Collections = () => {
           collection_name: string;
           description?: string;
         };
-        const displayName = codebaseLabel(collection_name, description);
+        const info = repoBranchOf(collection_name, description);
         return (
           <Box sx={{ maxWidth: '160px' }}>
             <Link
@@ -360,21 +356,52 @@ const Collections = () => {
                 whiteSpace: 'nowrap',
                 textDecoration: 'none',
               }}
-              title={`${displayName}\n${collection_name}`}
+              title={`${info.repo}:${info.branch}\n${collection_name}`}
             >
               <Highlighter
-                textToHighlight={displayName}
+                textToHighlight={info.repo}
                 searchWords={[search]}
                 highlightStyle={{
-                  color: '#1976d2',
-                  backgroundColor: 'transparent',
+                  color: 'inherit',
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(9, 181, 114, 0.18)',
                 }}
               />
             </Link>
           </Box>
         );
       },
-      label: collectionTrans('name'),
+      label: '仓库',
+    },
+    {
+      id: 'branch',
+      align: 'left',
+      disablePadding: false,
+      sortType: 'string',
+      formatter(col) {
+        const { collection_name, description } = col as {
+          collection_name: string;
+          description?: string;
+        };
+        const info = repoBranchOf(collection_name, description);
+        return (
+          <Chip
+            size="small"
+            label={info.branch}
+            color={info.isRoot ? 'primary' : 'default'}
+            variant="outlined"
+            sx={{
+              fontFamily: 'monospace',
+              fontSize: '0.78em',
+              height: 22,
+              borderRadius: 1,
+              fontWeight: info.isRoot ? 600 : 400,
+              '& .MuiChip-label': { px: 1 },
+            }}
+          />
+        );
+      },
+      label: '分支',
     },
     {
       id: 'status',
@@ -430,7 +457,12 @@ const Collections = () => {
         </Box>
       ),
       formatter(v) {
-        return v.description || '--';
+        return (
+          <EditableDescription
+            collection={v}
+            onSaved={() => fetchCollection(v.collection_name)}
+          />
+        );
       },
     },
     {

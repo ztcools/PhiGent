@@ -16,7 +16,7 @@ const EmptyCard: FC<EmptyCardProps> = ({
       component="section"
       className={wrapperClass}
       sx={{
-        color: 'text.disabled',
+        color: 'text.secondary',
         backgroundColor: 'background.paper',
         flexDirection: 'column',
         textAlign: 'center',
@@ -28,7 +28,10 @@ const EmptyCard: FC<EmptyCardProps> = ({
       <CardContent>
         {loading && <StatusIcon type={LoadingType.CREATING} size={40} />}
         {icon}
-        <Typography variant="h2" sx={{ mt: 2 }}>
+        <Typography
+          variant="h6"
+          sx={{ mt: 2, fontWeight: 500, color: 'text.secondary' }}
+        >
           {text}
         </Typography>
       </CardContent>

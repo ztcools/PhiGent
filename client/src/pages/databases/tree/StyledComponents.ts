@@ -7,6 +7,7 @@ export const Count = styled('span')(({ theme }) => ({
   marginLeft: theme.spacing(0.5),
   color: theme.palette.text.secondary,
   pointerEvents: 'none',
+  flexShrink: 0,
 }));
 
 export const StatusDot = styled(Box, {
@@ -16,17 +17,18 @@ export const StatusDot = styled(Box, {
     width: '6px',
     height: '6px',
     borderRadius: '50%',
+    flexShrink: 0,
     ...(status === 'loaded' && {
       border: `1px solid ${theme.palette.primary.main}`,
       backgroundColor: theme.palette.primary.main,
     }),
     ...(status === 'unloaded' && {
       border: `1px solid ${theme.palette.primary.main}`,
-      background: '#fff !important',
+      backgroundColor: theme.palette.background.paper,
     }),
     ...(status === 'loading' && {
       border: `1px solid ${theme.palette.primary.light}`,
-      backgroundColor: `${theme.palette.primary.light} !important`,
+      backgroundColor: theme.palette.primary.light,
     }),
     ...(status === 'noIndex' && {
       border: `1px solid ${theme.palette.text.disabled}`,
@@ -48,7 +50,7 @@ export const StyledDivider = styled(Divider)(({ theme }) => ({
 export const TreeContainer = styled(Box)(({ theme }) => ({
   height: 'calc(100vh - 64px)',
   overflow: 'auto',
-  fontSize: '15px',
+  fontSize: '14px',
   color: theme.palette.text.primary,
   '& .MuiSvgIcon-root': {
     fontSize: '14px',
@@ -92,6 +94,7 @@ export const NoResultsBox = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   height: '100px',
   color: theme.palette.text.secondary,
+  fontSize: '13px',
 }));
 
 export const TreeNodeBox = styled(Box, {
@@ -107,7 +110,7 @@ export const TreeNodeBox = styled(Box, {
   isContextMenuTarget: boolean;
   isCollectionNoSchema: boolean;
   depth: number;
-}>(({ theme, isSelected, isCollectionNoSchema, depth }) => ({
+}>(({ theme, isSelected, isContextMenuTarget, isCollectionNoSchema, depth }) => ({
   position: 'absolute',
   top: 0,
   left: 0,
@@ -117,19 +120,31 @@ export const TreeNodeBox = styled(Box, {
   display: 'flex',
   alignItems: 'center',
   cursor: 'pointer',
-  paddingLeft: `${depth * 16 === 0 ? 8 : depth * 12}px`,
+  // depth=0: 8px (root level) — depth>=1: 12px per level (sub-tree indent)
+  paddingLeft: `${depth === 0 ? 8 : depth * 12}px`,
   paddingRight: '8px',
+  boxSizing: 'border-box',
   backgroundColor: isSelected
     ? theme.palette.primary.light
-    : theme.palette.background.default,
+    : 'transparent',
+  borderLeft: isSelected
+    ? `2px solid ${theme.palette.primary.main}`
+    : '2px solid transparent',
+  transition:
+    'background-color 0.15s ease-in-out, border-color 0.15s ease-in-out',
   '&:hover': {
-    backgroundColor: theme.palette.primary.light,
+    backgroundColor:
+      theme.palette.mode === 'light'
+        ? 'rgba(9, 181, 114, 0.06)'
+        : 'rgba(9, 181, 114, 0.12)',
   },
+  // Right-click context menu target gets the same affordance as selected
+  ...(isContextMenuTarget && {
+    backgroundColor: theme.palette.primary.light,
+  }),
   opacity: isCollectionNoSchema ? 0.5 : 1,
   color: isCollectionNoSchema ? theme.palette.text.disabled : 'inherit',
   pointerEvents: isCollectionNoSchema ? 'none' : 'auto',
-  marginBottom: depth === 0 ? '0' : '0',
-  boxSizing: 'border-box',
 }));
 
 export const SearchBoxContainer = styled(Box)({
@@ -153,13 +168,15 @@ export const NodeContent = styled(Box)({
 export const SearchButton = styled(Box)(({ theme }) => ({
   padding: '4px',
   marginLeft: theme.spacing(1),
+  borderRadius: '4px',
+  transition: 'background-color 0.15s ease-in-out',
   '&:hover': {
-    backgroundColor: 'transparent',
+    backgroundColor: theme.palette.action.hover,
   },
 }));
 
-export const CollectionCount = styled('span')({
+export const CollectionCount = styled('span')(({ theme }) => ({
   marginLeft: 8,
-  color: '#888',
+  color: theme.palette.text.secondary,
   fontSize: 12,
-});
+}));

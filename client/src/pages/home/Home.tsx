@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
-import { Typography, Box, Button } from '@mui/material';
+import { Typography, Box, Button, Skeleton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -20,7 +20,6 @@ import { GitIndexService, GitRepo, RepoRunStatus } from '@/pages/gitlab/service'
 import CreateDatabaseDialog from '../dialogs/CreateDatabaseDialog';
 import icons from '@/components/icons/Icons';
 import SysCard from './SysCard';
-import StatusIcon, { LoadingType } from '@/components/status/StatusIcon';
 import CommunityLinks from '@/pages/home/CommunityLinks';
 
 const INDEX_STATE_COLLECTION = 'code_index_state';
@@ -29,6 +28,35 @@ const repoNameOf = (repoUrl: string): string => {
   const seg = repoUrl.replace(/\.git$/i, '').split(/[/:]/).filter(Boolean).pop();
   return seg || repoUrl;
 };
+
+interface SectionHeaderProps {
+  title: string;
+  count?: number;
+  action?: React.ReactNode;
+}
+
+const SectionHeader = ({ title, count, action }: SectionHeaderProps) => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+      mb: 1.5,
+    }}
+  >
+    <Typography variant="h5" sx={{ fontWeight: 600 }}>
+      {title}
+    </Typography>
+    {typeof count === 'number' && (
+      <Typography component="span" sx={{ color: 'text.secondary', fontSize: 14 }}>
+        ({count})
+      </Typography>
+    )}
+    {action}
+  </Box>
+);
+
+const CARD_SKELETON_KEYS = ['a', 'b', 'c', 'd'];
 
 const Home = () => {
   useNavigationHook(ROUTE_PATHS.HOME);
@@ -46,7 +74,8 @@ const Home = () => {
   const { t: databaseTrans } = useTranslation('database');
 
   const [repos, setRepos] = useState<RepoInfo[]>([]);
-  const [gitRepos, setGitRepos] = useState<(GitRepo & { lastRun: RepoRunStatus | null })[]>([]);
+  const [gitRepos, setGitRepos] = useState<(GitRepo & { lastRuns?: Record<string, RepoRunStatus | null> })[]>([]);
+  const [gitReposLoaded, setGitReposLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +85,8 @@ const Home = () => {
         if (!cancelled) setGitRepos(s.repos || []);
       } catch {
         if (!cancelled) setGitRepos([]);
+      } finally {
+        if (!cancelled) setGitReposLoaded(true);
       }
     })();
     return () => {
@@ -154,7 +185,7 @@ const Home = () => {
     }
 
     return `${duration.toFixed(2)} ${unit}`;
-  }, [data.rootCoord]);
+  }, [data.rootCoord, homeTrans]);
 
   const { isServerless } = useContext(authContext);
   const { setDialog } = useContext(rootContext);
@@ -176,15 +207,15 @@ const Home = () => {
 
   return (
     <Box
-      sx={theme => ({
-        margin: '12px',
-        position: 'relative',
+      sx={{
         display: 'flex',
-        gap: 2,
-        height: 'calc(100vh - 80px)',
-        pr: 2,
+        gap: 3,
+        height: 'calc(100vh - 45px)',
+        px: 3,
+        py: 2,
         overflow: 'hidden',
-      })}
+        boxSizing: 'border-box',
+      }}
     >
       {/* Main content */}
       <Box
@@ -194,122 +225,79 @@ const Home = () => {
           flexDirection: 'column',
           minWidth: 0,
           overflow: 'auto',
+          pr: 1,
         }}
       >
-        <Box
-          sx={{
-            mb: 1.5,
-            px: 0.5,
-            maxWidth: '100%',
-          }}
-        >
-          <Box display="flex" alignItems="center" mb={2}>
-            <Box display="flex" alignItems="center">
-              <Typography
-                variant="h4"
+        {/* Databases section */}
+        <Box sx={{ mb: 3 }}>
+          <SectionHeader
+            title={databaseTrans('databases')}
+            count={databases.length}
+            action={
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleCreateDbClick}
+                aria-label="新建数据库"
                 sx={{
-                  mr: 1,
-                  position: 'relative',
-                  top: 8,
-                  mb: 2,
-                  color: theme => theme.palette.text.primary,
+                  ml: 1,
+                  minWidth: 28,
+                  width: 28,
+                  height: 28,
+                  p: 0,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                {databaseTrans('databases')}
-              </Typography>
-              <Typography
-                component="span"
-                variant="subtitle1"
-                color="textSecondary"
-                sx={{ position: 'relative', top: 1, mr: 2 }}
-              >
-                ({databases.length})
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={handleCreateDbClick}
-              sx={{
-                ml: 0,
-                minWidth: 24,
-                width: 24,
-                height: 24,
-                p: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <PlusIcon sx={{ fontSize: 20 }} />
-            </Button>
-          </Box>
-          {loadingDatabases ? (
-            <StatusIcon type={LoadingType.CREATING} />
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                flexGrow: 0,
-                gap: 1.5,
-              }}
-            >
-              {databases.map(db => {
-                if (db.name === database) {
-                  db.collections = collections.map(c => c.collection_name);
-                }
-                return (
-                  <DatabaseCard
-                    database={db}
-                    isActive={db.name === database}
-                    setDatabase={setDatabase}
-                    fetchDatabases={fetchDatabases}
-                    key={db.name}
-                  />
-                );
-              })}
-            </Box>
-          )}
-        </Box>
-
-        {repos.length > 0 && (
+                <PlusIcon sx={{ fontSize: 18 }} />
+              </Button>
+            }
+          />
           <Box
             sx={{
-              mb: 1.5,
-              px: 0.5,
-              maxWidth: '100%',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
             }}
           >
-            <Box display="flex" alignItems="center" mb={2}>
-              <Typography
-                variant="h4"
-                sx={{
-                  mr: 1,
-                  position: 'relative',
-                  top: 8,
-                  mb: 2,
-                  color: theme => theme.palette.text.primary,
-                }}
-              >
-                {homeTrans('indexTree')}
-              </Typography>
-              <Typography
-                component="span"
-                variant="subtitle1"
-                color="textSecondary"
-                sx={{ position: 'relative', top: 1, mr: 2 }}
-              >
-                ({repos.length})
-              </Typography>
-            </Box>
+            {loadingDatabases
+              ? CARD_SKELETON_KEYS.map(k => (
+                  <Skeleton
+                    key={k}
+                    variant="rectangular"
+                    width={180}
+                    height={128}
+                    sx={{ borderRadius: 2 }}
+                  />
+                ))
+              : databases.map(db => {
+                  if (db.name === database) {
+                    db.collections = collections.map(c => c.collection_name);
+                  }
+                  return (
+                    <DatabaseCard
+                      database={db}
+                      isActive={db.name === database}
+                      setDatabase={setDatabase}
+                      fetchDatabases={fetchDatabases}
+                      key={db.name}
+                    />
+                  );
+                })}
+          </Box>
+        </Box>
+
+        {/* Index tree section */}
+        {repos.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <SectionHeader title={homeTrans('indexTree')} count={repos.length} />
             <Box
               sx={{
                 display: 'flex',
                 flexWrap: 'wrap',
-                flexGrow: 0,
-                gap: 1.5,
+                gap: 2,
               }}
             >
               {repos.map(repo => (
@@ -319,81 +307,73 @@ const Home = () => {
           </Box>
         )}
 
-        <Box sx={{ mb: 1.5, px: 0.5, maxWidth: '100%' }}>
-          <Box display="flex" alignItems="center" mb={2}>
-            <Typography
-              variant="h4"
-              sx={{
-                mr: 1,
-                position: 'relative',
-                top: 8,
-                mb: 2,
-                color: theme => theme.palette.text.primary,
-              }}
-            >
-              {homeTrans('gitlabRepos')}
-            </Typography>
-            <Typography
-              component="span"
-              variant="subtitle1"
-              color="textSecondary"
-              sx={{ position: 'relative', top: 1, mr: 2 }}
-            >
-              ({gitRepos.length})
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', flexGrow: 0, gap: 1.5 }}>
-            {gitRepos.map(repo => (
-              <GitRepoCard repo={repo} key={repo.name} />
-            ))}
-            <Box
-              component="section"
-              onClick={() => navigate('/gitlab')}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1,
-                minWidth: '140px',
-                minHeight: '128px',
-                cursor: 'pointer',
-                borderRadius: 2,
-                border: theme => `1px dashed ${theme.palette.divider}`,
-                color: theme => theme.palette.text.secondary,
-                '&:hover': {
-                  borderColor: theme => theme.palette.primary.main,
-                  color: theme => theme.palette.primary.main,
-                },
-              }}
-            >
-              <PlusIcon sx={{ fontSize: 28 }} />
-              <Typography sx={{ fontSize: 13 }}>
-                {gitRepos.length > 0 ? homeTrans('manageRepos') : homeTrans('addRepo')}
-              </Typography>
-            </Box>
+        {/* GitLab repos section */}
+        <Box sx={{ mb: 3 }}>
+          <SectionHeader
+            title={homeTrans('gitlabRepos')}
+            count={gitRepos.length}
+          />
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {!gitReposLoaded
+              ? CARD_SKELETON_KEYS.map(k => (
+                  <Skeleton
+                    key={k}
+                    variant="rectangular"
+                    width={180}
+                    height={128}
+                    sx={{ borderRadius: 2 }}
+                  />
+                ))
+              : gitRepos.map(repo => (
+                  <GitRepoCard repo={repo} key={repo.name} />
+                ))}
+            {gitReposLoaded && (
+              <Box
+                component="section"
+                onClick={() => navigate('/gitlab')}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  minWidth: 140,
+                  minHeight: 128,
+                  cursor: 'pointer',
+                  borderRadius: 2,
+                  border: theme => `1px dashed ${theme.palette.divider}`,
+                  color: theme => theme.palette.text.secondary,
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    borderColor: theme => theme.palette.primary.main,
+                    color: theme => theme.palette.primary.main,
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'light'
+                        ? 'rgba(9, 181, 114, 0.04)'
+                        : 'rgba(9, 181, 114, 0.08)',
+                  },
+                }}
+              >
+                <PlusIcon sx={{ fontSize: 28 }} />
+                <Typography sx={{ fontSize: 13 }}>
+                  {gitRepos.length > 0
+                    ? homeTrans('manageRepos')
+                    : homeTrans('addRepo')}
+                </Typography>
+              </Box>
+            )}
           </Box>
         </Box>
 
+        {/* System info section */}
         {data?.systemInfo && (
           <>
-            <Box
-              sx={{
-                mb: 1.5,
-                px: 0.5,
-              }}
-            >
-              <Typography
-                variant="h4"
-                sx={{ mb: 2, color: theme => theme.palette.text.primary }}
-              >
-                {homeTrans('sysInfo')}
-              </Typography>
+            <Box sx={{ mb: 3 }}>
+              <SectionHeader title={homeTrans('sysInfo')} />
               <Box
                 sx={{
                   display: 'flex',
                   flexWrap: 'wrap',
-                  flexGrow: 0,
                   gap: 2,
                 }}
               >
@@ -428,17 +408,11 @@ const Home = () => {
             </Box>
 
             {data?.deployMode === MILVUS_DEPLOY_MODE.DISTRIBUTED && (
-              <Box
-                sx={{
-                  mb: 1.5,
-                  px: 2,
-                }}
-              >
+              <Box sx={{ mb: 3 }}>
                 <Box
                   sx={{
                     display: 'flex',
                     flexWrap: 'wrap',
-                    flexGrow: 0,
                     gap: 2,
                   }}
                 >

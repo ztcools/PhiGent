@@ -144,6 +144,30 @@ export function useCollectionsManagement(database: string) {
 
       setCollections([]);
       const res = excludeInfra(await CollectionService.getAllCollections());
+
+      // code collection (hcc_/cc_) 需要 description 里的 identity 才能正确归组
+      // 到「仓库 → 分支」。showCollections 不带 description，批量补一次 details。
+      const codeNames = res
+        .map(c => c.collection_name)
+        .filter(n => /^(hcc|cc)_/i.test(n));
+      if (codeNames.length > 0) {
+        try {
+          const full: any[] = await CollectionService.getCollections({
+            db_name: databaseRef.current,
+            collections: codeNames,
+          });
+          const descMap = new Map<string, string>(
+            full.map((c: any) => [c.collection_name, c.description || '']),
+          );
+          for (const c of res) {
+            const d = descMap.get(c.collection_name);
+            if (d) (c as { description?: string }).description = d;
+          }
+        } catch {
+          /* best-effort: 解析不到就退化为 collection 名 slug */
+        }
+      }
+
       if (currentRequestId === requestIdRef.current) {
         detectLoadingIndexing(res);
         setCollections(res);

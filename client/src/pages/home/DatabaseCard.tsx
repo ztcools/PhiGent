@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { MilvusService, DatabaseService } from '@/http';
 import icons from '@/components/icons/Icons';
 import DeleteTemplate from '@/components/customDialog/DeleteDialogTemplate';
+import CardBase from '@/components/cards/CardBase';
 import { rootContext, authContext } from '@/context';
 import type { DatabaseObject } from '@server/types';
 import IconButton from '@mui/material/IconButton';
@@ -60,30 +61,7 @@ const DatabaseCard: FC<DatabaseCardProps> = ({
 
   return (
     <Box component="section" className={wrapperClass}>
-      <Box
-        component="section"
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1,
-          backgroundColor: theme => theme.palette.background.paper,
-          color: theme => theme.palette.text.primary,
-          padding: 2,
-          border: theme => `1px solid ${theme.palette.divider}`,
-          minWidth: '128px',
-          minHeight: '128px',
-          cursor: 'pointer',
-          borderRadius: 2,
-          '&:hover': {
-            borderColor: theme => theme.palette.primary.main,
-          },
-          ...(isActive && {
-            borderColor: theme => theme.palette.primary.main,
-          }),
-        }}
-        onClick={onClick}
-      >
+      <CardBase active={isActive} onClick={onClick}>
         <>
           {isManaged ? (
             <ZillizIcon />
@@ -159,14 +137,24 @@ const DatabaseCard: FC<DatabaseCardProps> = ({
               arrow
             >
               <IconButton
+                size="small"
+                aria-label={`${btnTrans('drop')} ${dbTrans('database')}`}
                 sx={{
                   color: theme => theme.palette.text.secondary,
                   position: 'absolute',
                   top: 8,
                   right: 8,
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   p: 0,
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    color: theme => theme.palette.error.main,
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'light'
+                        ? 'rgba(217, 60, 0, 0.08)'
+                        : 'rgba(217, 60, 0, 0.16)',
+                  },
                   '& svg': {
                     width: 16,
                     height: 16,
@@ -198,7 +186,7 @@ const DatabaseCard: FC<DatabaseCardProps> = ({
             </Tooltip>
           )}
         </Box>
-      </Box>
+      </CardBase>
     </Box>
   );
 };

@@ -23,7 +23,13 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { dataContext } from '@/context';
 import CollectionNode from './CollectionNode';
 import DatabaseNode from './DatabaseNode';
+import RepoNode from './RepoNode';
 import SearchBox from './SearchBox';
+import {
+  parseCodeCollection,
+  groupByRepo,
+  CodeCollectionInfo,
+} from '@/utils/codeCollection';
 import {
   TreeContainer,
   TreeContent,
@@ -118,14 +124,74 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
   );
 
   const flattenedNodes = useMemo(() => {
-    const children = filteredCollections.map(c => ({
-      id: `c_${c.collection_name}`,
-      name: c.collection_name,
-      type: 'collection' as TreeNodeType,
-      data: c,
-      children: [],
-      expanded: false,
-    }));
+    // Group code collections into 「仓库(main) → 各分支」 two-level hierarchy.
+    // Only hcc_/cc_ code collections get grouped; other collections (user data,
+    // code_index_state, embedding_cache_*) stay flat at the top level.
+    const isCodeCollection = (name: string) => /^(hcc|cc)_/i.test(name);
+    const codeInfos = filteredCollections
+      .filter(c => isCodeCollection(c.collection_name))
+      .map(c => ({
+        ...parseCodeCollection(
+          c.collection_name,
+          (c as { description?: string }).description,
+        ),
+        rowCount: c.rowCount || 0,
+        data: c,
+      }));
+    const otherCollections = filteredCollections.filter(
+      c => !isCodeCollection(c.collection_name),
+    );
+
+    const repoGroups = groupByRepo(codeInfos);
+
+    const children: OriginalDatabaseTreeItem[] = [];
+
+    // 每个仓库一个父节点（main 行为仓库名），其余分支为子节点
+    for (const g of repoGroups) {
+      const branchChildren: OriginalDatabaseTreeItem[] = g.branches.map(b => ({
+        id: `c_${b.collectionName}`,
+        name: b.branch, // 子节点只显示分支名
+        type: 'collection' as TreeNodeType,
+        data: b.data,
+        children: [],
+        expanded: false,
+      }));
+      // 仓库主行：显示仓库名（不带 collection 名），数据用 main（若有）
+      const rootColl = g.root;
+      children.push({
+        id: `repo_${g.repo}`,
+        name: g.repo,
+        type: 'repo' as TreeNodeType,
+        data: rootColl ? rootColl.data : undefined,
+        children: rootColl
+          ? [
+              // main 本身作为第一个子节点（branch=main）
+              {
+                id: `c_${rootColl.collectionName}`,
+                name: rootColl.branch,
+                type: 'collection' as TreeNodeType,
+                data: rootColl.data,
+                children: [],
+                expanded: false,
+              },
+              ...branchChildren,
+            ]
+          : branchChildren,
+        expanded: expandedItems.has(`repo_${g.repo}`),
+      });
+    }
+
+    // 非 code collection 平铺
+    for (const c of otherCollections) {
+      children.push({
+        id: `c_${c.collection_name}`,
+        name: c.collection_name,
+        type: 'collection' as TreeNodeType,
+        data: c,
+        children: [],
+        expanded: false,
+      });
+    }
 
     const tree: OriginalDatabaseTreeItem = {
       id: database,
@@ -166,16 +232,24 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
   const skipNextScrollRef = useRef(false);
 
   const handleNodeClick = (node: FlatTreeItem) => {
-    skipNextScrollRef.current = true;
+    // 仓库行：点击只展开/收起分支列表，不跳详情（main 在展开后的第一个子节点）
+    if (node.type === 'repo') {
+      handleToggleExpand(node.id);
+      setSelectedItemId(node.id);
+      setContextMenu(null);
+      return;
+    }
 
+    skipNextScrollRef.current = true;
     setSelectedItemId(node.id);
-    navigate(
-      node.type === 'db'
-        ? `/databases/${database}/${params.databasePage || 'collections'}`
-        : `/databases/${database}/${node.name}/${
-            params.collectionPage || 'schema'
-          }`
-    );
+
+    if (node.type === 'db') {
+      navigate(`/databases/${database}/${params.databasePage || 'collections'}`);
+    } else {
+      // collection 分支节点：data 才是真正的 CollectionObject（含 collection_name）
+      const collName = (node.data as CollectionObject | null)?.collection_name || node.name;
+      navigate(`/databases/${database}/${collName}/${params.collectionPage || 'schema'}`);
+    }
     setContextMenu(null);
   };
 
@@ -427,25 +501,42 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
                   {node.hasChildren && node.type !== 'db' ? (
                     <IconButton
                       size="small"
+                      aria-label={node.isExpanded ? '收起' : '展开'}
                       onClick={e => {
                         e.stopPropagation();
                         handleToggleExpand(node.id);
                       }}
-                      sx={{ mr: 0 }}
+                      sx={{
+                        mr: 0,
+                        p: '2px',
+                        transition: 'transform 0.15s ease-in-out',
+                      }}
                     >
-                      {node.isExpanded ? (
-                        <ExpandIcon sx={{ transform: `rotate(90deg)` }} />
-                      ) : (
-                        <ExpandIcon />
-                      )}
+                      <ExpandIcon
+                        sx={{
+                          transform: node.isExpanded
+                            ? 'rotate(90deg)'
+                            : 'rotate(0deg)',
+                          transition: 'transform 0.15s ease-in-out',
+                        }}
+                      />
                     </IconButton>
                   ) : (
                     <Box sx={{ width: 0 }} />
                   )}
 
+                  {node.type === 'repo' && (
+                    <RepoNode
+                      repo={node.name}
+                      branchCount={node.originalNode.children?.length || 0}
+                      highlight={debouncedSearchQuery}
+                    />
+                  )}
+
                   {node.type === 'collection' && node.data && (
                     <CollectionNode
                       data={node.data as CollectionObject}
+                      displayName={node.name}
                       highlight={debouncedSearchQuery}
                       isSelected={isSelected}
                       isContextMenuTarget={isContextMenuTarget}
@@ -471,20 +562,23 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
         <IconButton
           onClick={handleScrollToTop}
           size="small"
-          sx={{
+          aria-label="回到顶部"
+          sx={theme => ({
             position: 'absolute',
             bottom: 16,
             right: 16,
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            backgroundColor: theme.palette.background.paper,
             '&:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 1)',
+              backgroundColor: theme.palette.background.paper,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
             },
             boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
             zIndex: 1000,
             width: 32,
             height: 32,
-            border: '1px solid rgba(0,0,0,0.1)',
-          }}
+            border: `1px solid ${theme.palette.divider}`,
+            transition: 'all 0.2s ease-in-out',
+          })}
         >
           <ExpandIcon sx={{ transform: 'rotate(-90deg)', fontSize: 20 }} />
         </IconButton>

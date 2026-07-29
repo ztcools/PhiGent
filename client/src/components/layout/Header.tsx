@@ -208,13 +208,28 @@ const Header: FC = () => {
             <Box sx={{ mr: 2 }}>
               <Typography
                 className="address"
-                sx={{ fontSize: 11, lineHeight: 1.3 }}
+                sx={{ fontSize: 11, lineHeight: 1.3, color: 'text.secondary' }}
               >
                 {address}
               </Typography>
               <Typography
                 className="status"
-                sx={{ fontSize: 11, lineHeight: 1.3, color: '#1ba954' }}
+                sx={{
+                  fontSize: 11,
+                  lineHeight: 1.3,
+                  color: 'success.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  '&::before': {
+                    content: '""',
+                    display: 'inline-block',
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    backgroundColor: 'success.main',
+                  },
+                }}
               >
                 {commonTrans('status.running')}
               </Typography>

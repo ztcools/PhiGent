@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import * as http from 'http';
+import * as fs from 'fs';
 import { LRUCache } from 'lru-cache';
 import * as path from 'path';
 import chalk from 'chalk';
@@ -86,13 +87,21 @@ if (!isElectron()) {
 app.use(ReqHeaderMiddleware);
 // use router
 app.use('/api/v1', router);
-// Return client build files
-app.use(express.static('build'));
+// Return client build files.
+// Resolve the built SPA absolutely: the server runs from /app/dist/src while
+// the client bundle is copied to /app/build in the runtime image. A relative
+// 'build' path resolves against the process CWD (and '../build' against
+// dist/src), which 404s in the container. /app/build is where the Dockerfile
+// places it; fall back to a CWD-relative 'build' for local dev.
+const clientBuildDir = fs.existsSync('/app/build/index.html')
+  ? '/app/build'
+  : path.join(process.cwd(), 'build');
+app.use(express.static(clientBuildDir));
 
 // handle every other route with index.html, which will contain
 // a script tag to your application's JavaScript file(s).
 app.get('*', (request, response) => {
-  response.sendFile(path.join(__dirname, '../build/index.html'));
+  response.sendFile(path.join(clientBuildDir, 'index.html'));
 });
 // ErrorInterceptor
 app.use(ErrorMiddleware);

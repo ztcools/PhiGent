@@ -3,6 +3,7 @@ import { Typography, useTheme, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import icons from '@/components/icons/Icons';
+import CardBase from '@/components/cards/CardBase';
 
 export interface RepoInfo {
   repoUrl: string;
@@ -28,27 +29,7 @@ const RepoCard: FC<RepoCardProps> = ({ repo }) => {
 
   return (
     <Box component="section">
-      <Box
-        component="section"
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1,
-          backgroundColor: theme => theme.palette.background.paper,
-          color: theme => theme.palette.text.primary,
-          padding: 2,
-          border: theme => `1px solid ${theme.palette.divider}`,
-          minWidth: '128px',
-          minHeight: '128px',
-          cursor: 'pointer',
-          borderRadius: 2,
-          '&:hover': {
-            borderColor: theme => theme.palette.primary.main,
-          },
-        }}
-        onClick={onClick}
-      >
+      <CardBase onClick={onClick}>
         <RepoIcon sx={{ width: 24, height: 24 }} />
         <Typography
           variant="h3"
@@ -107,7 +88,7 @@ const RepoCard: FC<RepoCardProps> = ({ repo }) => {
             </>
           )}
         </Box>
-      </Box>
+      </CardBase>
     </Box>
   );
 };

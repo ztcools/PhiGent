@@ -132,6 +132,33 @@ const colors = {
 
 const spacing = (factor: number) => `${8 * factor}px`;
 
+// Design tokens — single source of truth for the visual language.
+// Applied through getAttuTheme() so every page shares the same look & feel.
+export const designTokens = {
+  // Border radius scale
+  radius: {
+    sm: 4, // chips, small buttons
+    md: 8, // cards, papers, dialogs (default via shape.borderRadius)
+    lg: 12, // large containers
+  },
+  // Elevation / shadow scale — subtle, layered
+  shadow: {
+    card: '0 1px 2px rgba(15, 23, 42, 0.05)',
+    cardHover: '0 4px 12px rgba(15, 23, 42, 0.10)',
+    popover: '0 5px 15px rgba(0, 0, 0, 0.15)',
+  },
+  // Micro-interaction transitions
+  transition: {
+    fast: 'all 0.15s ease-in-out',
+    base: 'all 0.2s ease-in-out',
+  },
+  // Consistent page-level padding & section spacing
+  layout: {
+    pagePadding: 3, // theme.spacing(3) = 24px
+    sectionGap: 2, // 16px between sections
+  },
+};
+
 const typography = {
   fontFamily: [
     'Inter',
@@ -284,7 +311,61 @@ export const getAttuTheme = (mode: PaletteMode) => {
 
   return {
     ...commonThemes,
+    // Global shape — 8px corner radius everywhere unless overridden
+    shape: { borderRadius: designTokens.radius.md },
+    transitions: {
+      duration: {
+        shortest: 150,
+        shorter: 200,
+        short: 250,
+        standard: 250,
+      },
+    },
     components: {
+      // Subtle bordered surfaces by default; cards use a hairline border + soft
+      // shadow on hover instead of heavy elevation.
+      MuiPaper: {
+        defaultProps: { elevation: 0 },
+        styleOverrides: {
+          root: {
+            backgroundImage: 'none',
+          },
+        },
+      },
+      MuiTableRow: {
+        styleOverrides: {
+          root: {
+            transition: 'background-color 0.15s ease-in-out',
+          },
+        },
+      },
+      MuiTableCell: {
+        styleOverrides: {
+          root: ({ theme }: { theme: Theme }) => ({
+            borderColor: theme.palette.divider,
+          }),
+          head: ({ theme }: { theme: Theme }) => ({
+            fontWeight: 600,
+            color: theme.palette.text.secondary,
+            backgroundColor: theme.palette.background.paper,
+          }),
+        },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: {
+            transition: designTokens.transition.base,
+          },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: {
+            fontSize: 12,
+            borderRadius: designTokens.radius.sm,
+          },
+        },
+      },
       MuiTypography: {
         styleOverrides: {
           ...typography,
@@ -410,8 +491,8 @@ export const getAttuTheme = (mode: PaletteMode) => {
       MuiDialog: {
         styleOverrides: {
           paper: {
-            borderRadius: 8,
-            boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.15)',
+            borderRadius: designTokens.radius.md,
+            boxShadow: designTokens.shadow.popover,
           },
         },
       },
@@ -569,8 +650,8 @@ export const getAttuTheme = (mode: PaletteMode) => {
         styleOverrides: {
           paper: {
             backgroundColor: commonThemes.palette.background.paper,
-            boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.15)',
-            borderRadius: '8px',
+            boxShadow: designTokens.shadow.popover,
+            borderRadius: designTokens.radius.md,
           },
           list: {
             padding: '8px 0',

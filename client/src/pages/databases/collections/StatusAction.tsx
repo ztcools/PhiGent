@@ -14,14 +14,15 @@ const StatusIndicator: FC<{ color: string; filled?: boolean }> = ({
   color,
   filled,
 }) => (
-  <span
-    style={{
+  <Box
+    component="span"
+    sx={{
       display: 'inline-block',
       width: 8,
       height: 8,
       borderRadius: '50%',
       border: `1px solid ${color}`,
-      background: filled ? color : '#fff',
+      backgroundColor: filled ? color : 'background.paper',
       verticalAlign: 'middle',
     }}
   />

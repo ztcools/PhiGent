@@ -53,13 +53,14 @@ const DatabaseNode: React.FC<DatabaseNodeProps> = ({
         <IconButton
           size="small"
           onClick={onSearchClick}
+          aria-label="搜索集合"
           sx={{
             padding: '4px',
             ml: 0.5,
-            position: 'relative',
-            right: '-8px',
+            borderRadius: 1,
+            transition: 'background-color 0.15s ease-in-out',
             '&:hover': {
-              backgroundColor: 'transparent',
+              backgroundColor: 'action.hover',
             },
           }}
         >

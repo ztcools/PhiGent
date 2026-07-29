@@ -51,9 +51,10 @@ const NavMenu: FC<NavMenuType> = props => {
                 borderRadius: 1,
                 m: 0.5,
                 mb: 1,
-                cursor: 'pointer',
+                cursor: disabled ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 justifyContent: 'center',
+                opacity: disabled ? 0.45 : 1,
                 '& .itemIcon': {
                   minWidth: 'auto',
                   margin: 0,
@@ -63,17 +64,22 @@ const NavMenu: FC<NavMenuType> = props => {
                   width: 32,
                   height: 32,
                   borderRadius: 1,
-                  transition: 'all 0.2s ease',
+                  transition:
+                    'background-color 0.15s ease-in-out, color 0.15s ease-in-out',
                   '& .icon': {
                     transform: 'scale(0.8)',
                     color: theme => theme.palette.text.primary,
+                    transition: 'color 0.15s ease-in-out',
                   },
                 },
                 '&:hover': {
                   '& .itemIcon': {
-                    backgroundColor: theme => theme.palette.primary.main,
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'light'
+                        ? 'rgba(9, 181, 114, 0.12)'
+                        : 'rgba(9, 181, 114, 0.20)',
                     '& .icon': {
-                      color: '#fff',
+                      color: theme => theme.palette.primary.main,
                     },
                   },
                 },
@@ -91,6 +97,7 @@ const NavMenu: FC<NavMenuType> = props => {
                 '&.active': {
                   '& .itemIcon': {
                     backgroundColor: theme => theme.palette.primary.main,
+                    boxShadow: '0 2px 6px rgba(9, 181, 114, 0.35)',
                     '& .icon': {
                       color: '#fff',
                     },
@@ -128,8 +135,8 @@ const NavMenu: FC<NavMenuType> = props => {
       component="nav"
       sx={{
         borderRight: theme => `1px solid ${theme.palette.divider}`,
-        width: 46,
-        pt: 0,
+        width: 48,
+        pt: 0.5,
         color: theme => theme.palette.text.primary,
         backgroundColor: theme => theme.palette.background.paper,
         position: 'relative',
@@ -142,7 +149,10 @@ const NavMenu: FC<NavMenuType> = props => {
             position: 'absolute',
             fontSize: 10,
             bottom: 8,
-            left: 8,
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            color: 'text.disabled',
           }}
         >
           v {versionInfo.attu}
