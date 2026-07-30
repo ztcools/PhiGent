@@ -50,7 +50,12 @@ export const repoLabel = (repoUrl?: string): string => {
  *
  * 用 lastIndexOf(':') 是不行的：旧架构（dev-aware 个人 collection）留下的
  * identity 有第三段开发者 id —— `…/context.git:main:3614644417_q_1913`
- * 会被解析成 branch=开发者 id、repo=main。这里统一只取第二段作分支。
+ * 会被解析成 branch=开发者 id、repo=main。这里统一只取路径之后的那一段作分支。
+ *
+ * 还有一类结构性冒号 scheme 前缀盖不住：自建 GitLab 的非标准端口
+ * `https://gitlab.example.com:8443/g/r.git:main` —— 直接取第二段会得到
+ * branch=`8443/g/r.git`。端口的判据是"冒号后紧跟数字，数字后是路径分隔符或结尾"，
+ * 命中就把它并回 repoUrl 再往后取分支。
  */
 export function splitIdentity(identity: string): { repoUrl: string; branch: string } {
   let head = '';
@@ -69,10 +74,15 @@ export function splitIdentity(identity: string): { repoUrl: string; branch: stri
   rest = identity.slice(head.length);
 
   const parts = rest.split(':');
-  if (parts.length >= 2) {
-    return { repoUrl: head + parts[0], branch: parts[1] };
+  if (parts.length < 2) return { repoUrl: identity, branch: '' };
+
+  let path = parts[0];
+  let next = 1;
+  if (/^\d+(\/|$)/.test(parts[1])) {
+    path += ':' + parts[1];
+    next = 2;
   }
-  return { repoUrl: identity, branch: '' };
+  return { repoUrl: head + path, branch: parts[next] ?? '' };
 }
 
 /** 从 identity 拆 branch */
