@@ -81,7 +81,13 @@ export type CollectionLazyObject = {
   rowCount: undefined;
   createdTime: number;
   aliases: undefined;
-  description: undefined;
+  /**
+   * Schema description. showCollections omits it, so getAllCollections back-fills
+   * it concurrently — the collection list parses the repo/branch hierarchy out of
+   * it and would otherwise render an empty Branch column on first paint. Empty
+   * string when the collection has no description or describeCollection failed.
+   */
+  description: string;
   autoID: undefined;
   loadedPercentage: undefined;
   consistency_level: undefined;

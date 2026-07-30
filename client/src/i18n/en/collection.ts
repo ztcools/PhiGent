@@ -22,6 +22,8 @@ const collectionTrans = {
   // table
   id: 'ID',
   name: 'Name',
+  repo: 'Repository',
+  branch: 'Branch',
   features: 'Features',
   nameTip: 'Collection Name',
   status: 'Status',

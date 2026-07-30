@@ -20,7 +20,7 @@ const homeTrans = {
   createdTime: '创建时间',
   indexTree: '索引树',
   branches: '分支',
-  gitlabRepos: 'GitLab 仓库',
+  gitlabRepos: '代码仓库',
   addRepo: '添加仓库',
   manageRepos: '管理',
 };

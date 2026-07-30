@@ -3,12 +3,11 @@ import { CollectionService, MilvusService } from '@/http';
 import { WS_EVENTS, WS_EVENTS_TYPE } from '@server/utils/Const';
 import { checkIndexing, checkLoading } from '@server/utils/Shared';
 import { authContext } from '@/context';
+import { isInfraCollection } from '@/utils/codeCollection';
 import type { CollectionObject, CollectionFullObject } from '@server/types';
 
 // Infrastructure collections (shared index state + embedding cache) are hidden
 // everywhere so counts/lists show only real code collections (repos / branches).
-const isInfraCollection = (name: string) =>
-  name === 'code_index_state' || name.startsWith('embedding_cache_');
 const excludeInfra = <T extends { collection_name: string }>(list: T[]): T[] =>
   list.filter(c => !isInfraCollection(c.collection_name));
 
@@ -142,31 +141,10 @@ export function useCollectionsManagement(database: string) {
     try {
       setLoading(true);
 
-      setCollections([]);
+      // 不先清空 —— 保留旧数据直到新数据就绪，避免整表闪烁。
+      // 响应已带 description（服务端 fillDescriptions 并发补齐），列表页首屏
+      // 就能解析出「仓库 → 分支」层次，不需要再补一轮 details。
       const res = excludeInfra(await CollectionService.getAllCollections());
-
-      // code collection (hcc_/cc_) 需要 description 里的 identity 才能正确归组
-      // 到「仓库 → 分支」。showCollections 不带 description，批量补一次 details。
-      const codeNames = res
-        .map(c => c.collection_name)
-        .filter(n => /^(hcc|cc)_/i.test(n));
-      if (codeNames.length > 0) {
-        try {
-          const full: any[] = await CollectionService.getCollections({
-            db_name: databaseRef.current,
-            collections: codeNames,
-          });
-          const descMap = new Map<string, string>(
-            full.map((c: any) => [c.collection_name, c.description || '']),
-          );
-          for (const c of res) {
-            const d = descMap.get(c.collection_name);
-            if (d) (c as { description?: string }).description = d;
-          }
-        } catch {
-          /* best-effort: 解析不到就退化为 collection 名 slug */
-        }
-      }
 
       if (currentRequestId === requestIdRef.current) {
         detectLoadingIndexing(res);

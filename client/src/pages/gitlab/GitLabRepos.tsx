@@ -25,6 +25,7 @@ import icons from '@/components/icons/Icons';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeader from '@/components/layout/PageHeader';
 import { GitIndexService, GitIndexStatus, CurrentProgress } from './service';
+import { detectGitHost, tokenHint, GitHostInfo } from './gitHost';
 
 const RefreshIcon = icons.refresh;
 const DeleteIcon = icons.delete;
@@ -39,6 +40,80 @@ const parseBranchList = (text: string): string[] =>
     .split(/[,\s]+/)
     .map(s => s.trim())
     .filter(Boolean);
+
+/**
+ * Platform detection for the URL currently in a form field. Answers locally on
+ * every keystroke (gitHost.ts mirrors the service's table) and then confirms
+ * against `GET /detect` once typing settles, so a service whose table is newer
+ * than this bundle still wins.
+ */
+const useGitHost = (url: string): GitHostInfo => {
+  const trimmed = url.trim();
+  const [remote, setRemote] = useState<GitHostInfo | null>(null);
+
+  useEffect(() => {
+    setRemote(null);
+    if (!trimmed) return;
+    const t = setTimeout(() => {
+      GitIndexService.detect(trimmed)
+        .then(info => setRemote(info as GitHostInfo))
+        // Offline / older service without /detect — the local guess stands.
+        .catch(() => {});
+    }, 400);
+    return () => clearTimeout(t);
+  }, [trimmed]);
+
+  const local = detectGitHost(trimmed);
+  return remote && remote.host === local.host ? remote : local;
+};
+
+const PLATFORM_COLOR: Record<string, 'primary' | 'secondary' | 'info' | 'default'> = {
+  'huawei-codehub': 'primary',
+  gitlab: 'secondary',
+  github: 'info',
+  gitee: 'secondary',
+  bitbucket: 'info',
+  generic: 'default',
+};
+
+/**
+ * The detected platform and what it implies for authentication. Shown while the
+ * URL is being typed so a paste from the wrong platform — or an SSH URL with a
+ * token pasted alongside it — is visible before the repo is saved.
+ */
+const HostHint = ({ url, hasToken }: { url: string; hasToken: boolean }) => {
+  const info = useGitHost(url);
+  if (!url.trim()) return null;
+  if (!info.host) {
+    return (
+      <Typography variant="caption" sx={{ color: 'warning.main' }}>
+        无法解析仓库 URL。支持 https://host/group/repo.git 或 git@host:group/repo.git。
+      </Typography>
+    );
+  }
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+      <Chip
+        size="small"
+        label={info.label}
+        color={PLATFORM_COLOR[info.platform] || 'default'}
+        variant="outlined"
+      />
+      <Chip
+        size="small"
+        variant="outlined"
+        label={hasToken ? 'HTTPS + Token' : 'SSH + 部署公钥'}
+      />
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {hasToken
+          ? tokenHint(info.platform)
+          : info.scheme === 'https'
+            ? '未填 Token：将把该 https 地址转成 SSH 形式，用服务器部署公钥拉取。'
+            : '未填 Token：用服务器部署公钥通过 SSH 拉取，需先在平台添加该公钥。'}
+      </Typography>
+    </Box>
+  );
+};
 
 interface BranchRowProps {
   repoName: string;
@@ -360,8 +435,8 @@ const GitLabRepos = () => {
   return (
     <PageContainer>
       <PageHeader
-        title="GitLab 仓库"
-        subtitle="服务器定时拉取这些 GitLab 仓库并更新 main 索引；修改即时生效，无需重启。认证方式：填 Token → HTTPS；留空 → SSH（需先在 GitLab 添加部署公钥）。"
+        title="代码仓库"
+        subtitle="服务器定时拉取这些仓库并更新各保护分支的索引；修改即时生效，无需重启。支持华为云 CodeHub / GitLab / GitHub / Gitee / Bitbucket 与自建 Git——平台由 URL 自动识别。认证方式：填 Token → HTTPS（用户名按平台自动选择）；留空 → SSH（需先在平台添加下方部署公钥）。"
         actions={
           <>
             <Button
@@ -439,28 +514,32 @@ const GitLabRepos = () => {
       </Paper>
 
       {/* add repo */}
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 1.5,
-          mb: 2,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
-        <TextField size="small" label="名称" value={form.name}
-          onChange={e => setForm({ ...form, name: e.target.value })} sx={{ width: 140 }} />
-        <TextField size="small" label="仓库 URL" value={form.url}
-          onChange={e => setForm({ ...form, url: e.target.value })} sx={{ flex: 1, minWidth: 240 }} />
-        <TextField size="small" label="主分支" value={form.branch}
-          onChange={e => setForm({ ...form, branch: e.target.value })} sx={{ width: 100 }} />
-        <TextField size="small" label="保护分支(逗号分隔)" value={form.protectedBranches}
-          onChange={e => setForm({ ...form, protectedBranches: e.target.value })} sx={{ width: 180 }} />
-        <TextField size="small" label="Token（留空走 SSH）" value={form.token} type="password"
-          onChange={e => setForm({ ...form, token: e.target.value })} sx={{ width: 170 }} />
-        <Button variant="contained" startIcon={<AddIcon />} onClick={addRepo} disabled={loading}>
-          添加
-        </Button>
+      <Box sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <TextField size="small" label="名称" value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })} sx={{ width: 140 }} />
+          <TextField size="small" label="仓库 URL（https 或 git@…）" value={form.url}
+            onChange={e => setForm({ ...form, url: e.target.value })} sx={{ flex: 1, minWidth: 240 }} />
+          <TextField size="small" label="主分支" value={form.branch}
+            onChange={e => setForm({ ...form, branch: e.target.value })} sx={{ width: 100 }} />
+          <TextField size="small" label="保护分支(逗号分隔)" value={form.protectedBranches}
+            onChange={e => setForm({ ...form, protectedBranches: e.target.value })} sx={{ width: 180 }} />
+          <TextField size="small" label="Token（留空走 SSH）" value={form.token} type="password"
+            onChange={e => setForm({ ...form, token: e.target.value })} sx={{ width: 170 }} />
+          <Button variant="contained" startIcon={<AddIcon />} onClick={addRepo} disabled={loading}>
+            添加
+          </Button>
+        </Box>
+        <Box sx={{ mt: 1, minHeight: 24 }}>
+          <HostHint url={form.url} hasToken={!!form.token.trim()} />
+        </Box>
       </Box>
 
       {/* repo table */}
@@ -527,9 +606,28 @@ const GitLabRepos = () => {
                         )}
                       </IconButton>
                       <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                        <Typography sx={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3 }} noWrap>
-                          {r.name}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                          <Typography sx={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3 }} noWrap>
+                            {r.name}
+                          </Typography>
+                          {/* Platform + auth flavor: which token username the fetch path
+                              will use, or that it goes over SSH with the deploy key. */}
+                          <Tooltip
+                            title={
+                              r.hasToken
+                                ? `HTTPS basic auth，用户名 ${r.tokenUser || detectGitHost(r.url).tokenUser}`
+                                : 'SSH，使用服务器部署公钥'
+                            }
+                          >
+                            <Chip
+                              size="small"
+                              variant="outlined"
+                              color={PLATFORM_COLOR[r.platform || detectGitHost(r.url).platform] || 'default'}
+                              label={`${r.platformLabel || detectGitHost(r.url).label} · ${r.hasToken ? 'Token' : 'SSH'}`}
+                              sx={{ flexShrink: 0, height: 18, fontSize: 10 }}
+                            />
+                          </Tooltip>
+                        </Box>
                         <Typography
                           variant="caption"
                           sx={{
@@ -625,7 +723,7 @@ const GitLabRepos = () => {
               >
                 <Typography>暂无仓库</Typography>
                 <Typography variant="body2" sx={{ mt: 1, color: 'text.disabled' }}>
-                  使用上方表单添加一个 GitLab 仓库即可开始索引。
+                  使用上方表单添加一个仓库即可开始索引（华为云 CodeHub / GitLab / GitHub / Gitee / 自建 Git 均可）。
                 </Typography>
               </Box>
             )}
@@ -637,13 +735,18 @@ const GitLabRepos = () => {
         <DialogTitle>编辑仓库：{editing?.name}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              size="small"
-              label="仓库 URL"
-              value={editForm.url}
-              onChange={e => setEditForm({ ...editForm, url: e.target.value })}
-              fullWidth
-            />
+            <Box>
+              <TextField
+                size="small"
+                label="仓库 URL（https 或 git@…）"
+                value={editForm.url}
+                onChange={e => setEditForm({ ...editForm, url: e.target.value })}
+                fullWidth
+              />
+              <Box sx={{ mt: 1, minHeight: 24 }}>
+                <HostHint url={editForm.url} hasToken={!editForm.useSsh} />
+              </Box>
+            </Box>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               <TextField
                 size="small"
@@ -682,6 +785,9 @@ const GitLabRepos = () => {
                 label="Token"
                 type="password"
                 placeholder="留空 = 保持原 Token 不变"
+                helperText={`可写成 <用户名>:<令牌> 显式指定 basic-auth 用户名；只填令牌则按平台自动选择（当前：${
+                  detectGitHost(editForm.url).tokenUser
+                }）。`}
                 value={editForm.token}
                 onChange={e => setEditForm({ ...editForm, token: e.target.value })}
                 fullWidth
@@ -706,8 +812,10 @@ const GitLabRepos = () => {
         <DialogTitle>服务器部署公钥 (SSH)</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-            将下面的公钥添加到 GitLab（用户 SSH Keys，或对应仓库的 Deploy Keys），
-            之后不填 Token 的仓库即可通过 SSH 克隆/拉取更新索引。私钥仅保存在服务器内网。
+            将下面的公钥添加到代码平台（GitLab: Settings → SSH Keys 或仓库 Deploy Keys；
+            GitHub: Settings → SSH and GPG keys 或仓库 Deploy keys；华为云 CodeArts:
+            个人设置 → SSH 密钥），之后不填 Token 的仓库即可通过 SSH 克隆/拉取更新索引。
+            私钥仅保存在服务器内网，只需授予只读权限。
           </Typography>
           <Box
             component="pre"

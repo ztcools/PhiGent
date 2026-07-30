@@ -9,7 +9,7 @@ const navTrans = {
   database: 'Database',
   play: 'Play(beta)',
   indexTree: 'Index Tree',
-  gitlab: 'GitLab Repos',
+  gitlab: 'Code Repos',
 };
 
 export default navTrans;

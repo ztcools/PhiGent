@@ -61,6 +61,22 @@ import { clientCache } from '../app';
 import { clients } from '../socket';
 import { WS_EVENTS } from '../utils';
 
+/**
+ * Cache backing CollectionsService.fillDescriptions. Keyed by name + collectionID
+ * so a dropped-and-recreated collection misses instead of serving a stale
+ * description; that makes the entry immutable and removes any need to invalidate.
+ * Shared across clients on purpose — collectionIDs are unique per Milvus instance,
+ * and reconnecting (which mints a new clientId) shouldn't throw the cache away.
+ */
+const descriptionCache = new Map<string, string>();
+/** Bound the cache so a long-lived server can't grow it without limit. */
+const DESCRIPTION_CACHE_MAX = 20_000;
+/** Parallel describeCollection calls while back-filling descriptions. */
+const DESCRIPTION_CONCURRENCY = 32;
+
+const descriptionCacheKey = (c: { collection_name: string; id: string }) =>
+  `${c.collection_name}#${c.id}`;
+
 export class CollectionsService {
   async showCollections(clientId: string, data?: ShowCollectionsReq) {
     const { milvusClient } = clientCache.get(clientId);
@@ -419,7 +435,8 @@ export class CollectionsService {
         schema: undefined,
         rowCount: undefined,
         aliases: undefined,
-        description: undefined,
+        // Back-filled by fillDescriptions() — showCollections doesn't carry it.
+        description: '',
         autoID: undefined,
         loadedPercentage: undefined,
         consistency_level: undefined,
@@ -527,6 +544,9 @@ export class CollectionsService {
       // sort targets by name
       targets.sort((a, b) => a.name.localeCompare(b.name));
 
+      // if no collection is specified, load all collections without detail
+      const lazy = collections.length === 0;
+
       // get all collection details
       for (let i = 0; i < targets.length; i++) {
         const collection = targets[i];
@@ -539,10 +559,17 @@ export class CollectionsService {
             clientId,
             collection,
             loadedCollection,
-            collections.length === 0, // if no collection is specified, load all collections without detail
+            lazy,
             database
           )
         );
+      }
+
+      // Lazy objects carry no description, which is where the repo/branch
+      // hierarchy lives — back-fill it before returning so the list renders the
+      // Branch column on first paint instead of after a second round trip.
+      if (lazy) {
+        await this.fillDescriptions(clientId, data, database);
       }
 
       // return data
@@ -551,6 +578,62 @@ export class CollectionsService {
       // if error occurs, return empty array, for example, when the client is disconnected
       return [];
     }
+  }
+
+  /**
+   * Fill in each collection's schema description, which showCollections omits.
+   * The collection list parses `codebasePath:<repoUrl>:<branch>` out of it to
+   * build the repo → branch hierarchy, so a missing description means an empty
+   * Branch column.
+   *
+   * describeCollection is metadata-only, but there is one call per collection and
+   * a server tracking hundreds of repos × protected branches has thousands of
+   * them. Two things keep that affordable: a bounded concurrency pool instead of
+   * a serial loop, and a cache that never needs invalidating — a description only
+   * changes on create/alter, and a rebuilt collection gets a fresh collectionID,
+   * so the ID is part of the key.
+   */
+  private async fillDescriptions(
+    clientId: string,
+    data: CollectionObject[],
+    database?: string
+  ): Promise<void> {
+    const pending = data.filter(c => {
+      const hit = descriptionCache.get(descriptionCacheKey(c));
+      if (hit === undefined) return true;
+      (c as { description: string }).description = hit;
+      return false;
+    });
+    if (pending.length === 0) return;
+
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < pending.length) {
+        const c = pending[cursor++];
+        let desc = '';
+        try {
+          const info = await this.describeCollection(clientId, {
+            collection_name: c.collection_name,
+            db_name: database,
+          });
+          desc = info.schema?.description || '';
+          if (descriptionCache.size >= DESCRIPTION_CACHE_MAX) {
+            descriptionCache.clear();
+          }
+          descriptionCache.set(descriptionCacheKey(c), desc);
+        } catch (e) {
+          // One unreadable collection must not fail the whole list. The console
+          // falls back to the slug in the collection name for the repo label.
+        }
+        (c as { description: string }).description = desc;
+      }
+    };
+    await Promise.all(
+      Array.from(
+        { length: Math.min(DESCRIPTION_CONCURRENCY, pending.length) },
+        worker
+      )
+    );
   }
 
   // update collections details

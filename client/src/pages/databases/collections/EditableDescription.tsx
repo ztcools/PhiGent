@@ -24,11 +24,15 @@ const EditableDescription: React.FC<EditableDescriptionProps> = ({ collection, o
   const EditIcon = icons.edit;
   const display = collection.description || '--';
 
+  const savingRef = React.useRef(false);
   const save = async () => {
+    // Enter 触发一次后 onBlur 会再触发 —— 用 ref 防重复提交
+    if (savingRef.current) return;
     if (value === (collection.description || '')) {
       setEditing(false);
       return;
     }
+    savingRef.current = true;
     setSaving(true);
     setError('');
     try {
@@ -41,6 +45,7 @@ const EditableDescription: React.FC<EditableDescriptionProps> = ({ collection, o
       setError(e?.message || '保存失败');
     } finally {
       setSaving(false);
+      savingRef.current = false;
     }
   };
 

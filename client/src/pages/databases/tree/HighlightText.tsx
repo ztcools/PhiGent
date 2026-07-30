@@ -13,7 +13,10 @@ const HighlightText: React.FC<HighlightTextProps> = ({ text, highlight }) => {
   if (!highlight.trim()) {
     return <>{text}</>;
   }
-  const regex = new RegExp(`(${highlight})`, 'gi');
+  // Escape regex metacharacters in the search term — a query like "a(b" or
+  // "c++" would otherwise make `new RegExp` throw and crash the tree render.
+  const escaped = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(${escaped})`, 'gi');
   const parts = text.split(regex);
 
   return (

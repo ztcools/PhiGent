@@ -1,3 +1,5 @@
+import type { GitPlatform, GitUrlScheme } from './gitHost';
+
 export interface GitRepo {
   name: string;
   url: string;
@@ -5,6 +7,13 @@ export interface GitRepo {
   protectedBranches?: string[];
   hasToken: boolean;
   auth?: 'https' | 'ssh';
+  // Detected by the service from the URL (git-host.ts). Optional so an older
+  // service build that doesn't send them still renders — the console falls back
+  // to detecting locally from `url`.
+  platform?: GitPlatform;
+  platformLabel?: string;
+  tokenUser?: string;
+  urlScheme?: GitUrlScheme;
 }
 
 export interface RepoRunStatus {
@@ -55,6 +64,14 @@ export const GitIndexService = {
 
   sshKey: (): Promise<{ publicKey: string | null }> =>
     fetch(`${base()}/ssh-key`).then(json),
+
+  /**
+   * Authoritative platform detection for a URL about to be added. The form shows
+   * an instant local guess (gitHost.ts) while typing and confirms it against this
+   * once the URL settles, so a service-side table update wins over the mirror.
+   */
+  detect: (url: string) =>
+    fetch(`${base()}/detect?url=${encodeURIComponent(url)}`).then(json),
 
   addRepo: (repo: {
     name: string;

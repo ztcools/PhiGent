@@ -4,7 +4,7 @@ import { Box, Chip, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Highlighter from 'react-highlight-words';
-import { rootContext, authContext, dataContext } from '@/context';
+import { rootContext, dataContext } from '@/context';
 import { usePaginationHook } from '@/hooks';
 import AttuGrid from '@/components/grid/Grid';
 import CustomToolBar from '@/components/grid/ToolBar';
@@ -23,8 +23,13 @@ import InsertDialog from '@/pages/dialogs/insert/Dialog';
 import { getLabelDisplayedRows } from '@/pages/search/Utils';
 import { LOADING_STATE } from '@/consts';
 import { formatNumber } from '@/utils';
-import { parseCodeCollection } from '@/utils/codeCollection';
-import Aliases from './Aliases';
+import {
+  parseCodeCollection,
+  groupByRepo,
+  flattenRepoGroups,
+  isInfraCollection,
+} from '@/utils/codeCollection';
+import type { CodeCollectionInfo, RepoGroup } from '@/utils/codeCollection';
 import type {
   ColDefinitionsType,
   ToolBarConfig,
@@ -32,20 +37,49 @@ import type {
 import type { CollectionObject } from '@server/types';
 import { Root } from '../StyledComponents';
 
-const codebaseLabel = (
-  collectionName: string,
-  description?: string
-): string => {
-  const info = parseCodeCollection(collectionName, description);
-  return info.branch ? `${info.repo}:${info.branch}` : info.repo;
+/** 一个 collection 连同它解析出的仓库/分支归属 */
+type AnnotatedCollection = CodeCollectionInfo & {
+  col: CollectionObject;
+  rowCount?: number;
 };
 
-/** 解析 collection 的 仓库/分支 归属（层次化展示用） */
-const repoBranchOf = (collectionName: string, description?: string) =>
-  parseCodeCollection(collectionName, description);
+/** 某一行在「仓库 → 分支」层次里的位置（按 collection 名索引） */
+interface RowLayout {
+  repo: string;
+  branch: string;
+  isCode: boolean;
+  /** 是否主分支（main/master） */
+  isRoot: boolean;
+  /** true = 仓库组主行，显示仓库名；false = 缩进子行，仓库列留空 */
+  isGroupHead: boolean;
+  /** 该仓库组共几行 */
+  groupSize: number;
+}
+
+/** 组排序取值：都取自组主行（或组总量），保证组内层次不受排序影响 */
+const groupSortValue = (
+  g: RepoGroup<AnnotatedCollection>,
+  key: string
+): string | number => {
+  const head = g.root || g.branches[0];
+  switch (key) {
+    case 'collection_name':
+      return g.repo.toLowerCase();
+    case 'branch':
+      return (head?.branch || '').toLowerCase();
+    case 'rowCount':
+      return g.totalRows;
+    // 表头传回的是 sortBy（status 列的 sortBy = loadedPercentage）
+    case 'loadedPercentage':
+      return Number(head?.col.loadedPercentage) || -1;
+    case 'createdTime':
+      return Number(head?.col.createdTime) || 0;
+    default:
+      return 0;
+  }
+};
 
 const Collections = () => {
-  const { isManaged } = useContext(authContext);
   const {
     collections,
     database,
@@ -69,30 +103,60 @@ const Collections = () => {
   const { setDialog } = useContext(rootContext);
   const { t: collectionTrans } = useTranslation('collection');
   const { t: btnTrans } = useTranslation('btn');
-  const { t: commonTrans } = useTranslation();
 
   const QuestionIcon = icons.question;
 
-  const formatCollections = useMemo(() => {
-    // Hide infrastructure collections (shared index state + embedding cache) so the
-    // list shows only real code collections (repos / branches).
-    const isInfra = (name: string) =>
-      name === 'code_index_state' || name.startsWith('embedding_cache_');
-    const visible = collections.filter(c => !isInfra(c.collection_name));
+  // 排序自管：作用在「仓库组」上，而不是行上 —— 否则一排序，main 主行和它的分支
+  // 子行就被打散，缩进层次没了意义。
+  const [orderBy, setOrderBy] = useState<string>('');
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
 
-    const filteredCollections = search
-      ? visible.filter(
-          collection =>
-            collection.collection_name.includes(search) ||
-            codebaseLabel(
-              collection.collection_name,
-              (collection as { description?: string }).description
-            ).includes(search)
+  const handleGridSort = (_e: any, property: string) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  /** 可见 collection（去掉基础设施表），带仓库/分支归属 */
+  const visibleCollections = useMemo(() => {
+    // context 层已经过滤过 infra 表，这里再挡一次，页面不依赖上游行为。
+    return collections
+      .filter(c => !isInfraCollection(c.collection_name))
+      .map<AnnotatedCollection>(c => ({
+        ...parseCodeCollection(
+          c.collection_name,
+          (c as { description?: string }).description
+        ),
+        col: c,
+        rowCount: c.rowCount,
+      }));
+  }, [collections]);
+
+  /** 按仓库分组后的列表 —— 分页和排序的单位都是「仓库」，组不会被翻页切断 */
+  const repoGroups = useMemo(() => {
+    const kw = search.toLowerCase();
+    // 分支名也参与搜索：搜 "dev" 应该能捞出各仓库的 dev 分支。命中的分支重新分组后，
+    // 组内第一行自然承担主行、显示仓库名，不会出现无归属的孤立子行。
+    const matched = kw
+      ? visibleCollections.filter(
+          a =>
+            a.collectionName.toLowerCase().includes(kw) ||
+            a.repo.toLowerCase().includes(kw) ||
+            a.branch.toLowerCase().includes(kw)
         )
-      : visible;
+      : visibleCollections;
 
-    return filteredCollections;
-  }, [search, collections]);
+    const groups = groupByRepo(matched);
+    if (!orderBy) return groups;
+
+    const dir = order === 'desc' ? -1 : 1;
+    return [...groups].sort((a, b) => {
+      const va = groupSortValue(a, orderBy);
+      const vb = groupSortValue(b, orderBy);
+      if (va === vb) return a.repo.localeCompare(b.repo);
+      return (va > vb ? 1 : -1) * dir;
+    });
+  }, [visibleCollections, search, orderBy, order]);
 
   const {
     pageSize,
@@ -100,11 +164,46 @@ const Collections = () => {
     currentPage,
     handleCurrentPage,
     total,
-    data: collectionList,
-    handleGridSort,
-    order,
-    orderBy,
-  } = usePaginationHook(formatCollections);
+    data: pageGroups,
+  } = usePaginationHook(repoGroups);
+
+  /** 当前页的表格行（原始 CollectionObject，保持引用不变）+ 各行的层次信息 */
+  const { collectionList, layout } = useMemo(() => {
+    const rows: CollectionObject[] = [];
+    const map = new Map<string, RowLayout>();
+    // usePaginationHook 的 data 是 any[]，显式指定泛型才能保住 col 字段的类型。
+    for (const { item, isGroupHead, groupSize } of flattenRepoGroups<
+      AnnotatedCollection
+    >(pageGroups)) {
+      rows.push(item.col);
+      map.set(item.collectionName, {
+        repo: item.repo,
+        branch: item.branch,
+        isCode: item.isCode,
+        isRoot: item.isRoot,
+        isGroupHead,
+        groupSize,
+      });
+    }
+    return { collectionList: rows, layout: map };
+  }, [pageGroups]);
+
+  // 搜索/排序一变仓库组数就变，停在旧页码可能落到空页上 —— 回到第一页。
+  useEffect(() => {
+    handleCurrentPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, orderBy, order]);
+
+  /** 行的层次信息（拿不到时退化成主行，至少仓库名不会消失） */
+  const layoutOf = (name: string): RowLayout =>
+    layout.get(name) || {
+      repo: name,
+      branch: '',
+      isCode: false,
+      isRoot: true,
+      isGroupHead: true,
+      groupSize: 1,
+    };
 
   const toolbarConfigs: ToolBarConfig[] = [
     {
@@ -199,7 +298,7 @@ const Collections = () => {
           params: {
             component: (
               <InsertDialog
-                collections={formatCollections}
+                collections={visibleCollections.map(a => a.col)}
                 defaultSelectedCollection={
                   selectedCollections.length === 1
                     ? selectedCollections[0].collection_name
@@ -338,13 +437,12 @@ const Collections = () => {
       sortBy: 'collection_name',
       sortType: 'string',
       formatter(col) {
-        const { collection_name, description } = col as {
-          collection_name: string;
-          description?: string;
-        };
-        const info = repoBranchOf(collection_name, description);
+        const { collection_name } = col as { collection_name: string };
+        const lo = layoutOf(collection_name);
+        // 子行：仓库列整格留空 —— 这个空白就是用户要的缩进，层次靠它体现。
+        if (!lo.isGroupHead) return <Box sx={{ maxWidth: 200 }} />;
         return (
-          <Box sx={{ maxWidth: '160px' }}>
+          <Box sx={{ maxWidth: 200 }}>
             <Link
               to={`/databases/${database}/${collection_name}/overview`}
               style={{
@@ -355,11 +453,16 @@ const Collections = () => {
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
                 textDecoration: 'none',
+                fontWeight: 600,
               }}
-              title={`${info.repo}:${info.branch}\n${collection_name}`}
+              title={
+                lo.isCode
+                  ? `${lo.repo}:${lo.branch}\n${collection_name}`
+                  : collection_name
+              }
             >
               <Highlighter
-                textToHighlight={info.repo}
+                textToHighlight={lo.repo}
                 searchWords={[search]}
                 highlightStyle={{
                   color: 'inherit',
@@ -367,41 +470,98 @@ const Collections = () => {
                   backgroundColor: 'rgba(9, 181, 114, 0.18)',
                 }}
               />
+              {lo.groupSize > 1 && (
+                <Typography
+                  component="span"
+                  sx={{
+                    ml: 0.75,
+                    fontSize: '0.72rem',
+                    fontWeight: 400,
+                    color: 'text.secondary',
+                  }}
+                >
+                  ({lo.groupSize})
+                </Typography>
+              )}
             </Link>
           </Box>
         );
       },
-      label: '仓库',
+      label: collectionTrans('repo'),
     },
     {
       id: 'branch',
       align: 'left',
       disablePadding: false,
+      sortBy: 'branch',
       sortType: 'string',
       formatter(col) {
-        const { collection_name, description } = col as {
-          collection_name: string;
-          description?: string;
-        };
-        const info = repoBranchOf(collection_name, description);
-        return (
+        const { collection_name } = col as { collection_name: string };
+        const lo = layoutOf(collection_name);
+        // 非代码 collection（用户手建的）没有分支语义。
+        if (!lo.branch)
+          return (
+            <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+              --
+            </Typography>
+          );
+        const chip = (
           <Chip
             size="small"
-            label={info.branch}
-            color={info.isRoot ? 'primary' : 'default'}
+            label={
+              <Highlighter
+                textToHighlight={lo.branch}
+                searchWords={[search]}
+                highlightStyle={{
+                  color: 'inherit',
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(9, 181, 114, 0.18)',
+                }}
+              />
+            }
+            color={lo.isRoot ? 'primary' : 'default'}
             variant="outlined"
             sx={{
               fontFamily: 'monospace',
               fontSize: '0.78em',
               height: 22,
               borderRadius: 1,
-              fontWeight: info.isRoot ? 600 : 400,
+              fontWeight: lo.isRoot ? 600 : 400,
               '& .MuiChip-label': { px: 1 },
             }}
           />
         );
+        return (
+          <Link
+            to={`/databases/${database}/${collection_name}/overview`}
+            style={{
+              color: 'inherit',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+            title={collection_name}
+          >
+            {/* 子行加一条 └ 连接线，视觉上挂在同组主行下面 */}
+            {!lo.isGroupHead && (
+              <Box
+                component="span"
+                sx={{
+                  color: 'text.disabled',
+                  fontFamily: 'monospace',
+                  mr: 0.5,
+                  ml: 0.5,
+                  lineHeight: 1,
+                }}
+              >
+                └
+              </Box>
+            )}
+            {chip}
+          </Link>
+        );
       },
-      label: '分支',
+      label: collectionTrans('branch'),
     },
     {
       id: 'status',
@@ -476,29 +636,6 @@ const Collections = () => {
     },
   ];
 
-  if (!isManaged) {
-    colDefinitions.splice(4, 0, {
-      id: 'aliases',
-      align: 'left',
-      disablePadding: false,
-      label: (
-        <Box
-          component="span"
-          className="flex-center with-max-content"
-          sx={{ display: 'inline-flex', alignItems: 'center' }}
-        >
-          {collectionTrans('alias')}
-          <CustomToolTip title={collectionTrans('aliasInfo')}>
-            <QuestionIcon sx={{ fontSize: 14, ml: 0.5 }} />
-          </CustomToolTip>
-        </Box>
-      ),
-      formatter(v) {
-        return <Aliases aliases={v.aliases} collection={v} />;
-      },
-    });
-  }
-
   const handleSelectChange = (value: any) => {
     setSelectedCollections(value);
   };
@@ -543,9 +680,9 @@ const Collections = () => {
           order={order}
           orderBy={orderBy}
           hideOnDisable={true}
-          labelDisplayedRows={getLabelDisplayedRows(
-            commonTrans('grid.collections')
-          )}
+          // 分页单位是「仓库组」而不是 collection —— 组不会被翻页切断，
+          // 所以这里显示的计数也必须是仓库数。
+          labelDisplayedRows={getLabelDisplayedRows(collectionTrans('repo'))}
           rowDecorator={(row: CollectionObject) => {
             if (!row.schema) {
               return {

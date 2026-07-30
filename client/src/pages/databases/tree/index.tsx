@@ -207,7 +207,7 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
     return allNodes.filter(
       node => node.type !== 'db' && node.type !== 'search'
     );
-  }, [database, filteredCollections, expandedItems, flattenTree, isSearchOpen]);
+  }, [database, filteredCollections, expandedItems, flattenTree]);
 
   const rowVirtualizer = useVirtualizer({
     count: flattenedNodes.length,
@@ -352,20 +352,31 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
   ]);
 
   useEffect(() => {
+    // 深链匹配要用 collection_name（node.data.collection_name），不是 node.name ——
+    // 分支子节点的 name 是分支名(main/dev)，URL 的 collectionName 是 collection 全名。
+    const matchNode = (node: FlatTreeItem) =>
+      (node.data as CollectionObject | null)?.collection_name === collectionName ||
+      node.name === collectionName;
+
     if (skipNextScrollRef.current) {
       skipNextScrollRef.current = false;
       setSelectedItemId(
-        flattenedNodes.find(node => node.name === collectionName)?.id ||
-          database
+        flattenedNodes.find(matchNode)?.id || database
       );
       return;
     }
-    const index = flattenedNodes.findIndex(
-      node => node.name === collectionName
-    );
+    const index = flattenedNodes.findIndex(matchNode);
     if (index >= 0) {
+      // 命中的分支子节点的父 repo 必须展开，否则虚拟列表里看不到该子节点
+      const hit = flattenedNodes[index];
+      const parentId = hit.id.startsWith('c_')
+        ? flattenedNodes.find(n => n.type === 'repo' && n.originalNode.children?.some(c => c.id === hit.id))?.id
+        : undefined;
+      if (parentId) {
+        setExpandedItems(prev => (prev.has(parentId) ? prev : new Set(prev).add(parentId)));
+      }
       rowVirtualizer.scrollToIndex(index, { align: 'center' });
-      setSelectedItemId(flattenedNodes[index].id);
+      setSelectedItemId(hit.id);
     } else {
       rowVirtualizer.scrollToIndex(0, { align: 'start' });
       setSelectedItemId(database);

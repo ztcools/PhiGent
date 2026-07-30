@@ -22,6 +22,8 @@ const collectionTrans = {
   // table
   id: 'ID',
   name: '名称',
+  repo: '仓库',
+  branch: '分支',
   features: '特性',
   nameTip: 'Collection 名称',
   status: '状态',

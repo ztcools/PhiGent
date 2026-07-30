@@ -277,7 +277,7 @@ const IndexTree = () => {
         >
           <Typography>暂无索引记录</Typography>
           <Typography variant="body2" sx={{ mt: 1, color: 'text.disabled' }}>
-            到 GitLab 仓库页 添加仓库并触发一次索引后，这里会显示仓库 / 分支层次。
+            到「代码仓库」页添加仓库并触发一次索引后，这里会显示仓库 / 分支层次。
           </Typography>
         </Paper>
       )}

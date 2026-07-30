@@ -2,9 +2,12 @@
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
-COPY . .
 
+# apt before COPY: a source edit shouldn't invalidate the (slow) package install layer.
+# git is needed by yarn install — some transitive deps resolve from git URLs.
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+COPY . .
 
 # => Building Client
 WORKDIR /app/client

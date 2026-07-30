@@ -11,17 +11,23 @@ echo "window._env_ = {" >> ./build/env-config.js
 # Each line represents key=value pairs
 while read -r line || [[ -n "$line" ]];
 do
+  # Skip blanks and comments. A comment may itself contain `=` ("# empty = default"),
+  # and emitting it verbatim makes env-config.js a JS syntax error, which takes the
+  # whole console down with an undefined window._env_.
+  [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+  [[ "$line" != *=* ]] && continue
+
   # Split env variables by character `=`
-  if printf '%s\n' "$line" | grep -q -e '='; then
-    varname=$(printf '%s\n' "$line" | sed -e 's/=.*//')
-    varvalue=$(printf '%s\n' "$line" | sed -e 's/^[^=]*=//')
-  fi
+  varname=${line%%=*}
+  varvalue=${line#*=}
+  # Only real identifiers become object keys.
+  [[ "$varname" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
 
   # Read value of current variable if exists as Environment variable
   value=$(printf '%s\n' "${!varname}")
   # Otherwise use value from .env file
   [[ -z $value ]] && value=${varvalue}
-  
+
   # Append configuration property to JS file
   echo "  $varname: \"$value\"," >> ./build/env-config.js
 done < ./build/.env

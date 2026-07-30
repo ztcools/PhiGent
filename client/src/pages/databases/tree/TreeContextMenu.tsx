@@ -61,7 +61,11 @@ export const TreeContextMenu = (props: {
         </>
       );
 
+    // 仓库节点：data 是其 main 分支的 CollectionObject（可能为空），
+    // 直接复用 collection 菜单；无 main（空仓库组）则不弹任何操作。
+    case 'repo':
     case 'collection':
+      if (!contextMenu.object) return null;
       return (
         <>
           <StyledMenuItem

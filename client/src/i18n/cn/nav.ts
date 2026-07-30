@@ -9,7 +9,7 @@ const navTrans = {
   database: '数据库',
   play: 'Play(beta)',
   indexTree: '索引树',
-  gitlab: 'GitLab 仓库',
+  gitlab: '代码仓库',
 };
 
 export default navTrans;
