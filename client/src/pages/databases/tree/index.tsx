@@ -30,6 +30,7 @@ import {
   groupByRepo,
   CodeCollectionInfo,
 } from '@/utils/codeCollection';
+import { useCodeRepoMap } from '@/utils/codeRepoMap';
 import {
   TreeContainer,
   TreeContent,
@@ -123,6 +124,9 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
     []
   );
 
+  // 分支名的权威来源是「仓库管理」（见 codeRepoMap.ts），不是 Milvus description。
+  const repoMap = useCodeRepoMap();
+
   const flattenedNodes = useMemo(() => {
     // Group code collections into 「仓库(main) → 各分支」 two-level hierarchy.
     // Only hcc_/cc_ code collections get grouped; other collections (user data,
@@ -134,6 +138,7 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
         ...parseCodeCollection(
           c.collection_name,
           (c as { description?: string }).description,
+          name => repoMap.get(name),
         ),
         rowCount: c.rowCount || 0,
         data: c,
@@ -150,7 +155,9 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
     for (const g of repoGroups) {
       const branchChildren: OriginalDatabaseTreeItem[] = g.branches.map(b => ({
         id: `c_${b.collectionName}`,
-        name: b.branch, // 子节点只显示分支名
+        // 子节点只显示分支名；分支未知（不在「仓库管理」里、description 也没有）时
+        // 退回 collection 名，免得渲染出一个没有文字的节点。
+        name: b.branch || b.collectionName,
         type: 'collection' as TreeNodeType,
         data: b.data,
         children: [],
@@ -168,7 +175,7 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
               // main 本身作为第一个子节点（branch=main）
               {
                 id: `c_${rootColl.collectionName}`,
-                name: rootColl.branch,
+                name: rootColl.branch || rootColl.collectionName,
                 type: 'collection' as TreeNodeType,
                 data: rootColl.data,
                 children: [],
@@ -207,7 +214,7 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
     return allNodes.filter(
       node => node.type !== 'db' && node.type !== 'search'
     );
-  }, [database, filteredCollections, expandedItems, flattenTree]);
+  }, [database, filteredCollections, expandedItems, flattenTree, repoMap]);
 
   const rowVirtualizer = useVirtualizer({
     count: flattenedNodes.length,

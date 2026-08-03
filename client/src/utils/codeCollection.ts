@@ -23,7 +23,21 @@ export interface CodeCollectionInfo {
   isRoot: boolean;
   /** 是否 claude-context 的代码 collection（hcc_/cc_ 前缀或有 codebasePath 描述） */
   isCode: boolean;
+  /**
+   * 仓库/分支的来源：
+   *   'registry' —— 来自「仓库管理」的权威映射（见 codeRepoMap.ts），可信
+   *   'description' —— 从 Milvus description 反推（兜底）
+   *   'slug' —— 连 description 都没有，只能从 collection 名的 slug 猜，分支未知
+   *   'none' —— 非代码 collection，没有仓库/分支语义
+   * UI 可据此提示"这个 collection 已不在仓库管理里"（registry 之外的代码 collection）。
+   */
+  source: 'registry' | 'description' | 'slug' | 'none';
 }
+
+/** 权威映射的查表函数（collection 名 → 仓库/分支）。见 utils/codeRepoMap.ts。 */
+export type RepoRefLookup = (collectionName: string) =>
+  | { repo: string; branch: string; isMain: boolean; repoUrl?: string; identity?: string }
+  | undefined;
 
 const ROOT_BRANCHES = new Set(['main', 'master']);
 
@@ -95,19 +109,32 @@ export const repoOfIdentity = (identity: string): string =>
 
 /**
  * 解析一个 collection 的仓库/分支归属信息。
+ *
+ * 三级取值，先权威后猜测：
+ *   1. `lookup`（「仓库管理」的 collection → 分支映射）—— 命中即用，分支和"谁是主分支"
+ *      都是配置里写着的事实。
+ *   2. description 的 `codebasePath:<identity>` —— 兜底。仓库已从「仓库管理」删除、
+ *      collection 还留着的孤儿行走这条。
+ *   3. collection 名的 slug —— 连 description 都没有，只能拿到仓库名，分支未知。
+ *      **不再假装分支是 main**：编出来的 main 会让这一行冒充主行，把真正的 main
+ *      挤成子行（真实数据里 master 抢 main 主行位就是这么来的）。
+ *
  * @param collectionName collection 名
  * @param description    collection 的 description（可能含 codebasePath:<identity>）
+ * @param lookup         权威映射查表函数，见 utils/codeRepoMap.ts
  */
 export function parseCodeCollection(
   collectionName: string,
   description?: string,
+  lookup?: RepoRefLookup,
 ): CodeCollectionInfo {
   let identity = '';
   if (description && description.startsWith('codebasePath:')) {
     identity = description.slice('codebasePath:'.length).split('|')[0].trim();
   }
   const slugMatch = collectionName.match(/^(?:hcc|cc)_(.+)_[0-9a-f]{8}$/i);
-  const isCode = !!identity || !!slugMatch;
+  const ref = lookup?.(collectionName);
+  const isCode = !!ref || !!identity || !!slugMatch;
 
   // 非代码 collection（用户手建的）没有仓库/分支语义 —— 名字照原样展示、分支留空，
   // 各自成一个单行组，不参与分支层次。
@@ -119,30 +146,48 @@ export function parseCodeCollection(
       identity: '',
       isRoot: true,
       isCode: false,
+      source: 'none',
     };
   }
 
-  let repo: string;
-  let branch: string;
-  if (identity) {
-    const parsed = splitIdentity(identity);
-    repo = repoLabel(parsed.repoUrl);
-    // identity 解析不出分支段（本地路径索引）时按主分支处理，避免整组没有主行。
-    branch = parsed.branch || 'main';
-  } else {
-    // 退化：从 collection 名解析 slug（hcc_<slug>_<hash8>）。slug 由 core 的
-    // slugForIdentity 生成（非字母数字已替换成 _），保持原样展示。
-    repo = slugMatch![1];
-    branch = 'main';
+  if (ref) {
+    return {
+      collectionName,
+      repo: ref.repo,
+      branch: ref.branch,
+      identity: ref.identity || identity,
+      // 「仓库管理」里配的主分支才是主分支。同一仓库 main 与 master 都被索引时，
+      // 靠名字判断会两个都算主行、先到者占位；这里只有一个 isMain=true。
+      isRoot: ref.isMain,
+      isCode: true,
+      source: 'registry',
+    };
   }
 
+  if (identity) {
+    const parsed = splitIdentity(identity);
+    return {
+      collectionName,
+      repo: repoLabel(parsed.repoUrl),
+      // identity 解析不出分支段（本地路径索引）时按主分支处理，避免整组没有主行。
+      branch: parsed.branch || 'main',
+      identity,
+      isRoot: ROOT_BRANCHES.has(parsed.branch || 'main'),
+      isCode: true,
+      source: 'description',
+    };
+  }
+
+  // slug 由 core 的 slugForRepoIdentity 生成（非字母数字已替换成 _），原样展示。
   return {
     collectionName,
-    repo,
-    branch,
-    identity,
-    isRoot: ROOT_BRANCHES.has(branch),
+    repo: slugMatch![1],
+    branch: '',
+    identity: '',
+    // 分支未知也要能当主行，否则这个仓库整组没有仓库名可显示。
+    isRoot: true,
     isCode: true,
+    source: 'slug',
   };
 }
 

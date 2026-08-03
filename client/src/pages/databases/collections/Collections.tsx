@@ -30,6 +30,7 @@ import {
   isInfraCollection,
 } from '@/utils/codeCollection';
 import type { CodeCollectionInfo, RepoGroup } from '@/utils/codeCollection';
+import { useCodeRepoMap } from '@/utils/codeRepoMap';
 import type {
   ColDefinitionsType,
   ToolBarConfig,
@@ -117,20 +118,26 @@ const Collections = () => {
     setOrderBy(property);
   };
 
+  // 「仓库管理」里配的分支 → collection 映射。这是分支名的权威来源：分支是在那边
+  // 添加的，服务端一清二楚，不必再从 Milvus description 反推（见 codeRepoMap.ts）。
+  const repoMap = useCodeRepoMap();
+
   /** 可见 collection（去掉基础设施表），带仓库/分支归属 */
   const visibleCollections = useMemo(() => {
+    const lookup = (name: string) => repoMap.get(name);
     // context 层已经过滤过 infra 表，这里再挡一次，页面不依赖上游行为。
     return collections
       .filter(c => !isInfraCollection(c.collection_name))
       .map<AnnotatedCollection>(c => ({
         ...parseCodeCollection(
           c.collection_name,
-          (c as { description?: string }).description
+          (c as { description?: string }).description,
+          lookup
         ),
         col: c,
         rowCount: c.rowCount,
       }));
-  }, [collections]);
+  }, [collections, repoMap]);
 
   /** 按仓库分组后的列表 —— 分页和排序的单位都是「仓库」，组不会被翻页切断 */
   const repoGroups = useMemo(() => {

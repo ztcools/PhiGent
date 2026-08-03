@@ -21,6 +21,8 @@ import { CollectionService, DataService } from '@/http';
 import icons from '@/components/icons/Icons';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeader from '@/components/layout/PageHeader';
+import { repoLabel, branchOfIdentity } from '@/utils/codeCollection';
+import { useCodeRepoMap } from '@/utils/codeRepoMap';
 
 const STATE_COLLECTION = 'code_index_state';
 
@@ -40,21 +42,16 @@ interface TreeNode {
   depth: number;
   rowCount?: number;
   tracked?: string;
+  /** 分支名（权威源：「仓库管理」；兜底：identity 解析） */
+  branch: string;
+  /** 是否该仓库配置的主分支 —— 不是"名字叫 main/master"猜的 */
+  isMain: boolean;
 }
 
 const ROOT_BRANCHES = ['main', 'master'];
 
-const repoLabel = (repoUrl?: string): string => {
-  if (!repoUrl) return '(local)';
-  const seg = repoUrl.replace(/\.git$/i, '').split(/[/:]/).filter(Boolean).pop();
-  return seg || repoUrl;
-};
-
-const branchOf = (identity: string, repoUrl?: string): string => {
-  if (repoUrl && identity.startsWith(repoUrl + ':')) return identity.slice(repoUrl.length + 1);
-  const i = identity.lastIndexOf(':');
-  return i >= 0 ? identity.slice(i + 1) : identity;
-};
+/** 本页的仓库标题：没有 repoUrl（本地路径索引）时标一下 (local) */
+const repoTitle = (repoUrl?: string): string => repoLabel(repoUrl) || '(local)';
 
 const RefreshIcon = icons.refresh;
 
@@ -163,8 +160,26 @@ const IndexTree = () => {
     load();
   }, [load]);
 
+  // 分支名与"谁是主分支"的权威来源：「仓库管理」的 collection → 分支映射。
+  // 从 identity 反推分支在三种情况下会给错值（description 缺失、旧架构的三段
+  // identity、自建 GitLab 非标准端口），而这些分支本来是在仓库管理里配好的。
+  const repoMap = useCodeRepoMap();
+
   // Group by repo, build parent→children tree, flatten to depth-tagged rows.
   const groups = useMemo(() => {
+    const refOf = (s: BranchState) =>
+      s.collectionName ? repoMap.get(s.collectionName) : undefined;
+    // 兜底链：registry → identity 解析 → identity 原文（至少不是空白单元格）
+    const branchName = (s: BranchState) =>
+      refOf(s)?.branch || branchOfIdentity(s.identity) || s.identity;
+    // 主分支同样先问 registry。同一仓库 main 与 master 都被索引时，靠名字判断会
+    // 两个都算主行、先到者占位；registry 里只有一个 isMain=true。
+    const isMainBranch = (s: BranchState) => {
+      const ref = refOf(s);
+      if (ref) return ref.isMain;
+      return ROOT_BRANCHES.includes(branchName(s).toLowerCase());
+    };
+
     const byRepo = new Map<string, BranchState[]>();
     for (const s of states) {
       const key = s.repoUrl || '(local)';
@@ -172,18 +187,15 @@ const IndexTree = () => {
       byRepo.get(key)!.push(s);
     }
 
-    const result: { repoUrl: string; nodes: TreeNode[] }[] = [];
+    const result: { repoUrl: string; title: string; nodes: TreeNode[] }[] = [];
     for (const [repoUrl, list] of byRepo) {
       const byIdentity = new Map(list.map(s => [s.identity, s]));
-      const nameOf = (s: BranchState) => branchOf(s.identity, s.repoUrl).toLowerCase();
 
-      // The repo root is ALWAYS the main/master branch when present, so a feature
-      // branch indexed before main (a temporary root) never displaces main. Fall
-      // back to a base=null branch, then the first.
+      // The repo root is ALWAYS the configured main branch when present, so a
+      // feature branch indexed before main (a temporary root) never displaces
+      // main. Fall back to a base=null branch, then the first.
       const root =
-        ROOT_BRANCHES.map(rb => list.find(s => nameOf(s) === rb)).find(Boolean) ||
-        list.find(s => !s.baseIdentity) ||
-        list[0];
+        list.find(isMainBranch) || list.find(s => !s.baseIdentity) || list[0];
 
       // A "secondary root" is a base=null (or parent-less) branch that ISN'T the
       // chosen root — e.g. `b` indexed before main. Its descendants re-attach to
@@ -211,18 +223,22 @@ const IndexTree = () => {
           depth,
           rowCount: counts[s.identity] ?? (s.collectionName ? counts[s.collectionName] : undefined),
           tracked: parentBranch,
+          branch: branchName(s),
+          isMain: isMainBranch(s),
         });
         const kids = (childrenOf.get(s.identity) || []).sort((a, b) =>
-          branchOf(a.identity, a.repoUrl).localeCompare(branchOf(b.identity, b.repoUrl))
+          branchName(a).localeCompare(branchName(b))
         );
-        for (const k of kids) walk(k, depth + 1, branchOf(s.identity, s.repoUrl));
+        for (const k of kids) walk(k, depth + 1, branchName(s));
       };
       walk(root, 0, '');
-      result.push({ repoUrl, nodes });
+      // 组标题优先用「仓库管理」里填的仓库名（比 URL 末段更贴近用户的叫法）。
+      const title = refOf(root)?.repo || repoTitle(repoUrl);
+      result.push({ repoUrl, title, nodes });
     }
-    result.sort((a, b) => repoLabel(a.repoUrl).localeCompare(repoLabel(b.repoUrl)));
+    result.sort((a, b) => a.title.localeCompare(b.title));
     return result;
-  }, [states, counts]);
+  }, [states, counts, repoMap]);
 
   return (
     <PageContainer>
@@ -304,7 +320,7 @@ const IndexTree = () => {
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, flexShrink: 0 }}>
-              {repoLabel(group.repoUrl)}
+              {group.title}
             </Typography>
             <Typography
               variant="caption"
@@ -341,7 +357,7 @@ const IndexTree = () => {
               </TableHead>
               <TableBody>
                 {group.nodes.map((node, idx) => {
-                  const branch = branchOf(node.state.identity, node.state.repoUrl);
+                  const branch = node.branch;
                   const isRoot = node.depth === 0;
                   const tracked = node.tracked || '';
                   return (
@@ -380,11 +396,13 @@ const IndexTree = () => {
                           >
                             {branch}
                           </Typography>
+                          {/* 顶级行不等于主分支：main 尚未索引时会由别的分支临时占位，
+                              那种情况标"顶级"而不是谎报 main。 */}
                           {isRoot && (
                             <Chip
-                              label="main"
+                              label={node.isMain ? 'main' : '顶级'}
                               size="small"
-                              color="primary"
+                              color={node.isMain ? 'primary' : 'default'}
                               variant="outlined"
                               sx={{ flexShrink: 0 }}
                             />

@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Typography, useTheme, Box } from '@mui/material';
+import { Typography, useTheme, Box, Tooltip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import icons from '@/components/icons/Icons';
@@ -17,6 +17,26 @@ const GitRepoCard: FC<GitRepoCardProps> = ({ repo }) => {
 
   const mainBranch = repo.branch || 'main';
   const mainRun = repo.lastRuns?.[mainBranch];
+
+  // 被索引的分支就是「仓库管理」里配的那些 —— 主分支 + 保护分支。卡片很窄，一行
+  // 放不下就省略号截断，完整列表连同各自的索引结果放进 tooltip（分支名本来是已知
+  // 信息，没必要让用户点进仓库管理页才看得到）。
+  const extraBranches = (repo.protectedBranches || []).filter(
+    b => b && b !== mainBranch
+  );
+  const allBranches = [mainBranch, ...extraBranches];
+  const branchLine = allBranches.join(', ');
+  const branchTip = (
+    <Box component="span" sx={{ display: 'block', whiteSpace: 'pre-line' }}>
+      {allBranches
+        .map(b => {
+          const run = repo.lastRuns?.[b];
+          const state = run ? (run.ok ? run.mode || '成功' : '失败') : '未索引';
+          return `${b}${b === mainBranch ? '（主）' : ''} — ${state}`;
+        })
+        .join('\n')}
+    </Box>
+  );
 
   return (
     <Box component="section">
@@ -36,17 +56,19 @@ const GitRepoCard: FC<GitRepoCardProps> = ({ repo }) => {
           {repo.name}
         </Typography>
         <Box>
-          <Typography
-            sx={{
-              fontSize: '12px',
-              color: theme => theme.palette.text.secondary,
-            }}
-          >
-            {mainBranch}
-            {repo.protectedBranches?.length
-              ? ` +${repo.protectedBranches.length} 保护分支`
-              : ''}
-          </Typography>
+          <Tooltip title={branchTip} placement="top" arrow>
+            <Typography
+              noWrap
+              sx={{
+                fontSize: '12px',
+                color: theme => theme.palette.text.secondary,
+                maxWidth: '160px',
+              }}
+            >
+              {branchLine}
+              {extraBranches.length ? ` (${allBranches.length})` : ''}
+            </Typography>
+          </Tooltip>
           <Typography
             sx={{
               fontSize: '13px',
