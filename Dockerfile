@@ -6,6 +6,8 @@ ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
 # apt before COPY: a source edit shouldn't invalidate the (slow) package install layer.
 # git is needed by yarn install — some transitive deps resolve from git URLs.
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+# Enable corepack so `yarn` is available (node:20-bookworm-slim ships corepack but not yarn).
+RUN corepack enable
 
 COPY . .
 
