@@ -41,3 +41,6 @@ express/dist
 # client/package.lock.json
 
 coverage
+ap-client-api/
+package-lock.json
+server/yarn.lock

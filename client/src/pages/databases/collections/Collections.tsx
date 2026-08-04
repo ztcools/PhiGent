@@ -174,15 +174,20 @@ const Collections = () => {
     data: pageGroups,
   } = usePaginationHook(repoGroups);
 
-  /** 当前页的表格行（原始 CollectionObject，保持引用不变）+ 各行的层次信息 */
+  /** 当前页的表格行 + 各行的层次信息。
+   *
+   * Grid 的 Table 组件在调用 formatter 前会检查 `typeof row[colDef.id] !== 'undefined'`
+   * （见 components/grid/Table.tsx:286），只有该字段在 row 上存在时才会渲染单元格。
+   * branch 列 id='branch'，而 CollectionObject 没有 branch 字段 —— 不把它合到 row 上，
+   * 分支列整列都会被跳过。 */
   const { collectionList, layout } = useMemo(() => {
-    const rows: CollectionObject[] = [];
+    const rows: any[] = [];
     const map = new Map<string, RowLayout>();
     // usePaginationHook 的 data 是 any[]，显式指定泛型才能保住 col 字段的类型。
     for (const { item, isGroupHead, groupSize } of flattenRepoGroups<
       AnnotatedCollection
     >(pageGroups)) {
-      rows.push(item.col);
+      rows.push({ ...item.col, branch: item.branch });
       map.set(item.collectionName, {
         repo: item.repo,
         branch: item.branch,
@@ -687,6 +692,7 @@ const Collections = () => {
           order={order}
           orderBy={orderBy}
           hideOnDisable={true}
+          sx={{ height: 'auto', minHeight: '100%' }}
           // 分页单位是「仓库组」而不是 collection —— 组不会被翻页切断，
           // 所以这里显示的计数也必须是仓库数。
           labelDisplayedRows={getLabelDisplayedRows(collectionTrans('repo'))}

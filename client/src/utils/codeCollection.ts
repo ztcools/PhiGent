@@ -225,9 +225,27 @@ export function groupByRepo<T extends CodeCollectionInfo & { rowCount?: number }
   }
   const groups = Array.from(map.values());
   for (const g of groups) {
+    // main/master 必须始终在顶层，无论仓库配置的主分支是什么。
+    // 一些仓库 HEAD 指向了 dev/release 等分支，但真正"重要"的是 main/master——
+    // 它们应该作为主行显示，非主分支退到子行。
+    if (g.root && !ROOT_BRANCHES.has(g.root.branch)) {
+      const canon = g.branches.find(b => ROOT_BRANCHES.has(b.branch));
+      if (canon) {
+        g.branches = g.branches.filter(b => b !== canon);
+        if (g.root) g.branches.push(g.root);
+        g.branches.sort((a, b) => a.branch.localeCompare(b.branch));
+        g.root = canon;
+      }
+    }
     g.branches.sort((a, b) => a.branch.localeCompare(b.branch));
   }
-  groups.sort((a, b) => a.repo.localeCompare(b.repo));
+  // 排序：有 main/master 做根的仓库优先，同组内按名称。
+  groups.sort((a, b) => {
+    const aCanon = a.root && ROOT_BRANCHES.has(a.root.branch) ? 0 : 1;
+    const bCanon = b.root && ROOT_BRANCHES.has(b.root.branch) ? 0 : 1;
+    if (aCanon !== bCanon) return aCanon - bCanon;
+    return a.repo.localeCompare(b.repo);
+  });
   return groups;
 }
 

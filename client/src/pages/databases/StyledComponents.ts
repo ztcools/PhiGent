@@ -5,6 +5,7 @@ export const Root = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   height: 'calc(100%)',
+  overflow: 'auto',
 }));
 
 export const Toolbar = styled(Box)(({ theme }) => ({

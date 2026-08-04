@@ -26,6 +26,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import PageHeader from '@/components/layout/PageHeader';
 import { GitIndexService, GitIndexStatus, CurrentProgress } from './service';
 import { detectGitHost, tokenHint, GitHostInfo } from './gitHost';
+import { repoLabel } from '@/utils/codeCollection';
 
 const RefreshIcon = icons.refresh;
 const DeleteIcon = icons.delete;
@@ -37,7 +38,7 @@ const emptyForm = { name: '', url: '', branch: 'main', token: '', protectedBranc
 
 const parseBranchList = (text: string): string[] =>
   text
-    .split(/[,\s]+/)
+    .split(/[,，]+/)
     .map(s => s.trim())
     .filter(Boolean);
 
@@ -526,7 +527,13 @@ const GitLabRepos = () => {
           <TextField size="small" label="名称" value={form.name}
             onChange={e => setForm({ ...form, name: e.target.value })} sx={{ width: 140 }} />
           <TextField size="small" label="仓库 URL（https 或 git@…）" value={form.url}
-            onChange={e => setForm({ ...form, url: e.target.value })} sx={{ flex: 1, minWidth: 240 }} />
+            onChange={e => {
+              const url = e.target.value;
+              const next: any = { ...form, url };
+              // 名称未填时自动从 URL 提取仓库名，用户可覆盖。
+              if (!form.name.trim()) next.name = repoLabel(url);
+              setForm(next);
+            }} sx={{ flex: 1, minWidth: 240 }} />
           <TextField size="small" label="主分支" value={form.branch}
             onChange={e => setForm({ ...form, branch: e.target.value })} sx={{ width: 100 }} />
           <TextField size="small" label="保护分支(逗号分隔)" value={form.protectedBranches}
