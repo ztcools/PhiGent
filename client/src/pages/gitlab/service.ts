@@ -24,7 +24,7 @@ export interface GitRepo {
   /** main + 各保护分支，含 collection 名。旧服务端不发这个字段，展示侧要能退化。 */
   branches?: RepoBranch[];
   hasToken: boolean;
-  auth?: 'https' | 'ssh';
+  auth?: 'https' | 'ssh' | 'anonymous';
   // Detected by the service from the URL (git-host.ts). Optional so an older
   // service build that doesn't send them still renders — the console falls back
   // to detecting locally from `url`.

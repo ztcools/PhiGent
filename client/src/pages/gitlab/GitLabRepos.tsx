@@ -84,6 +84,7 @@ const PLATFORM_COLOR: Record<string, 'primary' | 'secondary' | 'info' | 'default
  */
 const HostHint = ({ url, hasToken }: { url: string; hasToken: boolean }) => {
   const info = useGitHost(url);
+  const isSshUrl = info.scheme === 'ssh';
   if (!url.trim()) return null;
   if (!info.host) {
     return (
@@ -103,14 +104,14 @@ const HostHint = ({ url, hasToken }: { url: string; hasToken: boolean }) => {
       <Chip
         size="small"
         variant="outlined"
-        label={hasToken ? 'HTTPS + Token' : 'SSH + 部署公钥'}
+        label={hasToken ? 'HTTPS + Token' : isSshUrl ? 'SSH + 部署公钥' : '公开 / SSH 回退'}
       />
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {hasToken
           ? tokenHint(info.platform)
-          : info.scheme === 'https'
-            ? '未填 Token：将把该 https 地址转成 SSH 形式，用服务器部署公钥拉取。'
-            : '未填 Token：用服务器部署公钥通过 SSH 拉取，需先在平台添加该公钥。'}
+          : isSshUrl
+            ? '未填 Token：用服务器部署公钥通过 SSH 拉取，需先在平台添加该公钥。'
+            : '未填 Token：先尝试匿名 HTTPS（公开仓库即可，无需凭据），失败则回退到 SSH 部署公钥。'}
       </Typography>
     </Box>
   );
@@ -437,7 +438,7 @@ const GitLabRepos = () => {
     <PageContainer>
       <PageHeader
         title="代码仓库"
-        subtitle="服务器定时拉取这些仓库并更新各保护分支的索引；修改即时生效，无需重启。支持华为云 CodeHub / GitLab / GitHub / Gitee / Bitbucket 与自建 Git——平台由 URL 自动识别。认证方式：填 Token → HTTPS（用户名按平台自动选择）；留空 → SSH（需先在平台添加下方部署公钥）。"
+        subtitle="服务器定时拉取这些仓库并更新各保护分支的索引；修改即时生效，无需重启。支持华为云 CodeHub / GitLab / GitHub / Gitee / Bitbucket 与自建 Git——平台由 URL 自动识别。认证方式：填 Token → HTTPS（用户名按平台自动选择）；留空 → 先匿名 HTTPS（公开仓库即成功），失败回退 SSH 部署公钥。"
         actions={
           <>
             <Button
@@ -617,20 +618,22 @@ const GitLabRepos = () => {
                           <Typography sx={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3 }} noWrap>
                             {r.name}
                           </Typography>
-                          {/* Platform + auth flavor: which token username the fetch path
-                              will use, or that it goes over SSH with the deploy key. */}
+                          {/* Platform + auth flavor: HTTPS with token, anonymous HTTPS
+                              (public repos), or SSH deploy key. */}
                           <Tooltip
                             title={
-                              r.hasToken
-                                ? `HTTPS basic auth，用户名 ${r.tokenUser || detectGitHost(r.url).tokenUser}`
-                                : 'SSH，使用服务器部署公钥'
+                              r.auth === 'anonymous'
+                                ? '先匿名 HTTPS（公开仓库），失败回退到 SSH 部署公钥'
+                                : r.hasToken
+                                  ? `HTTPS basic auth，用户名 ${r.tokenUser || detectGitHost(r.url).tokenUser}`
+                                  : 'SSH，使用服务器部署公钥'
                             }
                           >
                             <Chip
                               size="small"
                               variant="outlined"
                               color={PLATFORM_COLOR[r.platform || detectGitHost(r.url).platform] || 'default'}
-                              label={`${r.platformLabel || detectGitHost(r.url).label} · ${r.hasToken ? 'Token' : 'SSH'}`}
+                              label={`${r.platformLabel || detectGitHost(r.url).label} · ${r.auth === 'anonymous' ? '公开' : r.hasToken ? 'Token' : 'SSH'}`}
                               sx={{ flexShrink: 0, height: 18, fontSize: 10 }}
                             />
                           </Tooltip>
