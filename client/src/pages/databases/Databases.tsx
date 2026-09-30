@@ -14,7 +14,7 @@ import { styled } from '@mui/material/styles';
 import { Box } from '@mui/material';
 
 const DEFAULT_TREE_WIDTH = 230;
-const MAX_TREE_WIDTH = 500; // Maximum width the tree can be dragged to
+const MAX_TREE_WIDTH = 500; // 树可拖拽的最大宽度
 
 const PageWrapper = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -78,43 +78,43 @@ const TabSection = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
 }));
 
-// Databases page(tree and tabs)
+// 数据库页面（左侧树 + 右侧标签页）
 const Databases = () => {
-  // context
+  // 上下文
   const { database, collections, loading, ui, setUIPref } =
     useContext(dataContext);
 
-  // UI state
+  // UI 状态
   const [searchParams, setSearchParams] = useState<SearchParams[]>([]);
   const [queryState, setQueryState] = useState<QueryState[]>([]);
 
-  // tree ref
+  // 树的 ref
   const [isDragging, setIsDragging] = useState(false);
   const treeRef = useRef<HTMLDivElement>(null);
   const draggerRef = useRef<HTMLDivElement>(null);
 
-  // support dragging tree width
+  // 支持拖拽调整树的宽度
   useEffect(() => {
-    // local tree width
+    // 本地维护的树宽度
     let treeWidth = 0;
     const handleMouseMove = (e: MouseEvent) => {
       requestAnimationFrame(() => {
-        // get mouse position
+        // 获取鼠标位置
         let mouseX = e.clientX - treeRef.current!.offsetLeft;
 
-        // set min and max width
+        // 限制最小和最大宽度
         treeWidth = Math.max(1, Math.min(mouseX, MAX_TREE_WIDTH));
 
-        // set tree width
+        // 设置树宽度
         setUIPref({ tree: { width: treeWidth } });
         setIsDragging(true);
       });
     };
 
     const handleMouseUp = () => {
-      // set dragging false
+      // 取消拖拽状态
       setIsDragging(false);
-      // highlight dragger alwasy if width === 1
+      // 宽度为 1 时始终高亮拖拽条
       if (draggerRef.current) {
         draggerRef.current.classList.toggle('tree-collapsed', treeWidth === 1);
       }
@@ -124,7 +124,7 @@ const Databases = () => {
     const handleMouseDown = (e: MouseEvent) => {
       const t = e.target as HTMLDivElement;
       if (t && t.dataset.id === 'dragger') {
-        // set dragging true
+        // 进入拖拽状态
         setIsDragging(true);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
@@ -132,31 +132,31 @@ const Databases = () => {
       }
     };
 
-    // add event listener
+    // 注册事件监听
     document.addEventListener('mousedown', handleMouseDown);
     return () => {
-      // remove event listener
+      // 移除事件监听
       document.removeEventListener('mousedown', handleMouseDown);
-      // set dragging false
+      // 取消拖拽状态
       setIsDragging(false);
     };
   }, [isDragging]);
 
-  // double click on the dragger, recover default
+  // 双击拖拽条恢复默认宽度
   const handleDoubleClick = () => {
     draggerRef.current!.classList.toggle('tree-collapsed', false);
     setUIPref({ tree: { width: DEFAULT_TREE_WIDTH } });
   };
 
-  // init search params and query state
+  // 初始化搜索参数和查询状态
   useEffect(() => {
     collections.forEach(c => {
-      // find search params for the collection
+      // 查找该 collection 的搜索参数
       const searchParam = searchParams.find(
         s => s.collection.collection_name === c.collection_name
       );
 
-      // if search params not found, and the schema is ready, create new search params
+      // 若未找到搜索参数且 Schema 已就绪，则新建搜索参数
       if (!searchParam && c.schema) {
         setSearchParams(prevParams => {
           const scalarFields = c.schema.scalarFields.map(s => s.name);
@@ -196,11 +196,11 @@ const Databases = () => {
           ];
         });
       } else {
-        // update collection
+        // 更新 collection
         setSearchParams(prevParams => {
           return prevParams.map(s => {
             if (s.collection.collection_name === c.collection_name) {
-              // update field in search params
+              // 更新搜索参数中的 field
               const searchParams = s.searchParams.map(sp => {
                 const field = c.schema?.vectorFields.find(
                   v => v.name === sp.anns_field
@@ -210,7 +210,7 @@ const Databases = () => {
                 }
                 return sp;
               });
-              // update collection
+              // 更新 collection
               const collection = c;
               return { ...s, searchParams, collection };
             }
@@ -219,12 +219,12 @@ const Databases = () => {
         });
       }
 
-      // find query state for the collection
+      // 查找该 collection 的查询状态
       const query = queryState.find(
         q => q.collection.collection_name === c.collection_name
       );
 
-      // if query state not found, and the schema is ready, create new query state
+      // 若未找到查询状态且 Schema 已就绪，则新建查询状态
       if (!query && c.schema) {
         setQueryState(prevState => {
           const fields = c.schema.fields;
@@ -241,11 +241,11 @@ const Databases = () => {
           ];
         });
       } else {
-        // update collection
+        // 更新 collection
         setQueryState(prevState => {
           return prevState.map(q => {
             if (q.collection.collection_name === c.collection_name) {
-              // update collection
+              // 更新 collection
               const collection = c;
               return { ...q, collection };
             }
@@ -255,7 +255,7 @@ const Databases = () => {
       }
     });
 
-    // delete search params for the collection that is not in the collections
+    // 删除已不在 collections 中的 collection 对应的搜索参数
     setSearchParams(prevParams => {
       return prevParams.filter(s =>
         collections.find(
@@ -264,7 +264,7 @@ const Databases = () => {
       );
     });
 
-    // delete query state for the collection that is not in the collections
+    // 删除已不在 collections 中的 collection 对应的查询状态
     setQueryState(prevState => {
       return prevState.filter(q =>
         collections.find(
@@ -274,7 +274,7 @@ const Databases = () => {
     });
   }, [collections]);
 
-  // get current collection from url
+  // 从 URL 中获取当前 collection
   const params = useParams();
   const {
     databaseName = '',
@@ -283,7 +283,7 @@ const Databases = () => {
     databasePage = '',
   } = params;
 
-  // update navigation
+  // 更新导航
   useNavigationHook(ROUTE_PATHS.DATABASES, {
     collectionName,
     databaseName,
@@ -313,7 +313,7 @@ const Databases = () => {
     });
   };
 
-  // render
+  // 渲染
   return (
     <PageWrapper className={isDragging ? 'dragging' : ''}>
       <TreeSection

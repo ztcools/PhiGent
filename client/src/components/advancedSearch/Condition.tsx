@@ -39,8 +39,8 @@ const Condition: FC<ConditionProps> = props => {
   );
 
   /**
-   * Check condition's value by field's and operator's type.
-   * Trigger condition change event.
+   * 根据字段类型和操作符类型校验条件的值。
+   * 并触发条件变更事件。
    */
   useEffect(() => {
     const type = conditionField?.data_type;

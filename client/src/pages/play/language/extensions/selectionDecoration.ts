@@ -46,22 +46,22 @@ export const selectionDecoration = ViewPlugin.fromClass(
       }
 
       if (requestNode) {
-        // get from and to positions of the request node
+        // 获取 request 节点的起止位置
         const from = requestNode.from;
 
-        // get URL node
+        // 获取 URL 节点
         const urlNode = requestNode.getChild('URL')!;
         const bodyNode = requestNode.getChild('Body');
 
-        // if no URL node and no Body node, return
+        // 若既无 URL 节点也无 Body 节点则直接返回
         if (!urlNode && !bodyNode) {
           return builder.finish();
         }
 
-        // get to position of the Body node or URL node
+        // 获取 Body 节点或 URL 节点的结束位置
         const to = bodyNode ? bodyNode.to : urlNode.to;
 
-        // highlight the whole request node
+        // 高亮整个 request 节点
         const lines = this.getLinesInRange(doc, from, to);
 
         lines.forEach(line => {

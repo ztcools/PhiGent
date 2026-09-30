@@ -42,7 +42,7 @@ export interface AddConditionProps {
 export interface CopyButtonProps {
   className?: string;
   icon?: any;
-  // needed for accessibility, will not show on page
+  // 无障碍访问所需，不会显示在页面上
   label: string;
   value: string;
   others?: any;

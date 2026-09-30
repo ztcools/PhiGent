@@ -5,7 +5,7 @@ import Snackbar from '@mui/material/Snackbar';
 import type { AlertProps } from '@mui/material/Alert';
 import type { CustomSnackBarType } from './Types';
 
-// Forward ref for Alert component
+// 为 Alert 组件转发 ref
 const Alert = forwardRef<HTMLDivElement, AlertProps>((props, ref) => {
   return <MuiAlert ref={ref} elevation={0} variant="filled" {...props} />;
 });

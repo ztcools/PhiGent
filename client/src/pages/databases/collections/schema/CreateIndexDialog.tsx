@@ -23,8 +23,8 @@ import type { FieldObject } from '@server/types';
 import { INDEX_PARAMS_CONFIG } from './indexParamsConfig';
 
 /**
- * CreateIndex component for creating new indexes
- * Handles index type selection, parameter configuration, and validation
+ * CreateIndex 组件，用于创建新的 index
+ * 负责 index 类型选择、参数配置和校验
  */
 const CreateIndex = (props: {
   collectionName: string;
@@ -39,8 +39,8 @@ const CreateIndex = (props: {
   const { t: btnTrans } = useTranslation('btn');
 
   /**
-   * Convert field data type to DataTypeEnum
-   * Used to determine which index types and parameters are available
+   * 把 Field 数据类型转换为 DataTypeEnum
+   * 用于确定可选的 index 类型和参数
    */
   const getFieldType = (): DataTypeEnum => {
     switch (field.data_type) {
@@ -60,8 +60,8 @@ const CreateIndex = (props: {
   const defaultIndexType = INDEX_TYPES_ENUM.AUTOINDEX;
 
   /**
-   * Get default metric type based on field data type
-   * Different vector types have different default metric types
+   * 根据 Field 数据类型获取默认 metric type
+   * 不同 Vector 类型的默认 metric type 不同
    */
   const defaultMetricType = useMemo(() => {
     switch (field.data_type) {
@@ -80,7 +80,7 @@ const CreateIndex = (props: {
     }
   }, [field.data_type]);
 
-  // Form state for index creation
+  // index 创建的表单状态
   const [indexSetting, setIndexSetting] = useState<{
     index_type: IndexType;
     [x: string]: string | number | boolean;
@@ -91,8 +91,8 @@ const CreateIndex = (props: {
   });
 
   /**
-   * Get required and optional parameters for the selected index type
-   * Parameters are defined in INDEX_PARAMS_CONFIG
+   * 获取所选 index 类型的必填和选填参数
+   * 参数定义在 INDEX_PARAMS_CONFIG 中
    */
   const indexCreateParams = useMemo(() => {
     const fieldType = getFieldType();
@@ -102,8 +102,8 @@ const CreateIndex = (props: {
   }, [indexSetting.index_type]);
 
   /**
-   * Get available metric types for the selected index type
-   * Different index types support different metric types
+   * 获取所选 index 类型可用的 metric type
+   * 不同 index 类型支持的 metric type 不同
    */
   const metricOptions = useMemo(() => {
     return isVectorType(field)
@@ -112,8 +112,8 @@ const CreateIndex = (props: {
   }, [indexSetting.index_type, field]);
 
   /**
-   * Prepare parameters for index creation
-   * Combines index type, metric type, and other parameters
+   * 准备创建 index 所需的参数
+   * 汇总 index 类型、metric type 以及其他参数
    */
   const extraParams = useMemo(() => {
     const params: { [x: string]: string | number | boolean } = {};
@@ -131,8 +131,8 @@ const CreateIndex = (props: {
   }, [indexCreateParams, indexSetting]);
 
   /**
-   * Helper function to format index options for the selector
-   * Groups options by category (in-memory, disk, GPU)
+   * 格式化 selector 所需 index 选项的辅助函数
+   * 按类别分组（内存、磁盘、GPU）
    */
   const getOptions = (label: string, children: Option[]) => ({
     label,
@@ -143,8 +143,8 @@ const CreateIndex = (props: {
   });
 
   /**
-   * Get available index types based on field type
-   * Different field types have different available index types
+   * 根据 Field 类型获取可用的 index 类型
+   * 不同 Field 类型可用的 index 类型不同
    */
   const indexOptions = useMemo(() => {
     const autoOption = getOptions('AUTOINDEX', INDEX_OPTIONS_MAP['AUTOINDEX']);
@@ -208,8 +208,8 @@ const CreateIndex = (props: {
   }, [field, indexTrans]);
 
   /**
-   * Format form data for validation
-   * Combines metric type and index parameters
+   * 整理用于校验的表单数据
+   * 汇总 metric type 和 index 参数
    */
   const checkedForm = useMemo(() => {
     if (!isVectorType(field)) {
@@ -226,8 +226,8 @@ const CreateIndex = (props: {
     useFormValidation(checkedForm);
 
   /**
-   * Check if form is valid
-   * Validates required parameters and their values
+   * 检查表单是否有效
+   * 校验必填参数及其取值
    */
   const isFormValid = useMemo(() => {
     const fieldType = getFieldType();
@@ -257,22 +257,22 @@ const CreateIndex = (props: {
   }, [indexSetting, validation]);
 
   /**
-   * Update form field value
+   * 更新表单字段值
    */
   const updateForm = (type: string, value: string | number | boolean) => {
     setIndexSetting(v => ({ ...v, [type]: value }));
   };
 
   /**
-   * Handle index type change
-   * Reset parameters when index type changes and set default values from config
+   * 处理 index 类型变化
+   * index 类型变化时重置参数，并按配置设置默认值
    */
   const onIndexTypeChange = (type: string) => {
     const fieldType = getFieldType();
     const config = INDEX_PARAMS_CONFIG[fieldType]?.[type];
     if (!config) return;
 
-    // Create new form state with default values
+    // 创建带默认值的新表单状态
     const newIndexSetting: {
       index_type: IndexType;
       [key: string]: string | number | boolean;
@@ -281,7 +281,7 @@ const CreateIndex = (props: {
       index_type: type as IndexType,
     };
 
-    // Set default values for all parameters from config
+    // 从配置中为所有参数设置默认值
     Object.entries(config.params).forEach(([key, paramConfig]) => {
       if (paramConfig.defaultValue !== undefined) {
         newIndexSetting[key] = paramConfig.defaultValue.toString();
@@ -290,10 +290,10 @@ const CreateIndex = (props: {
       }
     });
 
-    // Update form state
+    // 更新表单状态
     setIndexSetting(newIndexSetting);
 
-    // Reset validation with new values
+    // 用新值重置校验
     const paramsForm: { [key: string]: string | number | boolean } = {};
     [...config.required, ...config.optional].forEach(param => {
       paramsForm[param] = newIndexSetting[param];
@@ -303,7 +303,7 @@ const CreateIndex = (props: {
   };
 
   /**
-   * Handle index creation
+   * 处理 index 创建
    */
   const handleCreateIndex = async () => {
     await handleCreate(extraParams, indexSetting.index_name as string);

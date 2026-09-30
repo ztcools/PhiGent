@@ -15,7 +15,7 @@ import type { Theme } from '@mui/material/styles';
 import type { DialogProps } from './Types';
 
 const AdvancedDialog = (props: DialogProps) => {
-  // i18n
+  // 国际化
   const { t: searchTrans } = useTranslation('search');
   const { t: btnTrans } = useTranslation('btn');
 
@@ -39,7 +39,7 @@ const AdvancedDialog = (props: DialogProps) => {
 
   useEffect(() => {
     flatConditions.length === 0 && addCondition();
-    // Only need add one condition after dialog's first mount.
+    // 对话框首次挂载后只需添加一个条件。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -55,7 +55,7 @@ const AdvancedDialog = (props: DialogProps) => {
         sx={{
           '& .disable-exp': {
             userSelect: 'none',
-            color: (theme: Theme) => theme.palette.text.disabled, // Changed for better theme coordination
+            color: (theme: Theme) => theme.palette.text.disabled, // 为更好地配合主题而调整
           },
         }}
         {...others}
@@ -72,7 +72,7 @@ const AdvancedDialog = (props: DialogProps) => {
           </Typography>
           <IconButton
             aria-label="close"
-            sx={{ color: (theme: Theme) => theme.palette.action.active }} // Changed for better theme coordination
+            sx={{ color: (theme: Theme) => theme.palette.action.active }} // 为更好地配合主题而调整
             onClick={onCancel}
             size="small"
           >
@@ -87,9 +87,9 @@ const AdvancedDialog = (props: DialogProps) => {
               alignItems: 'center',
               ...(shouldSowPlaceholder && {
                 userSelect: 'none',
-                color: (theme: Theme) => theme.palette.text.secondary, // Changed for placeholder
+                color: (theme: Theme) => theme.palette.text.secondary, // 占位符颜色调整
               }),
-              backgroundColor: (theme: Theme) => theme.palette.action.hover, // Changed for subtle background
+              backgroundColor: (theme: Theme) => theme.palette.action.hover, // 更柔和的背景色
               minHeight: '32px',
               fontSize: '13px',
               fontFamily: 'monospace',

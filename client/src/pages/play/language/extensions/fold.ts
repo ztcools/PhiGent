@@ -51,7 +51,7 @@ export const customFoldGutter = () => {
 export const persistFoldState = () => {
   return EditorView.updateListener.of(update => {
     if (update.docChanged) {
-      // Handle document changes
+      // 处理文档变更
       const view = update.view;
       const folded = view.state.field(foldState);
       const lineRanges: Array<{ from: number; to: number }> = [];
@@ -60,7 +60,7 @@ export const persistFoldState = () => {
       });
       localStorage.setItem(ATTU_PLAY_FOLD_STATE, JSON.stringify(lineRanges));
     } else {
-      // Handle fold/unfold effects
+      // 处理折叠/展开 effect
       for (const tr of update.transactions) {
         for (const effect of tr.effects) {
           if (effect.is(foldEffect) || effect.is(unfoldEffect)) {

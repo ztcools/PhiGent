@@ -25,12 +25,12 @@ import { getIp } from './utils/Network';
 import { MilvusClient } from './types';
 import { initWebSocket } from './socket';
 
-// initialize express app
+// 初始化 express 应用
 export const app = express();
-// use compression
+// 启用 compression 压缩
 app.use(compression());
 
-// initialize cache store
+// 初始化缓存存储
 export const clientCache = new LRUCache<
   string,
   {
@@ -44,9 +44,9 @@ export const clientCache = new LRUCache<
   ttlAutopurge: true,
 });
 
-// initialize express router
+// 初始化 express 路由
 const router = express.Router();
-// define routers
+// 注册路由
 router.use('/milvus', connectRouter);
 router.use('/databases', databasesRouter);
 router.use('/collections', collectionsRouter);
@@ -59,13 +59,13 @@ router.get('/healthy', (req, res, next) => {
   next();
 });
 
-// initialize a simple http server
+// 初始化一个简单的 http 服务
 const server = http.createServer(app);
 
-// setup middlewares
-// use cors https://expressjs.com/en/resources/middleware/cors.html
+// 设置中间件
+// 启用 cors https://expressjs.com/en/resources/middleware/cors.html
 app.use(cors());
-// use helmet https://github.com/helmetjs/helmet
+// 启用 helmet https://github.com/helmetjs/helmet
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -75,43 +75,42 @@ app.use(
     crossOriginResourcePolicy: false,
   })
 );
-// limit json file size
+// 限制 JSON 请求体大小
 app.use(express.json({ limit: '256MB' }));
-// TransformResInterceptor
+// 响应格式转换拦截器
 app.use(TransformResMiddleware);
-// LoggingInterceptor
+// 日志拦截器
 if (!isElectron()) {
   app.use(LoggingMiddleware);
 }
-// All headers operations
+// 请求头统一处理
 app.use(ReqHeaderMiddleware);
-// use router
+// 挂载路由
 app.use('/api/v1', router);
-// Return client build files.
-// Resolve the built SPA absolutely: the server runs from /app/dist/src while
-// the client bundle is copied to /app/build in the runtime image. A relative
-// 'build' path resolves against the process CWD (and '../build' against
-// dist/src), which 404s in the container. /app/build is where the Dockerfile
-// places it; fall back to a CWD-relative 'build' for local dev.
+// 返回前端构建产物。
+// 使用绝对路径解析构建后的 SPA：服务端运行在 /app/dist/src，而运行时镜像中前端
+// bundle 被复制到 /app/build。相对路径 'build' 会基于进程 CWD 解析（'../build'
+// 则相对 dist/src），在容器内会 404。Dockerfile 把产物放在 /app/build；
+// 本地开发时回退到基于 CWD 的 'build'。
 const clientBuildDir = fs.existsSync('/app/build/index.html')
   ? '/app/build'
   : path.join(process.cwd(), 'build');
 app.use(express.static(clientBuildDir));
 
-// handle every other route with index.html, which will contain
-// a script tag to your application's JavaScript file(s).
+// 其余所有路由都返回 index.html，其中包含引入
+// 应用 JavaScript 文件的 script 标签。
 app.get('*', (request, response) => {
   response.sendFile(path.join(clientBuildDir, 'index.html'));
 });
-// ErrorInterceptor
+// 错误处理拦截器
 app.use(ErrorMiddleware);
-// init websocket server
+// 初始化 WebSocket 服务
 initWebSocket(server);
 
-// use port 3000 unless there exists a preconfigured port
+// 默认使用 3000 端口，除非已预先配置端口
 const PORT = process.env.SERVER_PORT || 3000;
 
-// start server
+// 启动服务
 server.listen(PORT, () => {
   if (!isElectron()) {
     const ips = getIp();

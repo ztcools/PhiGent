@@ -36,13 +36,13 @@ const QueryToolbar = (props: QueryToolbarProps) => {
     forceDisabled = false,
   } = props;
 
-  // translations
+  // 国际化翻译
   const { t: searchTrans } = useTranslation('search');
   const { t: collectionTrans } = useTranslation('collection');
   const { t: btnTrans } = useTranslation('btn');
   const { t: commonTrans } = useTranslation();
 
-  // icons
+  // 图标
   const ResetIcon = icons.refresh;
 
   return (
@@ -99,11 +99,11 @@ const QueryToolbar = (props: QueryToolbarProps) => {
           wrapperClass="outputs selector"
           onChange={(e: { target: { value: unknown } }) => {
             const values = e.target.value as string[];
-            // prevent deselecting the last option
+            // 禁止取消选中最后一个选项
             if (values.length === 0) {
               return;
             }
-            // sort output fields by schema order
+            // 按 Schema 顺序排序输出字段
             const newOutputFields = [...values].sort(
               (a, b) =>
                 queryState.fields.findIndex(f => f.name === a) -
@@ -160,7 +160,7 @@ const QueryToolbar = (props: QueryToolbarProps) => {
           variant="contained"
           onClick={() => {
             setCurrentPage(0);
-            // set expr
+            // 设置过滤表达式
             setQueryState({
               ...queryState,
               expr: exprInputRef.current,

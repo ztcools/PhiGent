@@ -89,12 +89,12 @@ const EnhancedTableHead: FC<TableHeadType> = props => {
         )}
 
         {colDefinitions.map(headCell => {
-          // get cell style
+          // 获取单元格样式
           const cellStyle = headCell.getStyle
             ? headCell.getStyle(headCell)
             : {};
 
-          // get header formatter
+          // 获取表头渲染函数
           const headerFormatter =
             headCell.headerFormatter || (v => <>{v.label}</>);
 

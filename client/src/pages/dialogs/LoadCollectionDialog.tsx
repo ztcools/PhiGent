@@ -39,18 +39,18 @@ const LoadCollectionDialog = (props: {
   const [maxQueryNode, setMaxQueryNode] = useState(1);
   const [btnDisabled, setBtnDisabled] = useState(false);
 
-  // check if it is cluster
+  // 判断是否为集群模式
   useEffect(() => {
     async function fetchData() {
       try {
         const res = await MilvusService.getMetrics();
         const parsedJson = parseJson(res);
-        // get root cord
+        // 获取 root coord
         const rootCoords = getNode(
           parsedJson.workingNodes,
           MILVUS_NODE_TYPE.ROOTCOORD
         );
-        // get query nodes
+        // 获取 query node
         const queryNodes = getNode(
           parsedJson.workingNodes,
           MILVUS_NODE_TYPE.QUERYNODE
@@ -58,12 +58,12 @@ const LoadCollectionDialog = (props: {
 
         const rootCoord = rootCoords[0];
 
-        // should we show replic toggle
+        // 是否需要展示 replica 开关
         const enableRelica =
           rootCoord.infos.system_info.deploy_mode ===
           MILVUS_DEPLOY_MODE.DISTRIBUTED;
 
-        // only show replica toggle in distributed mode && query node > 1
+        // 仅在分布式模式且 query node 数量大于 1 时展示 replica 开关
         if (enableRelica && queryNodes.length > 1 && !isManaged) {
           setMaxQueryNode(queryNodes.length);
           setEnableRelica(enableRelica);
@@ -73,11 +73,11 @@ const LoadCollectionDialog = (props: {
     fetchData();
   }, []);
 
-  // input  state change
+  // 输入框状态变更
   const handleInputChange = (value: number) => {
     setForm({ replica: value });
   };
-  // confirm action
+  // 确认操作
   const handleConfirm = async () => {
     let params;
 
@@ -87,26 +87,26 @@ const LoadCollectionDialog = (props: {
 
     try {
       setBtnDisabled(true);
-      // load collection request
+      // 发起 load collection 请求
       await CollectionService.loadCollection(
         collection.collection_name,
         params
       );
-      // refresh collection
+      // 刷新 Collection
       await fetchCollection(collection.collection_name);
 
-      // show success message
+      // 展示成功提示
       openSnackBar(
         successTrans(isModifyReplica ? 'modifyReplica' : 'load', {
           name: collectionTrans('collection'),
         })
       );
 
-      // callback
+      // 回调
       if (onLoad) {
         await onLoad(collection);
       }
-      // close dialog
+      // 关闭对话框
       handleCloseDialog();
     } catch (error) {
     } finally {
@@ -114,15 +114,15 @@ const LoadCollectionDialog = (props: {
     }
   };
 
-  // validator
+  // 校验器
   const checkedForm = useMemo(() => {
     return enableRelica ? [] : formatForm(form);
   }, [form, enableRelica]);
 
-  // validate
+  // 校验
   const { validation, checkIsValid, disabled } = useFormValidation(checkedForm);
 
-  // input config
+  // 输入框配置
   const inputConfig: ITextfieldConfig = {
     label: collectionTrans('replicaNum'),
     type: 'number',
@@ -136,7 +136,7 @@ const LoadCollectionDialog = (props: {
     defaultValue: form.replica,
   };
 
-  // if replica is enabled, add validation
+  // 启用 replica 时添加校验规则
   if (enableRelica) {
     inputConfig.validations?.push(
       {
@@ -157,7 +157,7 @@ const LoadCollectionDialog = (props: {
     );
   }
 
-  // toggle enbale replica
+  // 切换 replica 启用状态
   const handleChange = () => {
     setReplicaToggle(!replicaToggle);
     if (!replicaToggle === false) {

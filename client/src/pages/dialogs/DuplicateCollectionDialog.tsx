@@ -43,20 +43,20 @@ const DuplicateCollectionDialog: FC<DuplicateCollectionDialogProps> = props => {
   };
 
   const handleConfirm = async () => {
-    // duplicate
+    // 复制
     await CollectionService.duplicateCollection(
       collection.collection_name,
       form.duplicate
     );
-    //refresh collection
+    //刷新 Collection
     await fetchCollection(form.duplicate);
-    // show success message
+    // 显示成功提示
     openSnackBar(
       successTrans('duplicate', {
         name: collectionTrans('collection'),
       })
     );
-    // close dialog
+    // 关闭对话框
     handleCloseDialog();
     cb && (await cb(form.duplicate));
   };

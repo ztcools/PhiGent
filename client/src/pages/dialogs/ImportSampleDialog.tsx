@@ -121,7 +121,7 @@ const ImportSampleDialog: FC<{
       handleCloseDialog();
       return;
     }
-    // start loading
+    // 开始加载
     setInsertStatus(InsertStatusEnum.loading);
     const { result, msg } = await handleImportSample(
       collection.collection_name,
@@ -134,7 +134,7 @@ const ImportSampleDialog: FC<{
       return;
     }
     setInsertStatus(InsertStatusEnum.success);
-    // hide dialog
+    // 隐藏对话框
     handleCloseDialog();
   };
 

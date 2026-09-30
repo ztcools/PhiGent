@@ -34,7 +34,7 @@ export class UnassignUserRoleDto {
   readonly roleName: string;
 }
 
-// privilege group
+// Privilege Group
 export class CreatePrivilegeGroupDto {
   @IsString({ message: 'group_name is required.' })
   readonly group_name: string;
@@ -43,7 +43,7 @@ export class CreatePrivilegeGroupDto {
   readonly privileges: string[];
 }
 
-// get privilege group
+// 获取 Privilege Group
 export class GetPrivilegeGroupDto {
   @IsString({ message: 'group_name is required.' })
   readonly group_name: string;
@@ -54,7 +54,7 @@ export class UpdatePrivilegeGroupDto {
   readonly privileges: string[];
 }
 
-// grant/revoke privilege to role
+// 为角色授予/回收权限
 export class PrivilegeToRoleDto {
   @IsString({ message: 'roleName is empty.' })
   readonly role: string;

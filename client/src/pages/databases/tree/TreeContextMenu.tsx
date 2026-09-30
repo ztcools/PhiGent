@@ -28,7 +28,7 @@ export const TreeContextMenu = (props: {
   // i18n
   const { t: actionTrans } = useTranslation('action');
 
-  // render menu
+  // 渲染菜单
   if (!contextMenu) {
     return null;
   }
@@ -118,7 +118,7 @@ export const TreeContextMenu = (props: {
                       cb={async newName => {
                         await fetchCollection(newName);
 
-                        // update collection name in the route url;
+                        // 同步更新路由 URL 中的 collection 名称；
                         navigate(`/databases/${database}/${newName}/schema`);
                       }}
                     />
@@ -160,7 +160,7 @@ export const TreeContextMenu = (props: {
                   component: (
                     <InsertDialog
                       defaultSelectedCollection={collection.collection_name}
-                      // user can't select partition on collection page, so default value is ''
+                      // collection 页面无法选择 partition，因此默认值为 ''
                       defaultSelectedPartition={''}
                       collections={[collection!]}
                       onInsert={async () => {

@@ -28,7 +28,7 @@ const InsertPreview: FC<InsertPreviewProps> = ({
   const { t: insertTrans } = useTranslation('insert');
 
   const ArrowIcon = icons.dropdown;
-  // table needed table structure, metadata from csv
+  // 表格所需的表结构，元数据取自 CSV
   const tableData = getTableData(data, isContainFieldNames);
 
   const handleTableHeadChange = useCallback(
@@ -53,7 +53,7 @@ const InsertPreview: FC<InsertPreviewProps> = ({
             }}
           >
             <Select
-              value={head || ''} // Ensure value is not undefined for Select
+              value={head || ''} // 确保 Select 的 value 不为 undefined
               onChange={event =>
                 handleTableHeadChange(index, event.target.value as string)
               }
@@ -61,11 +61,11 @@ const InsertPreview: FC<InsertPreviewProps> = ({
               IconComponent={ArrowIcon}
               sx={{
                 color: theme => theme.palette.text.secondary,
-                fontSize: '0.875rem', // Smaller font size
+                fontSize: '0.875rem', // 更小的字号
                 '& .MuiSelect-select': {
-                  paddingRight: '28px', // Adjust for custom icon and smaller size
-                  paddingTop: '8px', // Reduce padding
-                  paddingBottom: '8px', // Reduce padding
+                  paddingRight: '28px', // 为自定义图标和更小尺寸留出空间
+                  paddingTop: '8px', // 减小 padding
+                  paddingBottom: '8px', // 减小 padding
                 },
                 '&:hover': { backgroundColor: 'transparent' },
               }}
@@ -105,9 +105,9 @@ const InsertPreview: FC<InsertPreviewProps> = ({
     { label: 'No', value: 0 },
   ];
 
-  // use table row first item to get value
+  // 取表格行的第一项来获取值
   const colDefinitions: ColDefinitionsType[] = Object.keys(tableData[0])
-    // filter id since we don't want to show it in the table
+    // 过滤掉 id，因为不需要在表格中展示
     .filter(item => item !== 'id')
     .map(key => ({
       id: key,

@@ -1,18 +1,16 @@
 /**
- * Git hosting platform detection — console-side mirror.
+ * Git 托管平台识别 —— 控制台侧的镜像实现。
  *
- * A personal access token reaches git as HTTP basic auth, and every host wants a
- * different *username* alongside it. Guess wrong and git fails with
- * `HTTP Basic: Access denied`, which reads like a bad token rather than a bad
- * username. The add/edit form detects the platform while the URL is being typed
- * and shows which token flavor that host expects, so a wrong paste surfaces
- * immediately instead of as an opaque failure at index time.
+ * 个人访问令牌是以 HTTP basic auth 的方式送到 git 的，而每个平台要求的
+ * *用户名* 各不相同。猜错的话 git 会报 `HTTP Basic: Access denied`，看起来像是
+ * 令牌有问题，而不是用户名不对。新增/编辑表单会在输入 URL 的过程中识别平台，
+ * 并提示该主机期望的令牌类型，这样粘贴错误能立刻暴露，而不是等到建索引时
+ * 变成一个语焉不详的失败。
  *
- * This is a copy of the service-side table at
- * `packages/git-index-service/src/git-host.ts` in the claude-context repo — the
- * fetch path picks its basic-auth username from the same mapping. Keep the two in
- * sync. Detection is duplicated rather than fetched so the hint is instant while
- * typing; the service also exposes `GET /detect?url=` as the authoritative answer.
+ * 这是 claude-context 仓库中 `packages/git-index-service/src/git-host.ts`
+ * 服务端表的副本 —— 拉取路径也从同一份映射中选取 basic-auth 用户名。
+ * 两边请保持同步。这里选择复制识别逻辑而不是调用接口，是为了在输入时就能
+ * 即时提示；服务端另外提供 `GET /detect?url=` 作为权威结果。
  */
 
 export type GitPlatform =
@@ -23,17 +21,17 @@ export type GitPlatform =
   | 'bitbucket'
   | 'generic';
 
-/** How the URL authenticates: https + token, or scp/ssh + deploy key. */
+/** URL 的认证方式：https + token，或 scp/ssh + deploy key。 */
 export type GitUrlScheme = 'https' | 'ssh' | 'unknown';
 
 export interface GitHostInfo {
   platform: GitPlatform;
-  /** Human-readable platform name. */
+  /** 便于阅读的平台名称。 */
   label: string;
-  /** Basic-auth username that pairs with a token on this platform. */
+  /** 该平台上与 token 搭配使用的 basic-auth 用户名。 */
   tokenUser: string;
   scheme: GitUrlScheme;
-  /** Hostname without port, lowercased. Empty when the URL doesn't parse. */
+  /** 不含端口的 hostname，已转为小写。URL 解析失败时为空。 */
   host: string;
 }
 
@@ -52,11 +50,11 @@ const PLATFORM_TOKEN_USER: Record<GitPlatform, string> = {
   github: 'x-access-token',
   gitee: 'oauth2',
   bitbucket: 'x-token-auth',
-  // Unknown host: GitLab's convention is the most common for self-hosted Git.
+  // 未知主机：自建 Git 服务最常用 GitLab 的约定。
   generic: 'oauth2',
 };
 
-/** Where the operator creates the token this platform expects. */
+/** 运维人员在该平台创建所需 token 的位置。 */
 const PLATFORM_TOKEN_HINT: Record<GitPlatform, string> = {
   'huawei-codehub':
     '在 CodeArts/DevCloud「个人设置 → 访问令牌」创建；basic-auth 用户名为 private-token。',
@@ -71,8 +69,8 @@ const PLATFORM_TOKEN_HINT: Record<GitPlatform, string> = {
 };
 
 /**
- * Pull the host out of either URL form. `new URL()` only handles the scheme form,
- * so scp syntax (`git@host:group/repo.git`) is matched separately.
+ * 从两种 URL 形式中取出 host。`new URL()` 只能处理带 scheme 的形式，
+ * 因此 scp 写法（`git@host:group/repo.git`）需要单独匹配。
  */
 export function parseGitUrl(raw: string): { host: string; scheme: GitUrlScheme } {
   const url = (raw || '').trim();
@@ -89,31 +87,31 @@ export function parseGitUrl(raw: string): { host: string; scheme: GitUrlScheme }
     }
   }
 
-  // scp-like: [user@]host:path
+  // scp 形式：[user@]host:path
   const scp = url.match(/^(?:[A-Za-z0-9._-]+@)?([^:/\s]+):(?!\/)(.+)$/);
   if (scp) return { host: scp[1].toLowerCase(), scheme: 'ssh' };
 
   return { host: '', scheme: 'unknown' };
 }
 
-/** Classify a host into a known platform. */
+/** 把 host 归类到已知平台。 */
 export function platformOfHost(host: string): GitPlatform {
   const h = (host || '').toLowerCase();
   if (!h) return 'generic';
-  // Huawei DevCloud/CodeArts repos live on codehub.devcloud.*.huaweicloud.com
-  // and the newer *.codearts.* domains.
+  // 华为 DevCloud/CodeArts 仓库位于 codehub.devcloud.*.huaweicloud.com
+  // 以及较新的 *.codearts.* 域名。
   if (h.includes('codehub') || h.includes('devcloud') || h.includes('codearts')) {
     return 'huawei-codehub';
   }
   if (h === 'github.com' || h.endsWith('.github.com')) return 'github';
   if (h === 'gitee.com' || h.endsWith('.gitee.com')) return 'gitee';
   if (h === 'bitbucket.org' || h.endsWith('.bitbucket.org')) return 'bitbucket';
-  // Self-hosted GitLab almost always keeps `gitlab` in the hostname.
+  // 自建 GitLab 的 hostname 几乎总是带有 `gitlab`。
   if (h.includes('gitlab')) return 'gitlab';
   return 'generic';
 }
 
-/** Detect platform + auth flavor from a repository URL. */
+/** 从仓库 URL 识别平台和认证方式。 */
 export function detectGitHost(url: string): GitHostInfo {
   const { host, scheme } = parseGitUrl(url);
   const platform = platformOfHost(host);
@@ -126,7 +124,7 @@ export function detectGitHost(url: string): GitHostInfo {
   };
 }
 
-/** Where to create a token for this platform (shown under the Token field). */
+/** 该平台创建 token 的位置（显示在 Token 输入框下方）。 */
 export function tokenHint(platform: GitPlatform): string {
   return PLATFORM_TOKEN_HINT[platform];
 }

@@ -1,7 +1,7 @@
 import { CollectionObject } from '../types';
 
 /**
- * Check collection is loading or not
+ * 检查 Collection 是否正在加载
  */
 export const checkLoading = (v: CollectionObject): boolean => {
   return (
@@ -12,9 +12,9 @@ export const checkLoading = (v: CollectionObject): boolean => {
 };
 
 /**
- * Check collection is index building or not.
+ * 检查 Collection 是否正在构建索引。
  * @param v
- * @returns boolean
+ * @returns 布尔值
  */
 export const checkIndexing = (v: CollectionObject): boolean => {
   return Boolean(

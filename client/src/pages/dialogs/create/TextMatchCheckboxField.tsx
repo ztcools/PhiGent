@@ -23,7 +23,7 @@ const TextMatchCheckboxField: FC<TextMatchCheckboxFieldProps> = ({
       enable_match: !field.enable_match,
     };
 
-    // If enabling text match, also enable analyzer
+    // 启用 text match 时同时启用 analyzer
     if (!field.enable_match) {
       update.enable_analyzer = true;
     }

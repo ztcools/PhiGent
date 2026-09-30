@@ -24,12 +24,12 @@ const OptimizedInput = ({
   const { t: collectionTrans } = useTranslation('collection');
   const [localValue, setLocalValue] = useState(value);
 
-  // Use refs to stabilize function calls
+  // 用 ref 稳定函数调用，避免回调频繁重建
   const onChangeRef = useRef(onChange);
   const onSubmitRef = useRef(onSubmit);
   const onKeyDownRef = useRef(onKeyDown);
 
-  // Update refs when props change
+  // Props 变化时更新 ref
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
@@ -51,14 +51,14 @@ const OptimizedInput = ({
       setLocalValue(newValue);
       onChangeRef.current(newValue);
     },
-    [] // Remove dependencies since we use refs
+    [] // 已使用 ref，故无需依赖
   );
 
   const handleKeyDown = useCallback(
     (e: any) => {
       onKeyDownRef.current(e);
     },
-    [] // Remove dependencies since we use refs
+    [] // 已使用 ref，故无需依赖
   );
 
   const handleFilterSubmit = useCallback(
@@ -67,7 +67,7 @@ const OptimizedInput = ({
       onChangeRef.current(expression);
       onSubmitRef.current(expression);
     },
-    [] // Remove dependencies since we use refs
+    [] // 已使用 ref，故无需依赖
   );
 
   return (

@@ -20,32 +20,32 @@ const ReleaseCollectionDialog = (props: {
   const { handleCloseDialog, openSnackBar } = useContext(rootContext);
   const [disabled, setDisabled] = useState(false);
 
-  // confirm action
+  // 确认操作
   const handleConfirm = async () => {
-    // disable confirm button
+    // 禁用确认按钮
     setDisabled(true);
     try {
-      // release collection
+      // 释放 Collection
       await CollectionService.releaseCollection(collection.collection_name);
 
-      // refresh collection
+      // 刷新 Collection
       await fetchCollection(collection.collection_name);
 
-      // show success message
+      // 显示成功提示
       openSnackBar(
         successTrans('release', {
           name: collectionTrans('collection'),
         })
       );
 
-      // execute callback
+      // 执行回调
       onRelease && (await onRelease(collection));
-      // enable confirm button
+      // 启用确认按钮
       setDisabled(false);
-      // close dialog
+      // 关闭对话框
       handleCloseDialog();
     } finally {
-      // enable confirm button
+      // 启用确认按钮
       setDisabled(false);
     }
   };

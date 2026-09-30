@@ -9,13 +9,13 @@ export const useUIPrefs = () => {
     },
   });
 
-  // set UI preferences
+  // 设置 UI 偏好
   const setUIPref = (pref: DataContextType['ui']) => {
     setUI(pref);
     localStorage.setItem(ATTU_UI_TREE_WIDTH, String(pref.tree.width));
   };
 
-  // load UI preferences
+  // 加载 UI 偏好
   useEffect(() => {
     const storedWidth = Number(localStorage.getItem(ATTU_UI_TREE_WIDTH));
     if (storedWidth) {

@@ -6,13 +6,13 @@ import { authContext } from '@/context';
 import Collections from './collections/Collections';
 import type { ITab } from '@/components/customTabList/Types';
 
-// Database tab pages
+// Database 标签页
 export const DatabasesTab = (props: {
-  databasePage: string; // current database page
+  databasePage: string; // 当前 Database 页面
   databaseName: string;
-  tabClass: string; // tab class
+  tabClass: string; // 标签页样式类
 }) => {
-  // context
+  // Context
   const { isManaged } = useContext(authContext);
   const { databaseName, tabClass, databasePage } = props;
   const { t: collectionTrans } = useTranslation('collection');

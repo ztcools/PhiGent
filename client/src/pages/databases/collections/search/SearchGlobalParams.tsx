@@ -27,14 +27,14 @@ const UNSPORTED_GROUPBY_TYPES = [
 ];
 
 const SearchGlobalParams = (props: SearchGlobalProps) => {
-  // props
+  // 属性
   const {
     searchParams,
     handleFormChange,
     onSlideChange,
     onSlideChangeCommitted,
   } = props;
-  // values
+  // 取值
   const searchGlobalParams = searchParams.globalParams;
   const fields = searchParams.collection.schema?.scalarFields || [];
   const outputFields = [
@@ -47,12 +47,12 @@ const SearchGlobalParams = (props: SearchGlobalProps) => {
   ).length;
   const showReranker = selectedCount > 1;
 
-  // translations
+  // 国际化文案
   const { t: warningTrans } = useTranslation('warning');
   const { t: commonTrans } = useTranslation();
   const { t: searchTrans } = useTranslation('search');
 
-  // UI functions
+  // UI 函数
   const handleInputChange = useCallback(
     <K extends keyof GlobalParams>(key: K, value: GlobalParams[K]) => {
       let form = { ...searchGlobalParams };
@@ -119,7 +119,7 @@ const SearchGlobalParams = (props: SearchGlobalProps) => {
         wrapperClass="selector"
         variant="filled"
         onChange={(e: { target: { value: unknown } }) => {
-          // add value to output fields if not exist, remove if exist
+          // 不存在则加入 output fields，已存在则移除
           const newOutputFields = [...searchGlobalParams.output_fields];
           const values = e.target.value as string[];
           const newFields = values.filter(
@@ -134,7 +134,7 @@ const SearchGlobalParams = (props: SearchGlobalProps) => {
             newOutputFields.splice(index, 1);
           });
 
-          // sort output fields by schema order
+          // 按 Schema 顺序对 output fields 排序
           newOutputFields.sort((a, b) => {
             const aIndex = outputFields.findIndex(f => f.name === a);
             const bIndex = outputFields.findIndex(f => f.name === b);
@@ -218,13 +218,13 @@ const SearchGlobalParams = (props: SearchGlobalProps) => {
                       return `${s.anns_field}'s weight: ${value}`;
                     }}
                     onChange={(event: Event, value: number | number[]) => {
-                      // update the selected field
+                      // 更新已选字段的权重
                       const weights = [
                         ...searchGlobalParams.weightedParams!.weights,
                       ];
                       weights[index] = Number(value);
                       handleInputChange('weightedParams', { weights: weights });
-                      // fire on change event
+                      // 触发 change 事件
                       onSlideChange(s.anns_field);
                     }}
                     onChangeCommitted={() => {

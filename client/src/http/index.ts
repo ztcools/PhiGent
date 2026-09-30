@@ -1,8 +1,8 @@
-// objects map(deprecating)
+// 对象映射（已废弃）
 export * from './Axios';
 export * from './BaseModel';
 
-// service
+// 服务
 export * from './Collection.service';
 export * from './Partition.service';
 export * from './Data.service';

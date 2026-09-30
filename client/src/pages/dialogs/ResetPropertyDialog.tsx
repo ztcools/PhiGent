@@ -14,13 +14,13 @@ export interface EditPropertyProps {
 }
 
 const ResetPropertyDialog: FC<EditPropertyProps> = props => {
-  // context
+  // Context
   const { fetchCollection } = useContext(dataContext);
   const { handleCloseDialog } = useContext(rootContext);
-  // props
+  // Props
   const { cb, target, type, property } = props;
 
-  // UI handlers
+  // UI 事件处理
   const handleDelete = async () => {
     switch (type) {
       case 'collection':
@@ -28,11 +28,11 @@ const ResetPropertyDialog: FC<EditPropertyProps> = props => {
         if (!collection || !collection.schema) {
           return;
         }
-        // Reset the property in the collection schema
+        // 将 Collection Schema 中的该属性重置为空
         await CollectionService.setProperty(collection.collection_name, {
           [property.key]: '',
         });
-        // Refresh the collection to get the latest schema
+        // 刷新 Collection 以获取最新的 Schema
         await fetchCollection((target as CollectionObject).collection_name);
         break;
 
@@ -48,7 +48,7 @@ const ResetPropertyDialog: FC<EditPropertyProps> = props => {
     cb && (await cb(target));
   };
 
-  // i18n
+  // 国际化
   const { t: btnTrans } = useTranslation('btn');
   const { t: dialogTrans } = useTranslation('dialog');
 

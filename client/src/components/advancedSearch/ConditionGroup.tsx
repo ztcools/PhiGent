@@ -13,7 +13,7 @@ import type {
 } from './Types';
 import { ThemeContext } from '@emotion/react';
 
-// "And & or" operator component.
+// And / Or 操作符组件
 const BinaryLogicalOp: FC<BinaryLogicalOpProps> = props => {
   const { onChange, initValue = 'and' } = props;
   const [operator, setOperator] = useState(initValue);
@@ -84,7 +84,7 @@ const BinaryLogicalOp: FC<BinaryLogicalOpProps> = props => {
   );
 };
 
-// "+ Add condition" component.
+// “+ 添加条件”组件
 const AddCondition: FC<AddConditionProps> = props => {
   const { className, onClick } = props;
   const { t: searchTrans } = useTranslation('search');
@@ -103,7 +103,7 @@ const AddCondition: FC<AddConditionProps> = props => {
   );
 };
 
-// Condition group component which contains of BinaryLogicalOp, AddCondition and ConditionItem.
+// 条件分组组件，由 BinaryLogicalOp、AddCondition 与 ConditionItem 组成
 const ConditionGroup = (props: ConditionGroupProps) => {
   const {
     fields = [],
@@ -119,7 +119,7 @@ const ConditionGroup = (props: ConditionGroupProps) => {
 
   // 已去除 generateClassName 逻辑
 
-  // Generate condition items with operators and add condition btn.
+  // 生成条件项，并附上操作符与“添加条件”按钮
   const generateConditionItems = (conditions: any[]) => {
     const conditionsLength = conditions.length;
     const results = conditions.reduce((prev: any, condition, currentIndex) => {

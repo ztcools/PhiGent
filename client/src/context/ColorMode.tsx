@@ -31,7 +31,7 @@ export const ColorModeProvider = (props: { children: React.ReactNode }) => {
     setMode(prevMode => (prevMode === 'light' ? 'dark' : 'light'));
   };
 
-  // store the current mode in localStorage
+  // 将当前 mode 存入 localStorage
   useEffect(() => {
     localStorage.setItem(ATTU_THEME_MODE, mode);
   }, [mode]);

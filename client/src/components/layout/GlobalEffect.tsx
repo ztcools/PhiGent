@@ -11,7 +11,7 @@ const GlobalEffect = ({ children }: { children: React.ReactNode }) => {
   const { database } = useContext(dataContext);
 
   useEffect(() => {
-    // Add database header to all axios requests
+    // 为所有 axios 请求添加 database Header
     const requestInterceptor = axiosInstance.interceptors.request.use(
       config => {
         config.headers['x-attu-database'] = database;
@@ -20,7 +20,7 @@ const GlobalEffect = ({ children }: { children: React.ReactNode }) => {
       error => Promise.reject(error)
     );
 
-    // Clean up interceptor on unmount
+    // 卸载时清理拦截器
     return () => {
       axiosInstance.interceptors.request.eject(requestInterceptor);
     };
@@ -30,11 +30,11 @@ const GlobalEffect = ({ children }: { children: React.ReactNode }) => {
     if (axiosResInterceptor === null) {
       axiosResInterceptor = axiosInstance.interceptors.response.use(
         (response: any) => {
-          // Handle successful responses
+          // 处理成功响应
           const isHttpError =
             response.statusCode && response.statusCode !== 200;
 
-          // check if the response is type of ResStatus and ResStatus.error_code !== 'Success'
+          // 判断响应是否为 ResStatus 类型且 ResStatus.error_code !== 'Success'
           const isResStatusError =
             response.data &&
             response.data.data &&
@@ -82,14 +82,14 @@ const GlobalEffect = ({ children }: { children: React.ReactNode }) => {
               return Promise.reject(error);
             }
           }
-          // Handle other error cases
+          // 处理其他错误情况
           openSnackBar(error.message, messageType);
           return Promise.reject(error);
         }
       );
     }
 
-    // Clean up response interceptor on unmount
+    // 卸载时清理响应拦截器
     return () => {
       if (axiosResInterceptor !== null) {
         axiosInstance.interceptors.response.eject(axiosResInterceptor);

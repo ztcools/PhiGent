@@ -69,12 +69,12 @@ const IndexTree = () => {
     setLoading(true);
     setError('');
     try {
-      // Row counts + existence check in one call (avoids querying a non-existent
-      // code_index_state on a fresh Milvus, which would pop a global error toast).
-      // Existence check via names (getAllCollections only returns lazy objects
-      // without rowCount/description), then fetch full details for code collections
-      // to map row counts by branch identity (from `codebasePath:<identity>` desc)
-      // and by collection name.
+      // 行数统计与存在性校验合并为一次调用（避免在全新的 Milvus 上查询并不存在的
+      // code_index_state，否则会弹出全局错误提示）。
+      // 先用名字做存在性校验（getAllCollections 只返回惰性对象，
+      // 不含 rowCount/description），再拉取 code collection 的完整信息，
+      // 以便按分支 identity（取自 `codebasePath:<identity>` 描述）
+      // 和 collection 名映射行数。
       const names: string[] = await CollectionService.getCollectionsNames({
         db_name: 'default',
       }).catch(() => [] as string[]);
@@ -98,7 +98,7 @@ const IndexTree = () => {
             }
           }
         } catch {
-          /* best-effort */
+          /* 尽力而为，失败可忽略 */
         }
       }
       setCounts(map);
@@ -115,10 +115,9 @@ const IndexTree = () => {
       });
       const rows: any[] = res?.data || res?.results || res || [];
 
-      // A branch is "live" only if its Milvus collection still exists. When a user
-      // drops a collection in attu, its code_index_state row is left behind — filter
-      // those out so the tree stays in sync with the database, and prune the orphan
-      // rows so the shared state table doesn't accumulate stale entries.
+      // 分支只有在对应 Milvus collection 仍存在时才算“存活”。用户在 Attu 里
+      // 删掉 collection 后，code_index_state 中的行会残留 —— 过滤掉这些行，
+      // 让索引树与数据库保持同步，并清理孤儿行，避免共享状态表不断累积过期数据。
       const codeNameSet = new Set(codeNames);
       const isLive = (s: BranchState): boolean =>
         (!!s.collectionName && codeNameSet.has(s.collectionName)) ||
@@ -134,7 +133,7 @@ const IndexTree = () => {
           if (isLive(s)) parsed.push(s);
           else if (row.id != null) orphanIds.push(String(row.id));
         } catch {
-          /* skip */
+          /* 跳过 */
         }
       }
       setStates(parsed);
@@ -146,7 +145,7 @@ const IndexTree = () => {
         DataService.deleteEntities(STATE_COLLECTION, {
           expr: `id in [${quoted}]`,
         }).catch(() => {
-          /* best-effort cleanup */
+          /* 尽力清理，失败可忽略 */
         });
       }
     } catch (e: any) {
@@ -165,7 +164,7 @@ const IndexTree = () => {
   // identity、自建 GitLab 非标准端口），而这些分支本来是在仓库管理里配好的。
   const repoMap = useCodeRepoMap();
 
-  // Group by repo, build parent→children tree, flatten to depth-tagged rows.
+  // 按仓库分组，构建父→子索引树，再摊平成带深度标记的行。
   const groups = useMemo(() => {
     const refOf = (s: BranchState) =>
       s.collectionName ? repoMap.get(s.collectionName) : undefined;
@@ -191,15 +190,13 @@ const IndexTree = () => {
     for (const [repoUrl, list] of byRepo) {
       const byIdentity = new Map(list.map(s => [s.identity, s]));
 
-      // The repo root is ALWAYS the configured main branch when present, so a
-      // feature branch indexed before main (a temporary root) never displaces
-      // main. Fall back to a base=null branch, then the first.
+      // 仓库根节点始终选配置里的主分支（若存在），这样早于 main 索引的特性分支
+      // （临时根）就不会顶替 main。兜底依次为 base=null 的分支、第一个分支。
       const root =
         list.find(isMainBranch) || list.find(s => !s.baseIdentity) || list[0];
 
-      // A "secondary root" is a base=null (or parent-less) branch that ISN'T the
-      // chosen root — e.g. `b` indexed before main. Its descendants re-attach to
-      // the real root so the tree shows main on top with everything under it.
+      // 「次级根」是指非所选根的 base=null（或无父）分支 —— 例如早于 main 索引的
+      // `b`。它的后代重新挂到真正的根上，让索引树以 main 为顶部、其余都在其下。
       const resolvedParent = (s: BranchState): string | null =>
         s.parentIdentity && byIdentity.has(s.parentIdentity) && s.parentIdentity !== s.identity
           ? s.parentIdentity

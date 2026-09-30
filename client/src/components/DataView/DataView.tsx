@@ -14,13 +14,13 @@ const DataView = (props: { type: string; value: any }) => {
     case 'FloatVector':
     case 'Float16Vector':
       const stringValue = JSON.stringify(value, null);
-      // remove escape characters
+      // 移除转义字符
       const formattedValue = stringValue
         .replace(/\\n/g, '\n')
         .replace(/\\t/g, '\t')
         .replace(/\\"/g, '"');
 
-      // remove first and last double quotes if present
+      // 存在时移除首尾双引号
       const trimmedValue = formattedValue.replace(/^"|"$/g, '');
       return (
         <Typography variant="mono" component="p" title={trimmedValue}>

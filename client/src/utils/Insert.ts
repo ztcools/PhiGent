@@ -3,9 +3,9 @@ import { DataTypeEnum } from '@/consts'
 import type { FieldObject } from '@server/types';
 
 /**
- * function to convert uploaded csv to AttuGrid component accepted data type
- * @param data uploaded csv data, e.g. [['name1', 12], ['name2', 14]]
- * @returns key value pair object array, use index as key, e.g. [{0: 'name1', 1: 12}, {0: 'name2', 1: 14}]
+ * 把上传的 csv 转换为 AttuGrid 组件可接受的数据类型
+ * @param data 上传的 csv 数据，例如 [['name1', 12], ['name2', 14]]
+ * @returns 键值对对象数组，以 index 作为 key，例如 [{0: 'name1', 1: 12}, {0: 'name2', 1: 14}]
  */
 export const transferCsvArrayToTableData = (data: any[][]) => {
   return data.reduce(
@@ -15,10 +15,10 @@ export const transferCsvArrayToTableData = (data: any[][]) => {
 };
 
 /**
- * function to replace object key
- * @param obj e.g. {0: 'name1', 1: 12, 2: 'red'}
- * @param newKeys e.g. ['name', 'age', 'color']
- * @returns e.g. {name: 'name1', age: 12, color: 'red'}
+ * 替换对象 key 的方法
+ * @param obj 例如 {0: 'name1', 1: 12, 2: 'red'}
+ * @param newKeys 例如 ['name', 'age', 'color']
+ * @returns 例如 {name: 'name1', age: 12, color: 'red'}
  */
 const replaceKeysByIndex = (
   obj: any,
@@ -57,20 +57,20 @@ export const formatValue = (value: any) => {
 
 /**
  *
- * @param heads table heads, e.g. ['field1', 'field2', 'field3']
- * @param data table data, e.g. [[23, [2,3,34,4,5,56], [1,1,1,1,1,1,1,1,1,1,1]]]
- * @returns key value pair object array, with user selected heads or csv heads
+ * @param heads 表格表头，例如 ['field1', 'field2', 'field3']
+ * @param data 表格数据，例如 [[23, [2,3,34,4,5,56], [1,1,1,1,1,1,1,1,1,1,1]]]
+ * @returns 键值对对象数组，key 为用户选择的表头或 csv 表头
  */
 export const combineHeadsAndData = (
   heads: string[],
   data: any[],
   fields: FieldObject[]
 ) => {
-  // use index as key, flatten two-dimensional array
-  // filter useless row
+  // 以 index 作为 key，把二维数组展平
+  // 过滤掉无用的行
   const flatTableData = data
     .filter(d => d.some((item: string) => item !== ''))
     .reduce((result, arr) => [...result, { ...arr }], []);
-  // replace flatTableData key with real head rely on index
+  // 依据下标把 flatTableData 的 key 替换为真实表头
   return flatTableData.map((d: any) => replaceKeysByIndex(d, heads, fields));
 };

@@ -98,8 +98,8 @@ const Home = () => {
     let cancelled = false;
     (async () => {
       try {
-        // Skip querying code_index_state when it doesn't exist yet (fresh Milvus),
-        // otherwise attu pops a global "collection not found" error toast.
+        // code_index_state 尚不存在时（全新的 Milvus）跳过查询，
+        // 否则 attu 会弹出全局的 "collection not found" 错误提示。
         const names: string[] = await CollectionService.getCollectionsNames({
           db_name: 'default',
         }).catch(() => []);
@@ -154,7 +154,7 @@ const Home = () => {
     };
   }, []);
 
-  // calculation diff to the rootCoord create time
+  // 计算与 rootCoord 创建时间的差值
   const duration = useMemo(() => {
     let rootCoordCreatedTime = data.rootCoord?.infos?.created_time;
 
@@ -217,7 +217,7 @@ const Home = () => {
         boxSizing: 'border-box',
       }}
     >
-      {/* Main content */}
+      {/* 主内容区 */}
       <Box
         sx={{
           flex: 1,
@@ -228,7 +228,7 @@ const Home = () => {
           pr: 1,
         }}
       >
-        {/* Databases section */}
+        {/* Database 区块 */}
         <Box sx={{ mb: 3 }}>
           <SectionHeader
             title={databaseTrans('databases')}
@@ -289,7 +289,7 @@ const Home = () => {
           </Box>
         </Box>
 
-        {/* Index tree section */}
+        {/* Index Tree 区块 */}
         {repos.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <SectionHeader title={homeTrans('indexTree')} count={repos.length} />
@@ -307,7 +307,7 @@ const Home = () => {
           </Box>
         )}
 
-        {/* GitLab repos section */}
+        {/* GitLab 仓库区块 */}
         <Box sx={{ mb: 3 }}>
           <SectionHeader
             title={homeTrans('gitlabRepos')}
@@ -365,7 +365,7 @@ const Home = () => {
           </Box>
         </Box>
 
-        {/* System info section */}
+        {/* 系统信息区块 */}
         {data?.systemInfo && (
           <>
             <Box sx={{ mb: 3 }}>
@@ -438,7 +438,7 @@ const Home = () => {
         )}
       </Box>
 
-      {/* Right sidebar */}
+      {/* 右侧边栏 */}
       <Box
         sx={{
           width: 280,

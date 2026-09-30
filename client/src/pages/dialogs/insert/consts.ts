@@ -5,7 +5,7 @@ export enum InsertStepperEnum {
 }
 
 export enum InsertStatusEnum {
-  // init means not begin yet
+  // init 表示尚未开始
   init = 'init',
   loading = 'loading',
   success = 'success',

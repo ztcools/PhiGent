@@ -18,9 +18,8 @@ import {
 } from '@codemirror/view';
 import { EditorView } from 'codemirror';
 
-/// A gutter marker represents a bit of information attached to a line
-/// in a specific gutter. Your own custom markers have to extend this
-/// class.
+/// 一个 gutter marker 表示挂在某一行、某个 gutter 上的一点信息。
+/// 自定义 marker 必须继承该类。
 export abstract class GutterMarker extends RangeValue {
   /// @internal
   compare(other: GutterMarker) {
@@ -29,20 +28,18 @@ export abstract class GutterMarker extends RangeValue {
     );
   }
 
-  /// Compare this marker to another marker of the same type.
+  /// 将该 marker 与同类型的另一个 marker 比较。
   eq(other: GutterMarker): boolean {
     return false;
   }
 
-  /// Render the DOM node for this marker, if any.
+  /// 渲染该 marker 的 DOM 节点（如果有）。
   toDOM?(view: EditorView): Node;
 
-  /// This property can be used to add CSS classes to the gutter
-  /// element that contains this marker.
+  /// 该属性可用于给承载此 marker 的 gutter 元素添加 CSS class。
   elementClass!: string;
 
-  /// Called if the marker has a `toDOM` method and its representation
-  /// was removed from a gutter.
+  /// 当 marker 有 `toDOM` 方法且其表示已从 gutter 中移除时调用。
   destroy(dom: Node) {}
 }
 
@@ -52,15 +49,15 @@ GutterMarker.prototype.mapMode = MapMode.TrackBefore;
 GutterMarker.prototype.startSide = GutterMarker.prototype.endSide = -1;
 GutterMarker.prototype.point = true;
 
-/// Facet used to add a class to all gutter elements for a given line.
-/// Markers given to this facet should _only_ define an
-/// [`elementclass`](#view.GutterMarker.elementClass), not a
-/// [`toDOM`](#view.GutterMarker.toDOM) (or the marker will appear
-/// in all gutters for the line).
+/// 用于给指定行的所有 gutter 元素添加 class 的 Facet。
+/// 传给该 Facet 的 marker 应 _只_ 定义
+/// [`elementclass`](#view.GutterMarker.elementClass)，而不要定义
+/// [`toDOM`](#view.GutterMarker.toDOM)（否则该 marker 会出现在
+/// 该行的所有 gutter 中）。
 export const gutterLineClass = Facet.define<RangeSet<GutterMarker>>();
 
-/// Facet used to add a class to all gutter elements next to a widget.
-/// Should not provide widgets with a `toDOM` method.
+/// 用于给 widget 旁的所有 gutter 元素添加 class 的 Facet。
+/// 不应提供带 `toDOM` 方法的 widget。
 export const gutterWidgetClass =
   Facet.define<
     (
@@ -75,40 +72,37 @@ type Handlers = {
 };
 
 interface GutterConfig {
-  /// An extra CSS class to be added to the wrapper (`cm-gutter`)
-  /// element.
+  /// 额外加到包装元素（`cm-gutter`）上的 CSS class。
   class?: string;
-  /// Controls whether empty gutter elements should be rendered.
-  /// Defaults to false.
+  /// 控制是否渲染空的 gutter 元素。
+  /// 默认为 false。
   renderEmptyElements?: boolean;
-  /// Retrieve a set of markers to use in this gutter.
+  /// 获取该 gutter 要使用的一组 marker。
   markers?: (
     view: EditorView
   ) => RangeSet<GutterMarker> | readonly RangeSet<GutterMarker>[];
-  /// Can be used to optionally add a single marker to every line.
+  /// 可用于给每一行可选地添加一个 marker。
   lineMarker?: (
     view: EditorView,
     line: BlockInfo,
     otherMarkers: readonly GutterMarker[]
   ) => GutterMarker | null;
-  /// Associate markers with block widgets in the document.
+  /// 把 marker 与文档中的 block widget 关联起来。
   widgetMarker?: (
     view: EditorView,
     widget: WidgetType,
     block: BlockInfo
   ) => GutterMarker | null;
-  /// If line or widget markers depend on additional state, and should
-  /// be updated when that changes, pass a predicate here that checks
-  /// whether a given view update might change the line markers.
+  /// 如果行 marker 或 widget marker 依赖额外状态、需要在状态变化时更新，
+  /// 就在这里传入一个判定函数，用来检查某次 view 更新是否可能改变行 marker。
   lineMarkerChange?: null | ((update: ViewUpdate) => boolean);
-  /// Add a hidden spacer element that gives the gutter its base
-  /// width.
+  /// 添加一个隐藏的占位元素，用于撑出 gutter 的基础宽度。
   initialSpacer?: null | ((view: EditorView) => GutterMarker);
-  /// Update the spacer element when the view is updated.
+  /// view 更新时同步更新占位元素。
   updateSpacer?:
     | null
     | ((spacer: GutterMarker, update: ViewUpdate) => GutterMarker);
-  /// Supply event handlers for DOM events on this gutter.
+  /// 为该 gutter 上的 DOM 事件提供事件处理函数。
   domEventHandlers?: Handlers;
 }
 
@@ -127,8 +121,8 @@ const defaults = {
 
 const activeGutters = Facet.define<Required<GutterConfig>>();
 
-/// Define an editor gutter. The order in which the gutters appear is
-/// determined by their extension priority.
+/// 定义一个编辑器 gutter。gutter 的显示顺序
+/// 由它们的 extension 优先级决定。
 export function gutter(config: GutterConfig): Extension {
   return [gutters(), activeGutters.of({ ...defaults, ...config })];
 }
@@ -137,14 +131,13 @@ const unfixGutters = Facet.define<boolean, boolean>({
   combine: values => values.some(x => x),
 });
 
-/// The gutter-drawing plugin is automatically enabled when you add a
-/// gutter, but you can use this function to explicitly configure it.
+/// 添加 gutter 时会自动启用 gutter 绘制插件，但你也可以用这个函数
+/// 显式配置它。
 ///
-/// Unless `fixed` is explicitly set to `false`, the gutters are
-/// fixed, meaning they don't scroll along with the content
-/// horizontally (except on Internet Explorer, which doesn't support
+/// 除非把 `fixed` 显式设为 `false`，否则 gutter 是固定的，
+/// 即不会随内容水平滚动（Internet Explorer 除外，它不支持
 /// CSS [`position:
-/// sticky`](https://developer.mozilla.org/en-US/docs/Web/CSS/position#sticky)).
+/// sticky`](https://developer.mozilla.org/en-US/docs/Web/CSS/position#sticky)）。
 export function gutters(config?: { fixed?: boolean }): Extension {
   let result: Extension[] = [gutterView];
   if (config && config.fixed === false) result.push(unfixGutters.of(true));
@@ -171,9 +164,9 @@ const gutterView = ViewPlugin.fromClass(
       for (let gutter of this.gutters) this.dom.appendChild(gutter.dom);
       this.fixed = !view.state.facet(unfixGutters);
       if (this.fixed) {
-        // FIXME IE11 fallback, which doesn't support position: sticky,
-        // by using position: relative + event handlers that realign the
-        // gutter (or just force fixed=false on IE11?)
+        // FIXME IE11 的兜底方案：它不支持 position: sticky，
+        // 可改用 position: relative + 事件处理函数来重新对齐
+        // gutter（或者干脆在 IE11 上强制 fixed=false？）
         this.dom.style.position = 'sticky';
       }
       this.syncGutters(false);
@@ -182,9 +175,8 @@ const gutterView = ViewPlugin.fromClass(
 
     update(update: ViewUpdate) {
       if (this.updateGutters(update)) {
-        // Detach during sync when the viewport changed significantly
-        // (such as during scrolling), since for large updates that is
-        // faster.
+        // viewport 变化较大时（例如滚动过程中）同步前先 detach，
+        // 因为对大规模更新来说这样更快。
         let vpA = this.prevViewport,
           vpB = update.view.viewport;
         let vpOverlap = Math.min(vpA.to, vpB.to) - Math.max(vpA.from, vpB.from);
@@ -534,7 +526,7 @@ class GutterElement {
   }
 
   destroy() {
-    this.setMarkers(null as any, []); // First argument not used unless creating markers
+    this.setMarkers(null as any, []); // 除非要创建 marker，否则不使用第一个参数
   }
 }
 
@@ -548,17 +540,16 @@ function sameMarkers(
 }
 
 interface LineNumberConfig {
-  /// How to display line numbers. Defaults to simply converting them
-  /// to string.
+  /// 如何显示行号。默认只是把行号转成字符串。
   formatNumber?: (lineNo: number, state: EditorState) => string;
-  /// Supply event handlers for DOM events on this gutter.
+  /// 为该 gutter 上的 DOM 事件提供事件处理函数。
   domEventHandlers?: Handlers;
 }
 
-/// Facet used to provide markers to the line number gutter.
+/// 用于为行号 gutter 提供 marker 的 Facet。
 export const lineNumberMarkers = Facet.define<RangeSet<GutterMarker>>();
 
-/// Facet used to create markers in the line number gutter next to widgets.
+/// 用于在行号 gutter 中紧邻 widget 创建 marker 的 Facet。
 export const lineNumberWidgetMarker =
   Facet.define<
     (
@@ -651,7 +642,7 @@ const lineNumberGutter = activeGutters.compute([lineNumberConfig], state => ({
   domEventHandlers: state.facet(lineNumberConfig).domEventHandlers,
 }));
 
-/// Create a line number gutter extension.
+/// 创建行号 gutter extension。
 export function lineNumbers(config: LineNumberConfig = {}): Extension {
   return [lineNumberConfig.of(config), gutters(), lineNumberGutter];
 }
@@ -682,9 +673,8 @@ const activeLineGutterHighlighter = gutterLineClass.compute(
   }
 );
 
-/// Returns an extension that adds a `cm-activeLineGutter` class to
-/// all gutter elements on the [active
-/// line](#view.highlightActiveLine).
+/// 返回一个 extension，给[当前活动
+/// 行](#view.highlightActiveLine)上的所有 gutter 元素添加 `cm-activeLineGutter` class。
 export function highlightActiveLineGutter() {
   return activeLineGutterHighlighter;
 }

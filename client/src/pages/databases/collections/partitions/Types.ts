@@ -1,13 +1,13 @@
 import { ManageRequestMethods } from '@/consts';
 
-// delete and create
+// 删除与创建
 export interface PartitionManageParam {
   collectionName: string;
   partitionName: string;
   type: ManageRequestMethods;
 }
 
-// load and release
+// 加载与释放
 export interface PartitionParam {
   collectionName: string;
   partitionNames: string[];

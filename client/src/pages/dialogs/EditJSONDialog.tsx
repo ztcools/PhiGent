@@ -15,19 +15,19 @@ type EditJSONDialogProps = {
 };
 
 const EditJSONDialog: FC<EditJSONDialogProps> = props => {
-  // props
+  // 属性
   const { data, handleCloseDialog, handleConfirm } = props;
-  // UI states
+  // UI 状态
   const [disabled, setDisabled] = useState(true);
-  // translations
+  // 翻译函数
   const { t: btnTrans } = useTranslation('btn');
-  // theme
+  // 主题
   const theme = useTheme();
 
   const originalData = JSON.stringify(data, null, 2) + '\n';
   const [value, setValue] = useState(originalData);
 
-  // handle confirm
+  // 处理确认
   const _handleConfirm = async () => {
     handleConfirm(JSON.parse(value));
     handleCloseDialog();
@@ -36,7 +36,7 @@ const EditJSONDialog: FC<EditJSONDialogProps> = props => {
   const handleChange = (docValue: string) => {
     try {
       setValue(docValue);
-      // Validate JSON parsing
+      // 校验 JSON 解析是否合法
       JSON.parse(docValue);
       setDisabled(docValue === originalData);
     } catch (err) {

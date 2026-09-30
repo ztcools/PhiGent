@@ -25,24 +25,24 @@ const D3PrivilegeTree: React.FC<Props> = ({
   margin = { top: 20, right: 20, bottom: 20, left: 60 },
   rbacOptions,
 }) => {
-  // i18n
+  // 国际化
   const { t: btnTrans } = useTranslation('btn');
   const { t: userTrans } = useTranslation('user');
 
-  // theme
+  // 主题
   const theme = useTheme();
 
-  // Refs for SVG and G elements
+  // SVG 和 G 元素的 ref
   const svgRef = useRef<SVGSVGElement | null>(null);
   const gRef = useRef<SVGGElement | null>(null);
 
-  // Derive the options arrays as in DBCollectionSelector.
+  // 与 DBCollectionSelector 一样，推导出各选项数组。
   const rbacEntries = Object.entries(rbacOptions) as [
     string,
     Record<string, string>
   ][];
 
-  // privileges of the privilege groups
+  // 权限组包含的权限
   const privilegeGroups = rbacEntries.filter(([key]) =>
     key.endsWith('PrivilegeGroups')
   );
@@ -53,7 +53,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
     )
   );
 
-  // Transform privileges data into d3.hierarchy structure
+  // 把权限数据转换为 d3.hierarchy 结构
   const transformData = (privileges: DBCollectionsPrivileges): TreeNode => {
     let nodeCount = 0;
 
@@ -97,57 +97,57 @@ const D3PrivilegeTree: React.FC<Props> = ({
 
     const treeNode = transformData(privileges);
 
-    // get svg width and height by accessing dom element
+    // 通过访问 DOM 元素获取 svg 的宽高
     const svgWidth = svgRef.current?.clientWidth || 0;
     const svgHeight = svgRef.current?.clientHeight || 0;
 
-    // Calculate height based on tree structure rather than total node count
-    // Max nodes at any level would be a better indication for vertical space needed
+    // 根据树结构而非节点总数计算高度
+    // 用任意一层的最大节点数来推算所需纵向空间更准确
     const maxNodesAtLevel = Math.max(
-      1, // Role level
-      Object.keys(privileges).length, // Database level
+      1, // Role 层
+      Object.keys(privileges).length, // Database 层
       ...Object.values(privileges).map(
         db => Object.keys(db.collections).length
-      ), // Collection level
+      ), // Collection 层
       ...Object.values(privileges).reduce(
         (acc, db) =>
           acc.concat(
             Object.values(db.collections).map(col => Object.keys(col).length)
           ),
-        [] as number[] // Privilege level
+        [] as number[] // 权限层
       )
     );
 
-    // Increase the multiplier to provide more space between nodes
+    // 增大系数，让节点之间留出更多间距
     const nodeSpacing = 30;
     let height =
-      maxNodesAtLevel * nodeSpacing + margin.top + margin.bottom + 120; // Added extra padding
+      maxNodesAtLevel * nodeSpacing + margin.top + margin.bottom + 120; // 额外的内边距
 
-    // Ensure minimum height for better visualization
+    // 保证最小高度，以获得更好的可视化效果
     height = Math.max(height, svgHeight);
 
-    // Add additional padding for large datasets
+    // 为大数据量额外增加内边距
     if (maxNodesAtLevel > 15) {
-      height += maxNodesAtLevel * 10; // Extra space for very large datasets
+      height += maxNodesAtLevel * 10; // 超大数据量的额外空间
     }
 
-    const fontSize = 12; // Font size for text labels
-    const marginLeft = role.length * fontSize; // Adjust margin left based on role length
+    const fontSize = 12; // 文字标签的字号
+    const marginLeft = role.length * fontSize; // 根据 role 名称长度调整左边距
 
-    // Clear SVG
+    // 清空 SVG
     d3.select(svgRef.current).selectAll('*').remove();
 
-    // Create hierarchy and layout
+    // 创建层级结构并布局
     const root = d3.hierarchy<TreeNode>(treeNode);
     const treeLayout = d3
       .tree<TreeNode>()
       .size([height - margin.top - margin.bottom, svgWidth / 2])
       .separation((a: any, b: any) => {
         return a.parent === b.parent ? 3 : 4;
-      }); // Swap width and height for vertical layout
+      }); // 交换宽高以实现纵向布局
     treeLayout(root);
 
-    // Calculate the bounds of the tree
+    // 计算树的边界
     let x0 = Infinity;
     let x1 = -Infinity;
     let y0 = Infinity;
@@ -159,11 +159,11 @@ const D3PrivilegeTree: React.FC<Props> = ({
       if (d.y < y0) y0 = d.y;
     });
 
-    // Create SVG container with expanded height
+    // 创建高度扩展后的 SVG 容器
     const svg = d3.select(svgRef.current);
 
-    // Add a group for zoomable content
-    const g = svg.append('g').attr('transform', `translate(0, ${margin.top})`); // Add top margin
+    // 添加一个可缩放的容器分组
+    const g = svg.append('g').attr('transform', `translate(0, ${margin.top})`); // 添加上边距
     gRef.current = g.node();
 
     const colorMap: { [key: string]: any } = {
@@ -172,7 +172,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
       collection: theme.palette.primary.dark,
     };
 
-    // Create links (connections between nodes)
+    // 创建连线（节点之间的连接）
     g.selectAll('.link')
       .data(root.links())
       .enter()
@@ -192,7 +192,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
           }`
       );
 
-    // Create nodes
+    // 创建节点
     const nodes = g
       .selectAll('.node')
       .data(root.descendants())
@@ -201,7 +201,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
       .attr('class', 'node')
       .attr('transform', d => `translate(${d.y! + 3},${d.x})`);
 
-    // Add circles for nodes
+    // 为节点添加圆形
     nodes
       .append('circle')
       .attr('r', 3)
@@ -212,7 +212,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
           : `transparent`
       );
 
-    // Add text labels
+    // 添加文字标签
     nodes
       .append('text')
       .attr('dy', d => (d.children && d.data.name !== role ? -3 : 3))
@@ -232,29 +232,29 @@ const D3PrivilegeTree: React.FC<Props> = ({
           : d.data.name
       );
 
-    // Calculate scale to fit the entire tree
-    const treeWidth = y1 - y0 + marginLeft + 50; // Add some padding
-    const treeHeight = x1 - x0 + 60; // Increased padding
+    // 计算缩放比例以适配整棵树
+    const treeWidth = y1 - y0 + marginLeft + 50; // 添加一些内边距
+    const treeHeight = x1 - x0 + 60; // 增大内边距
     const scaleX = svgWidth / treeWidth;
     const scaleY = svgHeight / treeHeight;
-    const scale = Math.min(scaleX, scaleY, 0.95); // Slightly reduce to ensure visibility
+    const scale = Math.min(scaleX, scaleY, 0.95); // 略微缩小以确保完整可见
 
-    // Calculate translation to center the tree
+    // 计算平移量使树居中
     const centerX = (svgWidth - treeWidth * scale) / 2 - 60;
     const centerY =
       (svgHeight - treeHeight * scale) / 2 - x0 * scale + margin.top;
 
-    // Add zoom functionality
+    // 添加缩放功能
     const zoom: any = d3
       .zoom()
-      .scaleExtent([scale, 4]) // Set minimum zoom to fit entire tree
+      .scaleExtent([scale, 4]) // 最小缩放比例设为可容纳整棵树
       .on('zoom', event => {
         g.attr('transform', event.transform);
       });
 
-    svg.call(zoom); // Apply zoom to the SVG
+    svg.call(zoom); // 为 SVG 应用缩放
 
-    // Apply initial transform to show the entire tree
+    // 应用初始变换以展示整棵树
     svg
       .transition()
       .duration(250)
@@ -264,7 +264,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
       );
   }, [JSON.stringify({ privileges, margin, groupPrivileges, role })]);
 
-  // Update colors on theme change
+  // 主题切换时更新颜色
   useEffect(() => {
     const updateColors = () => {
       const colorMap: { [key: string]: any } = {
@@ -273,12 +273,12 @@ const D3PrivilegeTree: React.FC<Props> = ({
         collection: theme.palette.primary.dark,
       };
 
-      // Update link colors
+      // 更新连线颜色
       d3.select(svgRef.current)
         .selectAll('.link')
         .attr('stroke', (d: any) => colorMap[d.source.data.type!]);
 
-      // Update node colors
+      // 更新节点颜色
       d3.select(svgRef.current)
         .selectAll('.node circle')
         .attr('stroke', theme.palette.primary.main)
@@ -288,7 +288,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
             : `transparent`
         );
 
-      // Update text colors
+      // 更新文字颜色
       d3.select(svgRef.current)
         .selectAll('.node text')
         .attr('fill', (d: any) =>
@@ -301,7 +301,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
     updateColors();
   }, [theme]);
 
-  // UI handler
+  // UI 处理函数
   const handleDownload = () => {
     if (!svgRef.current) return;
 

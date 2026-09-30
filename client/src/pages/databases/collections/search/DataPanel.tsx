@@ -5,20 +5,20 @@ import { vs2015, github } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import type { GraphNode } from '../../types';
 
 const DataPanel = (props: { node: GraphNode; color: any }) => {
-  // i18n
+  // 国际化
   const { t: searchTrans } = useTranslation('search');
 
-  // theme
+  // 主题
   const theme = useTheme();
-  // props
+  // Props
   const { node, color } = props;
   const data = node.data;
 
-  // format data to json
+  // 将 data 格式化为 JSON
   const json = JSON.stringify(data, null, 2);
   const image = [];
 
-  // loop through the object find any value is an image url, add it into an image array;
+  // 遍历对象，把所有值为图片 URL 的项收集到 image 数组中
   for (const key in data) {
     if (
       typeof data[key] === 'string' &&

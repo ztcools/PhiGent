@@ -51,7 +51,7 @@ const handleOnChange = (param: IChangeParam) => {
   } = param;
   let input = event.target.value;
 
-  // fix for number input
+  // 数字输入的特殊处理
   if (!isNaN(input) && input.trim() !== '' && type === 'number') {
     input = parseFloat(input);
   }
@@ -290,7 +290,7 @@ const CustomInput = (props: ICustomInputProps) => {
       template = getTextfield(textConfig!, checkValid!, validInfo!);
       break;
     default:
-      // default is plain text input
+      // 默认为普通文本输入
       template = getTextfield(textConfig!, checkValid!, validInfo!);
   }
 

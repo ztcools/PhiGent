@@ -5,26 +5,26 @@ import { designTokens } from '@/styles/theme';
 export interface CardBaseProps {
   children: ReactNode;
   onClick?: () => void;
-  /** Highlight card with primary-color border (active state). */
+  /** 高亮卡片：使用主题色边框（激活态） */
   active?: boolean;
-  /** Render a dashed-border placeholder style (for "add new" tiles). */
+  /** 渲染虚线边框的占位样式（用于「新增」卡片） */
   dashed?: boolean;
-  /** Minimum tile size — square cards use the default. */
+  /** 卡片最小尺寸 — 正方形卡片使用默认值 */
   minWidth?: number | string;
   minHeight?: number | string;
   sx?: SxProps<Theme>;
 }
 
 /**
- * Unified card/tile primitive used by all "grid of cards" pages (Home databases,
- * repos, GitLab repos, SysCards, etc.). Shares a single hover / focus /
- * active style so all cards behave the same.
+ * 通用的卡片/瓦片基础组件，供所有「卡片网格」页面使用（首页数据库、仓库、
+ * GitLab 仓库、SysCards 等）。统一 hover / focus / 激活态样式，
+ * 保证所有卡片行为一致。
  *
- * Visual spec:
- * - 8px radius (theme.shape.borderRadius)
- * - 1px hairline border (theme.divider)
- * - subtle shadow on hover + border darkens to primary.main
- * - 200ms ease-in-out transition
+ * 视觉规范：
+ * - 8px 圆角（theme.shape.borderRadius）
+ * - 1px 细线边框（theme.divider）
+ * - hover 时轻微阴影 + 边框加深为 primary.main
+ * - 200ms ease-in-out 过渡
  */
 const CardBase: FC<CardBaseProps> = ({
   children,

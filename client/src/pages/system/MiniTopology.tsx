@@ -49,13 +49,13 @@ const MiniTopo: FC<MiniTopoProps> = props => {
   const theme = useTheme();
   const { selectedCord, selectedChildNode, setCord, setShowChildView } = props;
 
-  const WIDTH = 300; // width for svg
-  const HEIGHT = 300; // height for svg
-  const LINE = 80; // line lenght from lv2 node
-  const ANGLE = 10; // angle offset for lv2 node
-  const R1 = 45; // root node radius
-  const R2 = 30; // lv1 node radius
-  const W3 = 20; // width of child rect
+  const WIDTH = 300; // svg 宽度
+  const HEIGHT = 300; // svg 高度
+  const LINE = 80; // lv2 节点的连线长度
+  const ANGLE = 10; // lv2 节点的角度偏移
+  const R1 = 45; // 根节点半径
+  const R2 = 30; // lv1 节点半径
+  const W3 = 20; // 子矩形宽度
 
   const childNodeCenterX = WIDTH / 2 + LINE * Math.cos((ANGLE * Math.PI) / 180);
   const childNodeCenterY =

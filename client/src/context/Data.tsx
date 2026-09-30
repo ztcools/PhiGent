@@ -31,17 +31,17 @@ export const dataContext = createContext<DataContextType>({
 const { Provider } = dataContext;
 
 export const DataProvider = (props: { children: React.ReactNode }) => {
-  // auth context
+  // 认证 Context
   const { clientId } = useContext(authContext);
 
-  // UI preferences hook
+  // UI 偏好 Hook
   const { ui, setUIPref } = useUIPrefs();
 
   // Database Hook
   const { databases, loadingDatabases, database, setDatabase, fetchDatabases } =
     useDatabaseManagement();
 
-  //  useCollections hook
+  // useCollections Hook
   const {
     collections,
     setCollections,
@@ -61,7 +61,7 @@ export const DataProvider = (props: { children: React.ReactNode }) => {
     onCollectionUpdate: updateCollections,
   });
 
-  // Effect to fetch collections when connection is established or database changes
+  // 连接建立或 Database 变化时拉取 Collection 的副作用
   useEffect(() => {
     if (connected) {
       fetchCollections();

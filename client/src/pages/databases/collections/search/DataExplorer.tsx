@@ -14,20 +14,20 @@ interface DataExplorerProps {
   onNodeClick?: (node: any) => void;
 }
 
-// Helper function to check if node already exists
+// 辅助函数：判断节点是否已存在
 function findNodes(nodes: any[], vector: any) {
   return nodes.filter(node => node.id === vector.id);
 }
 
-// Helper function to check if a link already exists
+// 辅助函数：判断连线是否已存在
 function linkExists(links: any[], source: string, target: string) {
   return links.some(link => link.source === source && link.target === target);
 }
 
-// d3 color scale for node color
+// 节点颜色使用的 d3 颜色比例尺
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-// Format Milvus search result to graph data
+// 把 Milvus 搜索结果格式化为图数据
 export const formatMilvusData = (
   graphData: GraphData,
   searchedVector: {
@@ -37,14 +37,14 @@ export const formatMilvusData = (
   results: SearchResultData[]
 ) => {
   const graphDataCopy = cloneObj(graphData) as GraphData;
-  // if searchedVector's id is 'root', color = 0
-  // otherwise, find the largest color in the graphDataCopy.nodes, and color = largest color + 1
+  // 若 searchedVector 的 id 为 'root'，color = 0
+  // 否则找出 graphDataCopy.nodes 中最大的 color，color = 最大 color + 1
   const color =
     searchedVector.id === 'root'
       ? 0
       : Math.max(...graphDataCopy.nodes.map(node => node.color)) + 1;
 
-  // Add searched vector as a node if not present
+  // 搜索向量不存在时，将其作为节点加入
   const existingNodes = findNodes(graphDataCopy.nodes, searchedVector);
   if (!existingNodes.length) {
     graphDataCopy.nodes.push({
@@ -54,7 +54,7 @@ export const formatMilvusData = (
       color: color,
     });
   } else {
-    // Update existing node with new data
+    // 用新数据更新已存在的节点
     existingNodes.forEach(node => {
       if (!node.searchIds.includes(searchedVector.id)) {
         node.searchIds.push(searchedVector.id);
@@ -63,7 +63,7 @@ export const formatMilvusData = (
   }
 
   results.forEach(result => {
-    // Add result vector as a node if not present
+    // 结果向量不存在时，将其作为节点加入
     const existingNodes = findNodes(graphDataCopy.nodes, result);
     if (!existingNodes.length) {
       graphDataCopy.nodes.push({
@@ -73,7 +73,7 @@ export const formatMilvusData = (
         color: color,
       });
     } else {
-      // Update existing node with new data
+      // 用新数据更新已存在的节点
       existingNodes.forEach(node => {
         if (!node.searchIds.includes(searchedVector.id)) {
           node.searchIds.push(searchedVector.id);
@@ -81,7 +81,7 @@ export const formatMilvusData = (
       });
     }
 
-    // Create a link between the searched vector and the result vector if not present
+    // 搜索向量与结果向量之间没有连线时创建连线
     const sourceId = searchedVector.id;
     const targetId = result.id;
     if (!linkExists(graphDataCopy.links, sourceId, targetId)) {
@@ -93,7 +93,7 @@ export const formatMilvusData = (
     }
   });
 
-  // Return formatted graph data
+  // 返回格式化后的图数据
   return graphDataCopy;
 };
 
@@ -103,11 +103,11 @@ const DataExplorer = ({
   height = 600,
   onNodeClick,
 }: DataExplorerProps) => {
-  // states
+  // 状态
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
-  //  we use ref to store the selected nodes, so that we need to re-render the component by this state withouth affacting the d3 effect
+  //  用 ref 保存选中的节点，再借助这个 state 触发组件重渲染，从而不影响 d3 的效果
   const [render, setRender] = useState<number>(0);
-  // theme
+  // 主题
   const theme = useTheme();
 
   // ref
@@ -116,7 +116,7 @@ const DataExplorer = ({
   const gRef = useRef<SVGGElement>(null);
   const selectedNodesRef = useRef<any[]>([]);
 
-  // filter out data from selectedNodesRef when data changes
+  // data 变化时，从 selectedNodesRef 中过滤掉已不存在的数据
   useEffect(() => {
     selectedNodesRef.current = selectedNodesRef.current.filter(node =>
       data.nodes.some(n => n.id === node.id)
@@ -124,36 +124,36 @@ const DataExplorer = ({
     setRender(prev => prev + 1);
   }, [JSON.stringify(data)]);
 
-  // d3 effect
+  // d3 副作用
   useEffect(() => {
     if (!svgRef.current || !gRef.current) return;
-    // if no data, clear selectedNodes and hoveredNode
+    // 没有数据时，清空选中节点和悬浮节点
     if (!data.nodes.length) {
       selectedNodesRef.current = [];
       setHoveredNode(null);
     }
-    // states
+    // 状态
     let _isDragging = false;
 
     const svg = d3.select(svgRef.current);
     const g = d3.select(gRef.current);
 
-    // Clear previous nodes and links before rendering new data
-    g.selectAll('*').remove(); // This removes all children of the <g> element
+    // 渲染新数据前先清除之前的节点和连线
+    g.selectAll('*').remove(); // 这会移除 <g> 元素的所有子元素
 
-    // Define zoom behavior
+    // 定义缩放行为
     const zoom = d3
       .zoom()
-      .scaleExtent([0.1, 10]) // Limit zoom scale
+      .scaleExtent([0.1, 10]) // 限制缩放比例
       .on('zoom', event => {
-        // Apply transform to the g element (where the graph is)
+        // 把变换应用到 g 元素（图所在的位置）
         g.attr('transform', event.transform);
       });
 
-    // Apply zoom behavior to the svg
+    // 把缩放行为应用到 svg
     svg.call(zoom as any).on('dblclick.zoom', null);
 
-    // clone data to avoid mutating the original data
+    // 克隆数据，避免修改原始数据
     const links = cloneObj(data.links) as GraphLink[];
     const nodes = cloneObj(data.nodes) as GraphNode[];
 
@@ -173,7 +173,7 @@ const DataExplorer = ({
       .force('charge', d3.forceManyBody().strength(-200))
       .force('center', d3.forceCenter(width / 3, height / 3));
 
-    // Draw links
+    // 绘制连线
     const link = g
       .selectAll('.link')
       .data(links)
@@ -183,7 +183,7 @@ const DataExplorer = ({
       .attr('stroke-width', 2)
       .attr('stroke', theme.palette.divider);
 
-    // Draw nodes
+    // 绘制节点
     const node = g
       .selectAll('.node')
       .data(nodes)
@@ -206,10 +206,10 @@ const DataExplorer = ({
         selectedNodesRef.current.some(n => n.id === d.id) ? 2 : 0
       )
       .on('mouseover', (event, d) => {
-        // Highlight the hovered node, keeping selected node unaffected
+        // 高亮悬浮的节点，不影响已选中的节点
         // d3.select(event.target).attr('stroke', 'black').attr('stroke-width', 2);
-        // calcuate the position of the hovered node, place the tooltip accordingly, it should
-        // get parent node's position and the mouse position
+        // 计算悬浮节点的位置，据此放置 tooltip：需要取父节点的位置
+        // 以及鼠标的位置
         const parentPosition = rootRef.current?.getBoundingClientRect();
         const nodeX = event.clientX - parentPosition!.left;
         const nodeY = event.clientY - parentPosition!.top;
@@ -226,7 +226,7 @@ const DataExplorer = ({
           node => node.id === d.id
         );
 
-        // Update selected nodes
+        // 更新选中的节点
         if (isAlreadySelected) {
           selectedNodesRef.current = selectedNodesRef.current.filter(
             node => node.id !== d.id
@@ -235,18 +235,18 @@ const DataExplorer = ({
           selectedNodesRef.current = [d, ...selectedNodesRef.current];
         }
 
-        // Add circle around the selected node and remove it when unselected
+        // 为选中的节点加上外圈，取消选中时移除
         d3.select(this)
           .attr('r', isAlreadySelected ? 8 : 16)
           .attr('stroke', isAlreadySelected ? 'transparent' : 'black')
           .attr('stroke-width', isAlreadySelected ? 0 : 2);
 
-        // Render the selected nodes
+        // 渲染选中的节点
         setRender(prev => prev + 1);
       })
       .on('dblclick', (event, d) => {
         onNodeClick && onNodeClick(d);
-        // remove the selected node
+        // 移除选中的节点
         setHoveredNode(null);
       })
       .call(

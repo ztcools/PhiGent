@@ -13,7 +13,7 @@ export const descendingNumberComparator = (
   b: numberObj,
   orderBy: string
 ) => {
-  // need to round the value to avoid floating point error
+  // 需要四舍五入以避免浮点误差
   const roundValue = (value: number) => Math.round(value * 1e12) / 1e12;
 
   const aValue = roundValue(a[orderBy]);
@@ -33,8 +33,8 @@ export const descendingStringComparator = (
   b: stringObj,
   orderBy: string
 ) => {
-  const aValue = a[orderBy].toLowerCase(); // Convert to lowercase for case-insensitive comparison
-  const bValue = b[orderBy].toLowerCase(); // Convert to lowercase for case-insensitive comparison
+  const aValue = a[orderBy].toLowerCase(); // 转成小写以实现大小写不敏感的比较
+  const bValue = b[orderBy].toLowerCase(); // 转成小写以实现大小写不敏感的比较
 
   if (bValue < aValue) {
     return -1;

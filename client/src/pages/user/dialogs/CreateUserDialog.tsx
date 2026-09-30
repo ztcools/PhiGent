@@ -23,29 +23,29 @@ const CreateUser: FC<CreateUserProps> = ({
   handleClose,
   roleOptions,
 }) => {
-  // context
+  // 上下文
   const { isDedicated } = useContext(authContext);
-  // i18n
+  // 国际化
   const { t: commonTrans } = useTranslation();
   const { t: userTrans } = useTranslation('user');
   const { t: btnTrans } = useTranslation('btn');
   const { t: warningTrans } = useTranslation('warning');
 
-  // UI states
+  // UI 状态
   const [form, setForm] = useState<CreateUserParams>({
     username: '',
     password: '',
     roles: [],
   });
 
-  // selected Role
+  // 已选角色
   const checkedForm = useMemo(() => {
     return formatForm(form);
   }, [form]);
 
   const { validation, checkIsValid, disabled } = useFormValidation(checkedForm);
 
-  // UI handlers
+  // UI 事件处理
   const handleInputChange = (key: 'username' | 'password', value: string) => {
     setForm(v => ({ ...v, [key]: value }));
   };

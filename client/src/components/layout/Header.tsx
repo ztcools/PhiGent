@@ -25,7 +25,7 @@ import icons from '../icons/Icons';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 
 const Header: FC = () => {
-  // use context
+  // 使用 Context
   const { navInfo } = useContext(navContext);
   const { mode, toggleColorMode } = useContext(ColorModeContext);
   const { database, databases, setDatabase } = useContext(dataContext);
@@ -36,21 +36,21 @@ const Header: FC = () => {
   const { address, username } = authReq;
   const navigate = useNavigate();
 
-  // UI states
+  // UI 状态
   const [dbAnchorEl, setDbAnchorEl] = useState<null | HTMLElement>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
 
-  // i18n
+  // 国际化
   const { t: commonTrans } = useTranslation();
   const { t: successTrans } = useTranslation('success');
   const { t: userTrans } = useTranslation('user');
 
-  // icons
+  // 图标
   const BackIcon = icons.back;
   const LogoutIcon = icons.logout;
   const Avatar = icons.avatar;
 
-  // UI handlers
+  // UI 事件处理
   const handleBack = (path: string) => {
     navigate(path);
   };
@@ -101,7 +101,7 @@ const Header: FC = () => {
     setDbAnchorEl(null);
   };
 
-  // local computes
+  // 本地计算
   const dbOptions = databases.map(d => ({ value: d.name, label: d.name }));
 
   return (

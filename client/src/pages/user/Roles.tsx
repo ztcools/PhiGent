@@ -16,11 +16,11 @@ import D3PrivilegeTree from './D3PrivilegeTree';
 
 const Roles = () => {
   useNavigationHook(ROUTE_PATHS.USERS);
-  // context
+  // 上下文
   const { database } = useContext(dataContext);
   const { setDialog, handleCloseDialog, openSnackBar } =
     useContext(rootContext);
-  // ui states
+  // UI 状态
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState<RolesWithPrivileges[]>([]);
   const [rbacOptions, setRbacOptions] = useState<RBACOptions>(

@@ -14,24 +14,24 @@ export interface CreateDatabaseProps {
 }
 
 const CreateDatabaseDialog: FC<CreateDatabaseProps> = ({ onCreate }) => {
-  // context
+  // Context
   const { fetchDatabases } = useContext(dataContext);
   const { openSnackBar, handleCloseDialog } = useContext(rootContext);
 
-  // i18n
+  // 国际化
   const { t: databaseTrans } = useTranslation('database');
   const { t: btnTrans } = useTranslation('btn');
   const { t: warningTrans } = useTranslation('warning');
   const { t: successTrans } = useTranslation('success');
   const { t: dbTrans } = useTranslation('database');
 
-  // UI state
+  // UI 状态
   const [form, setForm] = useState<CreateDatabaseParams>({
     db_name: '',
   });
   const [loading, setLoading] = useState(false);
 
-  // validation
+  // 校验
   const checkedForm = useMemo(() => {
     return formatForm(form);
   }, [form]);
@@ -64,11 +64,11 @@ const CreateDatabaseDialog: FC<CreateDatabaseProps> = ({ onCreate }) => {
 
   const handleCreate = async () => {
     setLoading(true);
-    // create database
+    // 创建 Database
     await DatabaseService.createDatabase(form).finally(() => {
       setLoading(false);
     });
-    // refresh database list
+    // 刷新 Database 列表
     await fetchDatabases();
 
     openSnackBar(successTrans('create', { name: dbTrans('database') }));

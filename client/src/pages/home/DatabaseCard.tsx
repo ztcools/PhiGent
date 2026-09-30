@@ -26,12 +26,12 @@ const DatabaseCard: FC<DatabaseCardProps> = ({
   fetchDatabases,
   isActive = false,
 }) => {
-  // context
+  // 上下文
   const { isManaged, isServerless } = useContext(authContext);
   const { setDialog, openSnackBar, handleCloseDialog } =
     useContext(rootContext);
 
-  // i18n
+  // 国际化
   const { t: homeTrans } = useTranslation('home');
   const { t: successTrans } = useTranslation('success');
   const { t: dbTrans } = useTranslation('database');

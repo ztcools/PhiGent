@@ -59,21 +59,21 @@ export const initWebSocket = (server: http.Server) => {
     if (clientId) {
       clients.set(clientId, socket);
 
-      // Log connection event
+      // 记录连接事件
       logWebSocketRequest(socket, 'CONNECT');
 
       socket.on('disconnect', () => {
-        // Log disconnect event
+        // 记录断开连接事件
         logWebSocketRequest(socket, 'DISCONNECT');
         clients.delete(clientId);
       });
 
       socket.on('error', (error: Error) => {
-        // Log error event
+        // 记录错误事件
         logWebSocketRequest(socket, 'error', error.message);
       });
 
-      // Log custom events
+      // 记录自定义事件
       socket.onAny((event, ...args) => {
         logWebSocketRequest(socket, event, args);
       });
@@ -82,16 +82,16 @@ export const initWebSocket = (server: http.Server) => {
 
   io.use((socket, next) => {
     const originalEmit = socket.emit;
-    // Convert the assigned function to an arrow function
+    // 将赋值的函数转换为箭头函数
     socket.emit = (event: string, ...args: any[]) => {
       logWebSocketRequest(socket, event, args, 'out');
-      // Use .apply() with the correct context (socket)
+      // 使用 .apply() 绑定正确的上下文（socket）
       return originalEmit.apply(socket, [event, ...args]);
     };
     next();
   });
 
-  // Handle server-level errors
+  // 处理服务端级别的错误
   io.on('error', (error: Error) => {
     if (!isElectron()) {
       console.error(chalk.red(`ws server error: ${error.message}`));

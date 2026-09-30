@@ -28,13 +28,13 @@ export const parseJson = (jsonData: any) => {
         )
       );
     }
-    // coordinator node
+    // coordinator 节点
     if (
       type?.toLowerCase().includes('coord') ||
       type?.toLowerCase().includes('proxy')
     ) {
       nodes.push(node);
-      // other nodes
+      // 其他节点
     } else {
       childNodes.push(node);
     }
@@ -48,7 +48,7 @@ export const parseJson = (jsonData: any) => {
   return { nodes, childNodes, system, workingNodes, allNodes };
 };
 
-// get nodes
+// 获取节点
 export const getNode = (nodes: any, type: MILVUS_NODE_TYPE) => {
   return nodes.filter((n: any) => n.infos.type === type);
 };

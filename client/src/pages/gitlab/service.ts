@@ -25,9 +25,9 @@ export interface GitRepo {
   branches?: RepoBranch[];
   hasToken: boolean;
   auth?: 'https' | 'ssh' | 'anonymous';
-  // Detected by the service from the URL (git-host.ts). Optional so an older
-  // service build that doesn't send them still renders — the console falls back
-  // to detecting locally from `url`.
+  // 由服务端根据 URL 探测得出（git-host.ts）。设为可选，这样旧版服务端
+  // 即使不返回这些字段也能正常渲染 —— 前端会退化为
+  // 从 `url` 本地探测。
   platform?: GitPlatform;
   platformLabel?: string;
   tokenUser?: string;
@@ -63,9 +63,9 @@ export interface GitIndexStatus {
 
 const base = (): string => {
   const env = (window as any)._env_ || {};
-  // GIT_INDEX_HOST lets a deployment point the UI at a remote git-index-service
-  // (e.g. http://10.50.4.149:8795) instead of assuming it's co-located with the
-  // page host. Falls back to same-hostname:GIT_INDEX_PORT for co-located setups.
+  // GIT_INDEX_HOST 允许部署时把前端指向远程 git-index-service
+  // （例如 http://10.50.4.149:8795），而不是假定它与页面同主机。
+  // 同主机部署时回退为同 hostname:GIT_INDEX_PORT。
   if (env.GIT_INDEX_HOST) return String(env.GIT_INDEX_HOST).replace(/\/$/, '');
   const port = env.GIT_INDEX_PORT || '8795';
   return `${window.location.protocol}//${window.location.hostname}:${port}`;
@@ -90,9 +90,9 @@ export const GitIndexService = {
     fetch(`${base()}/ssh-key`).then(json),
 
   /**
-   * Authoritative platform detection for a URL about to be added. The form shows
-   * an instant local guess (gitHost.ts) while typing and confirms it against this
-   * once the URL settles, so a service-side table update wins over the mirror.
+   * 对即将添加的 URL 做权威平台探测。表单在输入过程中先给出本地即时猜测
+   * （gitHost.ts），URL 稳定后再用本接口确认，因此服务端平台映射表的
+   * 更新会覆盖本地镜像的判断。
    */
   detect: (url: string) =>
     fetch(`${base()}/detect?url=${encodeURIComponent(url)}`).then(json),

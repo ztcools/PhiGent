@@ -27,7 +27,7 @@ const Circle = styled('div')(({ color }) => ({
   borderRadius: '50%',
   width: '10px',
   height: '10px',
-  marginRight: '4px', // Equivalent to theme.spacing(0.5)
+  marginRight: '4px', // 等价于 theme.spacing(0.5)
 }));
 
 const LoadingIconWrapper = styled('div')({

@@ -5,37 +5,37 @@ import { SchemaObject } from '@server/types';
 import { InsertStatusEnum } from './consts';
 
 export interface InsertContentProps {
-  // optional on partition page since its collection is fixed
+  // 在 Partition 页面可选，因为该页的 Collection 是固定的
   collections?: CollectionObject[];
-  // required on partition page since user can't select collection to get schema
+  // 在 Partition 页面必传，因为用户无法选择 Collection 来获取 Schema
   schema?: SchemaObject;
-  // required on partition page
+  // 在 Partition 页面必传
   partitions?: PartitionData[];
 
-  // insert default selected collection
-  // if default value is not '', collections not selectable
+  // 插入时默认选中的 Collection
+  // 若默认值不为 ''，则 Collection 不可选择
   defaultSelectedCollection: string;
 
-  // insert default selected partition
-  // if default value is not '', partitions not selectable
+  // 插入时默认选中的 Partition
+  // 若默认值不为 ''，则 Partition 不可选择
   defaultSelectedPartition: string;
 
   onInsert: Function;
 }
 
 export interface InsertImportProps {
-  // selectors options
+  // 选择器选项
   collectionOptions: Option[];
   partitionOptions: Option[];
-  // selectors value
+  // 选择器选中值
   selectedCollection: string;
   selectedPartition: string;
 
-  // selectors change methods
-  // optional if collection not selectable
+  // 选择器的变更方法
+  // Collection 不可选择时为可选
   handleCollectionChange?: (collectionName: string) => void;
   handlePartitionChange: (partitionName: string) => void;
-  // handle uploaded data
+  // 处理上传的数据
   handleUploadedData: (
     data: string,
     uploader: HTMLFormElement,
@@ -55,7 +55,7 @@ export interface InsertPreviewProps {
 
   isContainFieldNames: number;
   handleIsContainedChange: (isContained: number) => void;
-  file: File | null; // csv file
+  file: File | null; // CSV 文件
 }
 
 export interface InsertStatusProps {

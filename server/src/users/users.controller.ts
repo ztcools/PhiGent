@@ -36,7 +36,7 @@ export class UserController {
   }
 
   generateRoutes() {
-    // user
+    // 用户
     this.router.get('/', this.getUsers.bind(this));
     this.router.post(
       '/',
@@ -60,7 +60,7 @@ export class UserController {
       this.unassignUserRole.bind(this)
     );
 
-    // role
+    // 角色
     this.router.get('/rbac', this.rbac.bind(this));
     this.router.get(
       '/privilegeGroups',
@@ -79,7 +79,7 @@ export class UserController {
       this.updateRolePrivileges.bind(this)
     );
 
-    // privilege group
+    // 权限组
     this.router.get('/privilege-groups', this.getPrivilegeGrps.bind(this));
     this.router.get(
       '/privilege-groups/:group_name',
@@ -119,7 +119,7 @@ export class UserController {
           roles: roles.results[0].roles.map(r => r.name),
         });
         if (username === 'root') {
-          // Remove the recently pushed "root" user and insert it at the beginning of the results array
+          // 把刚插入的 root 用户取出，插到结果数组开头
           const rootUser = results.pop();
           results.unshift(rootUser);
         }
@@ -184,58 +184,58 @@ export class UserController {
 
   async getRoles(req: Request, res: Response, next: NextFunction) {
     try {
-      // Fetch all roles
+      // 获取所有角色
       const rolesResult = await this.userService.getRoles(req.clientId);
 
-      // Initialize the result array
+      // 初始化结果数组
       const rolesWithPrivileges: RolesWithPrivileges[] = [];
 
-      // Iterate through each role
+      // 遍历每个角色
       for (let i = 0; i < rolesResult.results.length; i++) {
         const roleName = rolesResult.results[i].role.name;
 
-        // Fetch grants for the current role
+        // 获取当前角色已有的授权
         const grantsResponse = await this.userService.listGrants(
           req.clientId,
           roleName
         );
 
-        // Initialize the privileges structure for the current role
+        // 初始化当前角色的权限结构
         const dbCollectionsPrivileges: DBCollectionsPrivileges = {};
 
-        // Iterate through each grant entity
+        // 遍历每个授权实体
         for (const entity of grantsResponse.entities) {
           const { db_name, object_name, grantor } = entity;
 
-          // Initialize the database entry if it doesn't exist
+          // Database 条目不存在则初始化
           if (!dbCollectionsPrivileges[db_name]) {
             dbCollectionsPrivileges[db_name] = {
               collections: {},
             };
           }
 
-          // Initialize the collection entry if it doesn't exist
+          // Collection 条目不存在则初始化
           if (!dbCollectionsPrivileges[db_name].collections[object_name]) {
             dbCollectionsPrivileges[db_name].collections[object_name] = {};
           }
 
-          // Add the privilege to the collection
+          // 把权限加到该 Collection 上
           dbCollectionsPrivileges[db_name].collections[object_name][
             grantor.privilege.name
           ] = true;
         }
 
-        // Add the role and its privileges to the result array
+        // 把角色及其权限加入结果数组
         rolesWithPrivileges.push({
           roleName,
           privileges: dbCollectionsPrivileges,
         });
       }
 
-      // Send the transformed result
+      // 返回转换后的结果
       res.status(200).json(rolesWithPrivileges);
     } catch (error) {
-      // Pass the error to the error-handling middleware
+      // 把错误交给错误处理中间件
       next(error);
     }
   }
@@ -290,14 +290,14 @@ export class UserController {
     const results = [];
 
     try {
-      // get user existing roles
+      // 获取用户已有的角色
       const selectUser = await this.userService.selectUser(req.clientId, {
         username,
         includeRoleInfo: false,
       });
 
       const existingRoles = selectUser.results[0].roles;
-      // remove user existing roles
+      // 移除用户已有的角色
       for (let i = 0; i < existingRoles.length; i++) {
         if (existingRoles[i].name.length > 0) {
           await this.userService.unassignUserRole(req.clientId, {
@@ -307,7 +307,7 @@ export class UserController {
         }
       }
 
-      // assign new user roles
+      // 为用户分配新角色
       for (let i = 0; i < roles.length; i++) {
         const result = await this.userService.assignUserRole(req.clientId, {
           username,
@@ -432,30 +432,30 @@ export class UserController {
     const clientId = req.clientId;
 
     const results = [];
-    const rollbackStack = []; // Stack to store actions for rollback in case of failure
+    const rollbackStack = []; // 用于失败时回滚的操作栈
 
     try {
-      // check if role exists
+      // 检查角色是否存在
       const hasRole = await this.userService.hasRole(clientId, {
         roleName,
       });
-      // if role does not exist, create it
+      // 角色不存在则先创建
       if (hasRole.hasRole === false) {
         const res = await this.userService.createRole(clientId, { roleName });
 
-        // If the role creation fails, propagate the error
+        // 创建角色失败时向上抛出错误
         if (res.error_code !== ErrorCode.SUCCESS) {
           throw new Error(res.reason);
         }
       }
 
-      // Iterate over each database
+      // 遍历每个 Database
       for (const [dbName, dbPrivileges] of Object.entries(privileges)) {
-        // Iterate over each collection in the database
+        // 遍历该 Database 下的每个 Collection
         for (const [collectionName, collectionPrivileges] of Object.entries(
           dbPrivileges.collections
         )) {
-          // Iterate over each privilege in the collection
+          // 遍历该 Collection 下的每个权限
           for (const [privilegeName, isGranted] of Object.entries(
             collectionPrivileges
           )) {
@@ -469,24 +469,24 @@ export class UserController {
             let result;
             try {
               if (isGranted) {
-                // If the privilege is true, call grantPrivilegeV2
+                // 权限为 true 时调用 grantPrivilegeV2
                 result = await this.userService.grantPrivilegeV2(
                   clientId,
                   requestData
                 );
-                // Push the reverse action (revoke) to the rollback stack
+                // 把反向操作（revoke）压入回滚栈
                 rollbackStack.push({ action: 'revoke', data: requestData });
               } else {
-                // If the privilege is false, call revokePrivilegeV2
+                // 权限为 false 时调用 revokePrivilegeV2
                 result = await this.userService.revokePrivilegeV2(
                   clientId,
                   requestData
                 );
-                // Push the reverse action (grant) to the rollback stack
+                // 把反向操作（grant）压入回滚栈
                 rollbackStack.push({ action: 'grant', data: requestData });
               }
 
-              // Collect the result
+              // 收集结果
               results.push({
                 dbName,
                 collectionName,
@@ -495,13 +495,13 @@ export class UserController {
                 result,
               });
             } catch (error) {
-              // If an error occurs, log it and initiate rollback
+              // 出错时记录日志并开始回滚
               console.error(
                 `Failed to update privilege: ${privilegeName} for collection: ${collectionName} in database: ${dbName}`,
                 error
               );
 
-              // Rollback all previously applied changes
+              // 回滚此前已生效的所有变更
               while (rollbackStack.length > 0) {
                 const { action, data } = rollbackStack.pop();
                 try {
@@ -518,20 +518,20 @@ export class UserController {
                 }
               }
 
-              // drop the role if creation fails
+              // 角色创建失败时删除该角色
               await this.userService.deleteRole(clientId, { roleName });
 
-              // Propagate the error to the error handler
+              // 把错误抛给错误处理器
               throw error;
             }
           }
         }
       }
 
-      // Return the results if everything succeeds
+      // 全部成功时返回结果
       res.status(200).json({ results });
     } catch (error) {
-      // Pass the error to the error-handling middleware
+      // 把错误交给错误处理中间件
       next(error);
     }
   }
@@ -543,12 +543,12 @@ export class UserController {
   ) {
     const { group_name, privileges } = req.body;
     try {
-      // create the group
+      // 创建权限组
       await this.userService.createPrivilegeGroup(req.clientId, {
         group_name,
       });
 
-      // add privileges to the group
+      // 向权限组中添加权限
       const result = await this.userService.addPrivilegeToGroup(req.clientId, {
         group_name,
         privileges,
@@ -606,27 +606,27 @@ export class UserController {
     res: Response,
     next: NextFunction
   ) {
-    // get privilege group
+    // 获取权限组
     const { group_name } = req.params;
     const { privileges } = req.body;
-    // get existing group
+    // 获取已有的权限组
     const theGroup = await this.userService.getPrivilegeGroup(req.clientId, {
       group_name,
     });
 
-    // if no group found, return error
+    // 未找到权限组则返回错误
     if (!theGroup) {
       return next(new Error('Group not found'));
     }
 
     try {
-      // remove all privileges from the group
+      // 移除权限组中的所有权限
       await this.userService.removePrivilegeFromGroup(req.clientId, {
         group_name,
         privileges: theGroup.privileges.map(p => p.name),
       });
 
-      // add new privileges to the group
+      // 向权限组中添加新的权限
       const result = await this.userService.addPrivilegeToGroup(req.clientId, {
         group_name,
         privileges,

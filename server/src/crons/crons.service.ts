@@ -10,7 +10,7 @@ import { clients } from '../socket';
 import { CronJobObject } from '../types';
 interface CronJob {
   id: string;
-  clientId: string; // milvus milvusClientId
+  clientId: string; // Milvus 的 milvusClientId
   task: ScheduledTask;
   data: CronJobObject;
 }
@@ -31,17 +31,17 @@ export class CronsService {
   async toggleCronJobByName(clientId: string, data: CronJobObject) {
     const { name, type } = data;
 
-    // define cronJob
+    // 定义 cronJob
     const cronJob: CronJob = this.schedulerRegistry.getCronJob(clientId, data);
 
-    // if type is stop, stop cronJob
+    // type 为 stop 时停止 cronJob
     if (cronJob && type === WS_EVENTS_TYPE.STOP) {
       return this.schedulerRegistry.deleteCronJob(clientId, data);
     }
 
-    // switch case for different events
+    // 按不同事件分支处理
     switch (name) {
-      // collection loading, indexing, update
+      // collection 加载、索引构建、更新
       case WS_EVENTS.COLLECTION_UPDATE:
         if (type === WS_EVENTS_TYPE.START && !cronJob) {
           return this.execCollectionUpdateTask(clientId, data);
@@ -61,28 +61,28 @@ export class CronsService {
         data
       );
 
-      // if currentJob is not exist
+      // 若 currentJob 不存在
       if (!currentJob) {
-        // if client not connected, stop cron
+        // 客户端未连接，停止 cron
         this.schedulerRegistry.deleteCronJob(clientId, data);
         return;
       }
 
       if (!clientCache.has(clientId)) {
-        // if client not connected, stop cron
+        // 客户端未连接，停止 cron
         this.schedulerRegistry.deleteCronJob(clientId, data);
         console.info('Client is not connected, stop cron.', clientId);
         return;
       }
 
       try {
-        // get client cache data
+        // 获取客户端缓存数据
         const { milvusClient } = clientCache.get(clientId);
         const currentDatabase = (milvusClient as any).metadata.get('dbname');
 
-        // if database is not matched, return
+        // 若 database 不匹配则直接返回
         if (currentDatabase !== data.payload.database) {
-          // if client not connected, stop cron
+          // 客户端未连接，停止 cron
           this.schedulerRegistry.deleteCronJob(clientId, data);
           console.info('Database is not matched, stop cron.', clientId);
           return;
@@ -93,17 +93,17 @@ export class CronsService {
           currentJob.data.payload.collections,
           currentJob.data.payload.database
         );
-        // get current socket
+        // 获取当前 socket
         const socketClient = clients.get(currentJob.clientId);
 
         if (socketClient) {
-          // emit event to current client, loading and indexing events are indetified as collection update
+          // 向当前客户端推送事件，加载和索引构建事件统一视为 collection 更新
           socketClient.emit(WS_EVENTS.COLLECTION_UPDATE, {
             collections,
             database: currentJob.data.payload.database,
           });
 
-          // if all collections are loaded, stop cron
+          // 所有 collection 都已加载完成时停止 cron
           const LoadingOrBuildingCollections = collections.filter(v => {
             const isLoading = checkLoading(v);
             const isBuildingIndex = checkIndexing(v);
@@ -117,7 +117,7 @@ export class CronsService {
         }
       } catch (error) {
         if (error.message.includes('pool is draining')) {
-          // Handle the pool draining error, possibly by logging and avoiding retry
+          // 处理连接池关闭错误，记录日志并避免重试
           console.error(
             'The pool is shutting down and cannot accept new work.'
           );
@@ -125,13 +125,13 @@ export class CronsService {
           return;
         }
 
-        // When user not connect milvus, stop cron
+        // 用户未连接 Milvus 时停止 cron
         this.schedulerRegistry.deleteCronJob(clientId, data);
 
         throw new Error(error);
       }
     };
-    // every 5 seconds
+    // 每 5 秒执行一次
     this.schedulerRegistry.setCronJob(clientId, '*/5 * * * * *', task, data);
   }
 }
@@ -166,12 +166,12 @@ export class SchedulerRegistry {
     });
   }
 
-  // ┌────────────── second (optional)
-  // │ ┌──────────── minute
-  // │ │ ┌────────── hour
-  // │ │ │ ┌──────── day of month
-  // │ │ │ │ ┌────── month
-  // │ │ │ │ │ ┌──── day of week
+  // ┌────────────── 秒（可选）
+  // │ ┌──────────── 分钟
+  // │ │ ┌────────── 小时
+  // │ │ │ ┌──────── 日
+  // │ │ │ │ ┌────── 月
+  // │ │ │ │ │ ┌──── 星期
   // │ │ │ │ │ │
   // │ │ │ │ │ │
   // * * * * * *
@@ -187,12 +187,12 @@ export class SchedulerRegistry {
     if (target) {
       target?.task?.stop();
     } else {
-      // create task id
+      // 生成任务 id
       const id = getId(clientId, data);
 
       if (!this.cronJobMap.has(id)) {
         console.log('create task:', id);
-        // create task
+        // 创建任务
         const task = schedule(cronExpression, () => {
           console.log(
             `[cronExpression:${cronExpression}] ${data.name} ${id}: running a task.`
@@ -200,7 +200,7 @@ export class SchedulerRegistry {
           func();
         });
 
-        // save task
+        // 保存任务
         this.cronJobMap.set(id, {
           id,
           clientId,

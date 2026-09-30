@@ -23,12 +23,12 @@ import { Typography } from '@mui/material';
 const Users = () => {
   useNavigationHook(ROUTE_PATHS.USERS);
 
-  // ui states
+  // UI 状态
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState(true);
-  // context
+  // 全局 Context
   const { setDialog, handleCloseDialog, openSnackBar } =
     useContext(rootContext);
   // i18n
@@ -66,7 +66,7 @@ const Users = () => {
   const handleCreate = async (data: CreateUserParams) => {
     const s: any = await UserService.createUser(data);
 
-    // assign user role if
+    // 为用户分配角色
     await UserService.updateUserRole({
       username: data.username,
       roles: data.roles,

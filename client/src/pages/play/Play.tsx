@@ -37,7 +37,7 @@ import {
 } from './language/extensions/fold';
 
 const Play: FC = () => {
-  // hooks
+  // Hook
   const theme = useTheme();
   useNavigationHook(ROUTE_PATHS.PLAY);
   const [result, setResult] = useState(() => {
@@ -48,13 +48,13 @@ const Play: FC = () => {
   const { collections, databases, fetchCollections } = useContext(dataContext);
   const { isManaged, authReq } = useContext(authContext);
 
-  // styles
+  // 样式
   const [code, setCode] = useState(() => {
     const savedCode = localStorage.getItem(ATTU_PLAY_CODE);
     return savedCode || DEFAULT_CODE_VALUE;
   });
 
-  // refs
+  // ref
   const container = useRef<HTMLDivElement>(null);
 
   const detail = JSON.parse(result) as PlaygroundCustomEventDetail;
@@ -116,7 +116,7 @@ const Play: FC = () => {
   });
   useCodelensShortcuts(container.current);
 
-  // save code to local storage
+  // 将代码保存到本地存储
   useEffect(() => {
     if (code === '') {
       localStorage.removeItem(ATTU_PLAY_CODE);

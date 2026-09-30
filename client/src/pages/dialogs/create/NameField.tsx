@@ -24,19 +24,19 @@ const NameField: FC<NameFieldProps> = ({
   const { t: warningTrans } = useTranslation('warning');
   const [touched, setTouched] = useState<boolean>(false);
 
-  // Determine the label based on field type
+  // 根据字段类型确定 label
   const defaultLabel = collectionTrans(
     VectorTypes.includes(field.data_type) ? 'vectorFieldName' : 'fieldName'
   );
 
-  // Initialize name if not defined
+  // 名称未定义时初始化
   useEffect(() => {
     if (field.name === undefined && field.id) {
       onChange(field.id, '', false);
     }
   }, []);
 
-  // Common validation function
+  // 通用校验函数
   const validateField = (name: string) => {
     const isValid = checkEmptyValid(name);
     const isDuplicate =

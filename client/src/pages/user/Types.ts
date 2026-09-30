@@ -89,16 +89,16 @@ export type DBOption = {
 };
 
 export interface DBCollectionsSelectorProps {
-  selected: DBCollectionsPrivileges; // Current selected DBs and their collections with privileges
+  selected: DBCollectionsPrivileges; // 当前选中的 Database 及其拥有权限的 Collection
   setSelected: (
     value:
       | DBCollectionsPrivileges
       | ((prev: DBCollectionsPrivileges) => DBCollectionsPrivileges)
   ) => void;
-  // Callback to update selected state
+  // 更新选中状态的回调
   options: {
-    rbacOptions: RBACOptions; // Available RBAC options (privileges)
-    dbOptions: DBOption[]; // Available databases
+    rbacOptions: RBACOptions; // 可用的 RBAC 选项（权限）
+    dbOptions: DBOption[]; // 可用的 Database
   };
 }
 

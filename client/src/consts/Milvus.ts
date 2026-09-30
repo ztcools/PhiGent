@@ -21,7 +21,7 @@ export enum DataTypeEnum {
   Double = 11,
 
   // String = 20,
-  VarChar = 21, // variable-length strings with a specified maximum length
+  VarChar = 21, // 变长字符串，需指定最大长度
   Array = 22,
   JSON = 23,
 
@@ -41,7 +41,7 @@ export const VectorTypes = [
 ];
 
 export enum INDEX_TYPES_ENUM {
-  // Vector indexes
+  // Vector 索引
   FLAT = 'FLAT',
   IVF_FLAT = 'IVF_FLAT',
   IVF_SQ8 = 'IVF_SQ8',
@@ -52,34 +52,34 @@ export enum INDEX_TYPES_ENUM {
   HNSW_PRQ = 'HNSW_PRQ',
   SCANN = 'SCANN',
   DISKANN = 'DISKANN',
-  // GPU indexes
+  // GPU 索引
   GPU_CAGRA = 'GPU_CAGRA',
   GPU_IVF_FLAT = 'GPU_IVF_FLAT',
   GPU_IVF_PQ = 'GPU_IVF_PQ',
-  // Binary vector indexes
+  // 二进制 Vector 索引
   BIN_FLAT = 'BIN_FLAT',
   BIN_IVF_FLAT = 'BIN_IVF_FLAT',
-  // Scalar indexes
+  // Scalar 索引
   INVERTED = 'INVERTED',
   STL_SORT = 'STL_SORT',
   Trie = 'Trie',
   BITMAP = 'BITMAP',
-  // Sparse vector indexes
+  // 稀疏 Vector 索引
   SPARSE_INVERTED_INDEX = 'SPARSE_INVERTED_INDEX',
-  // Auto index
+  // 自动索引
   AUTOINDEX = 'AUTOINDEX',
 }
 
 export enum METRIC_TYPES_VALUES {
-  // Vector metrics
+  // Vector 度量方式
   L2 = 'L2',
   IP = 'IP',
   COSINE = 'COSINE',
-  // Binary vector metrics
+  // 二进制 Vector 度量方式
   HAMMING = 'HAMMING',
   JACCARD = 'JACCARD',
   TANIMOTO = 'TANIMOTO',
-  // Sparse vector metrics
+  // 稀疏 Vector 度量方式
   IP_SPARSE = 'IP_SPARSE',
   BM25 = 'BM25',
 }
@@ -159,10 +159,10 @@ export enum MILVUS_DEPLOY_MODE {
 
 export enum ConsistencyLevelEnum {
   Strong = 'Strong',
-  Session = 'Session', // default in PyMilvus
+  Session = 'Session', // PyMilvus 中的默认值
   Bounded = 'Bounded',
   Eventually = 'Eventually',
-  Customized = 'Customized', // Users pass their own `guarantee_timestamp`.
+  Customized = 'Customized', // 由用户自行传入 `guarantee_timestamp`
 }
 
 export const TOP_K_OPTIONS = [15, 50, 100, 150, 200, 250].map(v => ({
@@ -305,7 +305,7 @@ export enum IndexState {
   Finished = 'Finished',
   Failed = 'Failed',
 
-  // only used by UI
+  // 仅前端 UI 使用
   Default = '',
   Delete = 'Delete',
 }

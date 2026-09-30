@@ -20,7 +20,7 @@ export interface FlushDialogProps extends CollectionDialogBaseProps {}
 
 export interface LoadSampleParam {
   collection_name: string;
-  // e.g. [{vector: [1,2,3], age: 10}]
+  // 例如 [{vector: [1,2,3], age: 10}]
   size: string;
   download?: boolean;
   format?: 'csv' | 'json';

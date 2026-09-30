@@ -13,12 +13,12 @@ const UpdateUser: FC<UpdateUserProps> = ({
   onUpdate,
   username,
 }) => {
-  // i18n
+  // 国际化
   const { t: userTrans } = useTranslation('user');
   const { t: btnTrans } = useTranslation('btn');
   const { t: warningTrans } = useTranslation('warning');
 
-  // UI state
+  // UI 状态
   const [form, setForm] = useState<
     Omit<UpdateUserParams, 'username'> & { confirmPassword: string }
   >({
@@ -27,7 +27,7 @@ const UpdateUser: FC<UpdateUserProps> = ({
     confirmPassword: '',
   });
 
-  // UI handlers
+  // UI 事件处理
   const checkedForm = useMemo(() => {
     const { oldPassword, newPassword, confirmPassword } = form;
     return formatForm({ oldPassword, newPassword, confirmPassword });
@@ -50,7 +50,7 @@ const UpdateUser: FC<UpdateUserProps> = ({
     onUpdate(res);
   };
 
-  // UI configs
+  // UI 配置
   const inputSx = { mt: 1, mb: 0.5 };
   const createConfigs: ITextfieldConfig[] = [
     {

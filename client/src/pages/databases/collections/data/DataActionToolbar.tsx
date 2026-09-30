@@ -39,11 +39,11 @@ const DataActionToolbar = (props: DataActionToolbarProps) => {
     setSelectedData,
   } = props;
 
-  // UI functions
+  // UI 相关函数
   const { setDialog, handleCloseDialog, openSnackBar, setDrawer } =
     useContext(rootContext);
 
-  // translations
+  // 国际化翻译
   const { t: dialogTrans } = useTranslation('dialog');
   const { t: successTrans } = useTranslation('success');
   const { t: searchTrans } = useTranslation('search');
@@ -58,10 +58,10 @@ const DataActionToolbar = (props: DataActionToolbarProps) => {
 
       const idField = result.IDs.id_field;
       const id = result.IDs[idField].data;
-      // deselect all
+      // 取消全部选中
       setSelectedData([]);
       const newExpr = `${collection.schema.primaryField.name} == ${id}`;
-      // set expr with id
+      // 用该 ID 设置过滤表达式
       setQueryState({
         ...queryState,
         consistencyLevel: ConsistencyLevelEnum.Strong,
@@ -78,7 +78,7 @@ const DataActionToolbar = (props: DataActionToolbarProps) => {
     ]
   );
 
-  // Memoize toolbar configs
+  // 缓存工具栏配置
   return useMemo<ToolBarConfig[]>(
     () => [
       {
@@ -247,7 +247,7 @@ const DataActionToolbar = (props: DataActionToolbarProps) => {
                   title={dialogTrans('deleteEntityTitle')}
                   text={collectionTrans('deleteDataWarning')}
                   handleDelete={async () => {
-                    // call delete api
+                    // 调用删除接口
                     await DataService.deleteEntities(
                       collection.collection_name,
                       {

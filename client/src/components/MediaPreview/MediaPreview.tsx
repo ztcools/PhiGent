@@ -19,18 +19,18 @@ const MediaPreview = (props: { value: string }) => {
   useEffect(() => {
     if (isImageSource(value)) {
       setImage(value);
-      setImageError(false); // Reset error state
+      setImageError(false); // 重置错误状态
       loadImageWithCache(value);
     }
   }, [value]);
 
-  // Cleanup cache when component unmounts or cache gets too large
+  // 组件卸载或缓存过大时清理缓存
   useEffect(() => {
     const cleanupCache = () => {
       if (imageCache.size > 50) {
-        // Limit cache to 50 images
+        // 缓存上限 50 张图片
         const entries = Array.from(imageCache.entries());
-        const newCache = new Map(entries.slice(-30)); // Keep last 30 images
+        const newCache = new Map(entries.slice(-30)); // 保留最近 30 张图片
         setImageCache(newCache);
       }
     };
@@ -38,7 +38,7 @@ const MediaPreview = (props: { value: string }) => {
     cleanupCache();
   }, [imageCache.size]);
 
-  // Cleanup on unmount
+  // 卸载时清理
   useEffect(() => {
     return () => {
       setImageCache(new Map());
@@ -48,7 +48,7 @@ const MediaPreview = (props: { value: string }) => {
   const loadImageWithCache = (imageSrc: string) => {
     // console.log('Loading image:', imageSrc); // Debug log
 
-    // Check if image is already cached
+    // 检查图片是否已经缓存
     if (imageCache.has(imageSrc)) {
       const cachedImg = imageCache.get(imageSrc)!;
       setImageDimensions({
@@ -64,11 +64,11 @@ const MediaPreview = (props: { value: string }) => {
       return;
     }
 
-    // Create an Image object to get natural dimensions with caching
+    // 创建 Image 对象以获取原始尺寸，并配合缓存
     const img = new Image();
 
-    // Don't set crossOrigin for external images to avoid CORS issues
-    // The browser will handle CORS automatically if the server allows it
+    // 外部图片不设置 crossOrigin，避免 CORS 问题
+    // 只要服务端允许，浏览器会自动处理 CORS
 
     img.onload = () => {
       // console.log(
@@ -77,7 +77,7 @@ const MediaPreview = (props: { value: string }) => {
       //   'x',
       //   img.naturalHeight
       // );
-      // Cache the loaded image
+      // 缓存已加载的图片
       setImageCache(prev => new Map(prev).set(imageSrc, img));
 
       setImageDimensions({
@@ -89,19 +89,19 @@ const MediaPreview = (props: { value: string }) => {
     img.onerror = () => {
       // console.warn('Failed to load image:', imageSrc);
       setImageError(true);
-      // Set default dimensions if image fails to load
+      // 图片加载失败时使用默认尺寸
       setImageDimensions({
         width: 200,
         height: 200,
       });
     };
 
-    // Set src after setting up event handlers
+    // 先绑定事件回调，再设置 src
     img.src = imageSrc;
   };
 
   const handleMouseOver = (e: React.MouseEvent) => {
-    // Use dynamic image dimensions if available, otherwise use defaults
+    // 有动态尺寸就用动态尺寸，否则用默认值
     const maxDimension = 200;
     let imageWidth = maxDimension;
     let imageHeight = maxDimension;
@@ -114,28 +114,28 @@ const MediaPreview = (props: { value: string }) => {
         imageDimensions.height > maxDimension
       ) {
         if (aspectRatio > 1) {
-          // Landscape orientation
+          // 横图
           imageWidth = maxDimension;
           imageHeight = maxDimension / aspectRatio;
         } else {
-          // Portrait or square orientation
+          // 竖图或方图
           imageHeight = maxDimension;
           imageWidth = maxDimension * aspectRatio;
         }
       } else {
-        // Use original dimensions if they're within the limit
+        // 在限制范围内就使用原始尺寸
         imageWidth = imageDimensions.width;
         imageHeight = imageDimensions.height;
       }
     }
 
-    const offset = 10; // Small offset to position the image beside the cursor
+    const offset = 10; // 小幅偏移，让图片紧贴光标
 
-    // Calculate preliminary position
+    // 计算初始位置
     let left = e.clientX + offset - imageWidth / 2;
     let top = e.clientY - imageHeight - 20;
 
-    // Ensure the image stays within viewport boundaries
+    // 保证图片不超出视口边界
     if (left + imageWidth > window.innerWidth) {
       left = e.clientX - imageWidth - offset;
     }
@@ -257,7 +257,7 @@ const MediaPreview = (props: { value: string }) => {
   );
 };
 
-// Helper function to detect if the value is a URL or Base64-encoded image
+// 辅助函数：判断该值是否为 URL 或 Base64 编码的图片
 function isImageSource(value: string): boolean {
   if (!value || typeof value !== 'string') {
     return false;

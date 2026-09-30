@@ -12,7 +12,7 @@ export interface EmptyDataProps {
 
 const EmptyDataDialog: FC<EmptyDataProps> = props => {
   const { cb, collection } = props;
-  // UI functions
+  // UI 函数
   const { openSnackBar } = useContext(rootContext);
 
   const { handleCloseDialog } = useContext(rootContext);
@@ -22,14 +22,14 @@ const EmptyDataDialog: FC<EmptyDataProps> = props => {
   const { t: successTrans } = useTranslation('success');
 
   const handleDelete = async () => {
-    // duplicate
+    // 复制
     await DataService.emptyData(collection.collection_name);
     openSnackBar(
       successTrans('empty', {
         name: collectionTrans('collection'),
       })
     );
-    // close dialog
+    // 关闭对话框
     handleCloseDialog();
     cb && cb();
   };

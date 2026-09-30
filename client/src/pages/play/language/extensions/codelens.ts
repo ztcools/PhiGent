@@ -106,7 +106,7 @@ export const codeLensDecoration = (options: PlaygroundExtensionParams) =>
         const doc = state.doc;
 
         let token = '';
-        // Find the Authorization node at the root level
+        // 在根层级查找 Authorization 节点
         tree.iterate({
           enter: node => {
             if (node.name === 'Authorization') {
@@ -146,7 +146,7 @@ export const codeLensDecoration = (options: PlaygroundExtensionParams) =>
                     { response: data, loading: false }
                   );
 
-                  // if param body contains collectionName, dispatch PlaygroundCollectionUpdate event
+                  // 若请求体包含 collectionName，则派发 PlaygroundCollectionUpdate 事件
                   if ('collectionName' in params.body) {
                     DocumentEventManager.dispatch(
                       CustomEventNameEnum.PlaygroundCollectionUpdate,

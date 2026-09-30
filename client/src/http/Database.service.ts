@@ -1,7 +1,7 @@
 import BaseModel from './BaseModel';
 import type { DatabaseObject, ResStatus } from '@server/types';
 
-// request types
+// 请求参数类型
 export interface CreateDatabaseParams {
   db_name: string;
 }

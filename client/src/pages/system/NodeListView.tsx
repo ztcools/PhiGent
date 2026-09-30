@@ -124,7 +124,7 @@ const NodeListView: FC<NodeListViewProps> = props => {
         }
       });
 
-      // create mock rows 100 times to test pagination
+      // 构造 100 行 mock 数据用于测试分页
       // const mockRows: any = [...newRows];
       // for (let i = 0; i < 100; i++) {
       //   mockRows.push({
@@ -135,7 +135,7 @@ const NodeListView: FC<NodeListViewProps> = props => {
       // }
 
       setRows(newRows);
-      // make first row selected
+      // 默认选中第一行
       if (newRows.length > 0) {
         setSelectedChildNode([newRows[0]]);
       }
@@ -147,7 +147,7 @@ const NodeListView: FC<NodeListViewProps> = props => {
   };
 
   const handleSelectChange = (value: GridNode[]) => {
-    // only select one row, filter out the rest
+    // 只能选中一行，其余行过滤掉
     if (value.length > 1) {
       value = [value[value.length - 1]];
     }
@@ -190,7 +190,7 @@ const NodeListView: FC<NodeListViewProps> = props => {
         sx={{
           height: `calc(100vh - 106px)`,
           display: 'flex',
-          gap: 1, // theme.spacing(1) is 8px by default, so 1 means 8px
+          gap: 1, // theme.spacing(1) 默认为 8px，因此 1 即 8px
         }}
       >
         <Box

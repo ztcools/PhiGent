@@ -38,15 +38,15 @@ export const rootContext = React.createContext<RootContextType>({
   handleCloseDialog: () => {},
   handleCloseDialog2: () => {},
   versionInfo: { attu: '', sdk: '' },
-  drawer: DefaultDrawerConfigs, // Add drawer to context
-  setDrawer: () => {}, // Function to set drawer state
+  drawer: DefaultDrawerConfigs, // 将 drawer 加入 context
+  setDrawer: () => {}, // 设置 drawer 状态的函数
 });
 
 const { Provider } = rootContext;
 
-// Dialog has two type : normal | custom;
-// notice type mean it's a notice dialog you need to set props like title, content, actions
-// custom type could have own state, you could set a complete component in dialog.
+// Dialog 有两种类型：normal | custom；
+// notice 类型表示通知类 dialog，需要设置 title、content、actions 等 props
+// custom 类型可以有自己的 state，可以在 dialog 中放置完整组件。
 export const RootProvider = (props: { children: React.ReactNode }) => {
   const { isAuth } = useContext(authContext);
 
@@ -70,7 +70,7 @@ export const RootProvider = (props: { children: React.ReactNode }) => {
       };
       fetchVersion();
     } else {
-      // if auth is off, hide snack bar
+      // 如果未认证，隐藏 snack bar
       setSnackBar({
         open: false,
         type: 'success',
@@ -79,7 +79,7 @@ export const RootProvider = (props: { children: React.ReactNode }) => {
         vertical: 'top',
         horizontal: 'center',
       });
-      // hide dialog
+      // 隐藏 dialog
       setDialog({
         ...dialog,
         open: false,

@@ -54,7 +54,7 @@ const ScalarFieldRow: FC<ScalarFieldRowProps> = ({
     field.data_type !== DataTypeEnum.Array &&
     field.data_type !== DataTypeEnum.JSON;
 
-  // handle default values for Array type
+  // 处理 Array 类型的默认值
   if (isArray && typeof field.element_type === 'undefined') {
     onFieldChange(field.id!, { element_type: DEFAULT_ATTU_ELEMENT_TYPE });
   }

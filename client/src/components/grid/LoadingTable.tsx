@@ -4,8 +4,8 @@ import Box from '@mui/material/Box';
 const SKELETON_ROWS = 5;
 
 /**
- * Placeholder shown while a grid is loading. Renders a column of shimmering
- * skeleton bars so the table area doesn't pop in empty when data arrives.
+ * 表格加载中展示的占位内容。渲染一列闪烁的骨架条，
+ * 避免数据到达时表格区域突然从空白弹出。
  */
 const LoadingTable = (props: { wrapperClass?: string }) => {
   const { wrapperClass = '' } = props;

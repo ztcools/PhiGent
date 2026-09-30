@@ -14,9 +14,9 @@ const SearchParams: FC<SearchParamsProps> = ({
   isManaged,
   sx = {},
 }) => {
-  // Get search params and their configs based on index type
+  // 根据 Index 类型获取搜索参数及其配置
   const { paramList, paramConfigs } = useMemo(() => {
-    // Common params that are always available
+    // 始终可用的通用参数
     const commonParams: Record<string, IndexParamConfig> = {
       radius: {
         label: 'radius',
@@ -49,7 +49,7 @@ const SearchParams: FC<SearchParamsProps> = ({
       };
     }
 
-    // Get search params for the specific index type
+    // 获取特定 Index 类型的搜索参数
     const indexParams: Record<string, IndexParamConfig> = {};
     Object.values(INDEX_PARAMS_CONFIG).forEach(dataTypeConfig => {
       const config = dataTypeConfig[indexType];
@@ -63,7 +63,7 @@ const SearchParams: FC<SearchParamsProps> = ({
     const allParams = { ...indexParams, ...commonParams };
     const allParamKeys = Object.keys(allParams);
 
-    // Sort params to ensure common params are at the end
+    // 对参数排序，确保通用参数排在最后
     const sortedParamKeys = allParamKeys.sort((a, b) => {
       const aIsCommon = COMMON_PARAMS.includes(
         a as (typeof COMMON_PARAMS)[number]

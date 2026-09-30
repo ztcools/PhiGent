@@ -17,23 +17,23 @@ import type { Theme } from '@mui/material/styles';
 import type { TableType } from './Types';
 
 /**
- * Enhanced Table Component
+ * 增强版表格组件
  *
- * Usage example with spacer column:
+ * 带 spacer 列的用法示例：
  * <AttuGrid
  *   colDefinitions={[
  *     { id: 'name', label: 'Name', disablePadding: false },
  *     { id: 'age', label: 'Age', disablePadding: false }
  *   ]}
- *   addSpacerColumn={true} // This will add a spacer column that absorbs remaining space
- *   // ... other props
+ *   addSpacerColumn={true} // 会添加一个吸收剩余空间的 spacer 列
+ *   // ... 其他 props
  * />
  *
- * The spacer column will:
- * - Have width: 'auto' and minWidth: 'auto'
- * - Display no content
- * - Naturally absorb remaining horizontal space without forcing table width
- * - Prevent unnecessary horizontal scrollbars
+ * spacer 列的特性：
+ * - width 为 'auto'，minWidth 为 'auto'
+ * - 不渲染任何内容
+ * - 自然吸收剩余横向空间，不强行撑开表格宽度
+ * - 避免出现多余的横向滚动条
  */
 
 const EnhancedTable: FC<TableType> = props => {
@@ -45,33 +45,33 @@ const EnhancedTable: FC<TableType> = props => {
     rows = [],
     colDefinitions,
     primaryKey,
-    // whether show checkbox in the first column
-    // set true as default
+    // 是否在第一列展示 checkbox
+    // 默认为 true
     openCheckBox = true,
     disableSelect,
     enableSelectAll = true,
     noData,
-    // whether change table row background color when mouse hover
-    // set true as default
+    // 鼠标悬停时是否改变表格行背景色
+    // 默认为 true
     showHoverStyle = true,
     isLoading,
     headEditable = false,
-    // editable heads required param, contains heads components and its value
+    // 可编辑表头的必传参数，包含各表头组件及其值
     editHeads = [],
-    // if table cell max width not be passed, table row will use 300px as default
+    // 未传入单元格最大宽度时，表格行默认使用 300px
     tableCellMaxWidth = '300px',
     handleSort,
     order,
     orderBy,
     rowDecorator = () => ({}),
     rowHeight,
-    // whether to add a spacer column to control space distribution
+    // 是否添加 spacer 列以控制空间分配
     addSpacerColumn = false,
   } = props;
 
   const hasData = rows && rows.length > 0;
 
-  // Add spacer column definition if needed
+  // 按需添加 spacer 列定义
   const finalColDefinitions = addSpacerColumn
     ? [
         ...colDefinitions,
@@ -193,7 +193,7 @@ const EnhancedTable: FC<TableType> = props => {
                           ? colDef.getStyle(row[colDef.id])
                           : {};
 
-                        // Skip rendering for spacer column
+                        // spacer 列跳过渲染
                         if (colDef.id === '__spacer__') {
                           return (
                             <TableCell
@@ -205,7 +205,7 @@ const EnhancedTable: FC<TableType> = props => {
                                 cellStyleFromDef,
                               ]}
                             >
-                              {/* Empty content for spacer column */}
+                              {/* spacer 列内容为空 */}
                             </TableCell>
                           );
                         }
@@ -241,7 +241,7 @@ const EnhancedTable: FC<TableType> = props => {
                             }
                             className={
                               colDef.isHoverAction ? 'hoverActionCell' : ''
-                            } // Keep class for targeting in rowHoverStyles
+                            } // 保留 class，供 rowHoverStyles 定位
                             key={colDef.id}
                           >
                             <ActionBar
@@ -280,7 +280,7 @@ const EnhancedTable: FC<TableType> = props => {
                                 display: 'flex',
                                 whiteSpace: 'nowrap',
                                 alignItems: 'center',
-                                minHeight: rowHeight - 16, // 16 is the padding of the table cell
+                                minHeight: rowHeight - 16, // 16 为单元格的 padding
                               }}
                             >
                               {typeof row[colDef.id] !== 'undefined' && (

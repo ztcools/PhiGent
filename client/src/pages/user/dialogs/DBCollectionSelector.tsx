@@ -94,28 +94,28 @@ export default function DBCollectionsSelector(
   // Props
   const { selected, setSelected, options } = props;
   const { rbacOptions, dbOptions } = options;
-  // Styles
-  // i18n
+  // 样式
+  // 国际化
   const { t: searchTrans } = useTranslation('search');
   const { t: userTrans } = useTranslation('user');
-  // context
+  // Context
   const { isDedicated } = useContext(authContext);
 
-  // UI states
+  // UI State
   const [selectedDB, setSelectedDB] = useState<DBOption | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string>('*');
   const [collectionOptions, setCollectionOptions] = useState<
     CollectionOption[]
   >([]);
   const [loading, setLoading] = useState(false);
-  const [tabValue, setTabValue] = useState(0); // Tab index
+  const [tabValue, setTabValue] = useState(0); // Tab 下标
   const [privilegeOptionType, setPrivilegeOptionType] = useState<
     'group' | 'custom'
-  >('group'); // Type of privilege options
+  >('group'); // 权限选项的类型
 
-  // Fetch collections when selected DB changes
+  // 选中的 Database 变化时拉取 Collection 列表
   const fetchCollections = useCallback(async (dbName: string) => {
-    // const
+    // 常量
     const ALL_COLLECTIONS = { name: '*', value: '*' };
     setLoading(true);
     try {
@@ -137,7 +137,7 @@ export default function DBCollectionsSelector(
     }
   }, []);
 
-  // Initialize selectedDB and fetch collections when dbOptions changes
+  // dbOptions 变化时初始化 selectedDB 并拉取 Collection 列表
   useEffect(() => {
     if (dbOptions.length > 0 && selectedDB === null) {
       const initialDB = dbOptions[0];
@@ -146,7 +146,7 @@ export default function DBCollectionsSelector(
     }
   }, [dbOptions, selectedDB, fetchCollections]);
 
-  // Handle DB selection
+  // 处理 Database 选择
   const handleDBChange = (db: DBOption) => {
     setSelectedDB(db);
     setSelected(prevSelected => {
@@ -160,14 +160,14 @@ export default function DBCollectionsSelector(
     fetchCollections(db.value);
   };
 
-  // Handle collection selection
+  // 处理 Collection 选择
   const handleCollectionChange = (collection: CollectionOption | null) => {
     if (collection) {
       setSelectedCollection(collection.value);
     }
   };
 
-  // Handle privilege change for a collection
+  // 处理某个 Collection 的权限勾选变化
   const handlePrivilegeChange = (
     collectionValue: string,
     privilegeName: string,
@@ -189,7 +189,7 @@ export default function DBCollectionsSelector(
     setSelected(newSelected);
   };
 
-  // Handle select all privileges in a category
+  // 处理某个分类的权限全选
   const handleSelectAll = (
     category: keyof RBACOptions,
     collectionValue: string,
@@ -213,7 +213,7 @@ export default function DBCollectionsSelector(
     setSelected(newSelected);
   };
 
-  // Check if all privileges in a category are selected
+  // 判断某个分类的权限是否已全选
   const isCategoryAllSelected = (
     category: keyof RBACOptions,
     collectionValue: string,
@@ -231,7 +231,7 @@ export default function DBCollectionsSelector(
     );
   };
 
-  // Check if some privileges in a category are selected
+  // 判断某个分类的权限是否部分选中
   const isCategorySomeSelected = (
     category: keyof RBACOptions,
     collectionValue: string,
@@ -255,7 +255,7 @@ export default function DBCollectionsSelector(
     return someSelected && !allSelected;
   };
 
-  // Calculate the number of selected privileges for a collection
+  // 计算某个 Collection 已勾选的权限数量
   const getSelectedPrivilegesCount = (
     collectionValue: string,
     privileges: [string, Record<string, string>][]
@@ -266,7 +266,7 @@ export default function DBCollectionsSelector(
     const collectionPrivileges =
       selected[selectedDBValue]?.collections?.[collectionValue] || {};
 
-    // Count the number of privileges that are selected for the collection
+    // 统计该 Collection 已勾选的权限数量
     const selectedCount = privileges.reduce(
       (total, [_, categoryPrivileges]) => {
         return (
@@ -282,7 +282,7 @@ export default function DBCollectionsSelector(
     return selectedCount;
   };
 
-  // Calculate the total number of privileges for a collection
+  // 计算某个 Collection 的权限总数
   const getTotalPrivilegesCount = (
     privileges: [string, Record<string, string>][]
   ) => {
@@ -293,7 +293,7 @@ export default function DBCollectionsSelector(
     return total;
   };
 
-  // extract privileges options
+  // 拆分权限选项
   const globalPrivileges = [
     'DatabasePrivileges',
     'ResourceManagementPrivileges',
@@ -333,7 +333,7 @@ export default function DBCollectionsSelector(
 
   return (
     <Root>
-      {/* Privilege type toggle */}
+      {/* 权限类型切换 */}
       <ToggleContainer>
         <label className="toggle-label">
           <Radio
@@ -360,7 +360,7 @@ export default function DBCollectionsSelector(
           </label>
         )}
       </ToggleContainer>
-      {/* Tabs for cluster, Database, Collection */}
+      {/* Cluster、Database、Collection 三个 Tab */}
       <Tabs
         value={tabValue}
         onChange={(event, newValue) => setTabValue(newValue)}
@@ -507,7 +507,7 @@ export default function DBCollectionsSelector(
   );
 }
 
-// PriviligeSelector
+// PrivilegeSelector 组件
 const PrivilegeSelector = (props: {
   privilegeOptions: [keyof RBACOptions, Record<string, string>][];
   selected: DBCollectionsPrivileges;
@@ -537,7 +537,7 @@ const PrivilegeSelector = (props: {
     dbValue: string
   ) => void;
 }) => {
-  // props
+  // Props
   const {
     selected,
     selectedDB,
@@ -550,7 +550,7 @@ const PrivilegeSelector = (props: {
     privilegeOptionType,
   } = props;
 
-  // i18n
+  // 国际化
   const { t: userTrans } = useTranslation('user');
 
   return (

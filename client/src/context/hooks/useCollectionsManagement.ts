@@ -6,8 +6,8 @@ import { authContext } from '@/context';
 import { isInfraCollection } from '@/utils/codeCollection';
 import type { CollectionObject, CollectionFullObject } from '@server/types';
 
-// Infrastructure collections (shared index state + embedding cache) are hidden
-// everywhere so counts/lists show only real code collections (repos / branches).
+// 基础设施 Collection（共享索引状态 + embedding 缓存）在所有位置都隐藏，
+// 使计数和列表只展示真实的代码 Collection（仓库 / 分支）。
 const excludeInfra = <T extends { collection_name: string }>(list: T[]): T[] =>
   list.filter(c => !isInfraCollection(c.collection_name));
 
@@ -40,7 +40,7 @@ export function useCollectionsManagement(database: string) {
         });
       }
     },
-    [] // Removing database from dependencies
+    [] // 从依赖中移除 database
   );
 
   const updateCollections = useCallback(
@@ -64,13 +64,13 @@ export function useCollectionsManagement(database: string) {
       const updatedFiltered = excludeInfra(updated);
       detectLoadingIndexing(updatedFiltered);
       setCollections(prev => {
-        // merge collections
+        // 合并 Collection
         const prevMap = new Map(prev.map(c => [c.id, c]));
         updatedFiltered.forEach(c => {
           prevMap.set(c.id, c);
         });
         let merged = Array.from(prevMap.values());
-        // delete collections
+        // 删除 Collection
         if (deletedNames.length > 0) {
           merged = merged.filter(
             c => !deletedNames.includes(c.collection_name)
@@ -79,7 +79,7 @@ export function useCollectionsManagement(database: string) {
         const newCollections = updatedFiltered.filter(
           c => !prev.some(p => p.collection_name === c.collection_name)
         );
-        // sort collections
+        // 排序 Collection
         if (newCollections.length > 0) {
           return merged.sort((a, b) => {
             if (
@@ -122,17 +122,17 @@ export function useCollectionsManagement(database: string) {
 
   useEffect(() => {
     if (!isAuth) {
-      // clear collections when not authenticated
+      // 未认证时清空 Collection
       setCollections([]);
       clearRefreshCollectionsDebounceMapRef();
     }
   }, [isAuth]);
 
-  // Update the ref when database changes
+  // database 变化时更新 ref
   useEffect(() => {
     databaseRef.current = database;
     setCollections([]);
-    // clear refreshCollectionsDebounceMapRef
+    // 清空 refreshCollectionsDebounceMapRef
     clearRefreshCollectionsDebounceMapRef();
   }, [database]);
 
@@ -174,7 +174,7 @@ export function useCollectionsManagement(database: string) {
 
   const batchRefreshCollections = useCallback(
     async (collectionNames: string[], key: string = 'default') => {
-      // if not logged in, do not refresh collections
+      // 未登录时不刷新 Collection
       if (!isAuth) return;
       let ref = refreshCollectionsDebounceMapRef.current.get(key);
       if (!ref) {
@@ -190,7 +190,7 @@ export function useCollectionsManagement(database: string) {
         clearTimeout(ref.timer);
       }
       
-      // Set batch refreshing to true if we have collections to refresh
+      // 有待刷新的 Collection 时，将批量刷新状态置为 true
       if (filteredCollectionNames.length > 0) {
         setIsBatchRefreshing(true);
       }
@@ -215,7 +215,7 @@ export function useCollectionsManagement(database: string) {
               return collection && !collection.schema;
             });
             batch.forEach(name => ref!.pending.add(name));
-            // call api
+            // 调用 API
             const res = await CollectionService.getCollections({
               db_name: databaseRef.current,
               collections: batch,
@@ -232,7 +232,7 @@ export function useCollectionsManagement(database: string) {
         ref!.names = [];
         ref!.timer = null;
         
-        // Check if all maps are empty and set batch refreshing to false
+        // 检查所有 map 是否为空，为空则将批量刷新状态置为 false
         const hasActiveRefreshes = Array.from(refreshCollectionsDebounceMapRef.current.values()).some(
           ref => ref.names.length > 0 || ref.timer !== null
         );
@@ -241,7 +241,7 @@ export function useCollectionsManagement(database: string) {
         }
       }, 200);
     },
-    [collections, updateCollections, isAuth] // Removed database dependency
+    [collections, updateCollections, isAuth] // 已移除 database 依赖
   );
 
   return {

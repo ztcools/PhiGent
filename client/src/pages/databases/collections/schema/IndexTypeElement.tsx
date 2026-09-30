@@ -26,7 +26,7 @@ const IndexTypeElement: FC<{
   const { fetchCollection } = useContext(dataContext);
 
   const theme = useTheme();
-  // set empty string as default status
+  // 默认状态置为空字符串
   const { t: indexTrans } = useTranslation('index');
   const { t: dialogTrans } = useTranslation('dialog');
   const { t: successTrans } = useTranslation('success');
@@ -47,7 +47,7 @@ const IndexTypeElement: FC<{
     };
     await CollectionService.createIndex(indexCreateParam);
     await fetchCollection(collectionName);
-    // reset status to default empty string
+    // 将状态重置为默认空字符串
     handleCloseDialog();
     openSnackBar(indexTrans('createSuccess'));
     cb && (await cb(collectionName));
@@ -219,7 +219,7 @@ const IndexTypeElement: FC<{
         </CustomButton>
       );
     }
-    // indexType example: FLAT
+    // indexType 示例：FLAT
     switch (field.index.indexType) {
       default: {
         if (field.index.state === IndexState.InProgress) {
@@ -235,7 +235,7 @@ const IndexTypeElement: FC<{
         }
 
         /**
-         * if creating finished, show chip that contains index type
+         * 创建完成后，展示包含 index type 的 chip
          */
         return chipComp(`${field.index.indexType}`);
       }

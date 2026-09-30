@@ -12,7 +12,7 @@ type RequestParams = {
 
 export default class BaseModel {
   /**
-   * Fetch multiple items
+   * 获取多条数据
    */
   static async find<T>(options: RequestParams): Promise<T> {
     const { method = 'get', path, params = {}, config } = options;
@@ -34,7 +34,7 @@ export default class BaseModel {
 
 
   /**
-   * Create a new resource
+   * 创建新资源
    */
   static async create<T>(options: RequestParams): Promise<T> {
     const { path, data = {}, config } = options;
@@ -43,7 +43,7 @@ export default class BaseModel {
   }
 
   /**
-   * Update an existing resource
+   * 更新已有资源
    */
   static async update<T>(options: RequestParams): Promise<T> {
     const { path, data = {}, config } = options;
@@ -52,7 +52,7 @@ export default class BaseModel {
   }
 
   /**
-   * Delete a resource
+   * 删除资源
    */
   static async delete<T>(options: RequestParams): Promise<T> {
     const { path, params = {}, config } = options;
@@ -64,7 +64,7 @@ export default class BaseModel {
   }
 
   /**
-   * Custom query
+   * 自定义查询
    */
   static async query<T>(options: RequestParams): Promise<T> {
     return this.find<T>({

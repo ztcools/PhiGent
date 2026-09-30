@@ -43,7 +43,7 @@ const Properties = (props: PropertiesProps) => {
   const [selected, setSelected] = useState<Property[]>([]);
   const { setDialog, openSnackBar } = useContext(rootContext);
 
-  // setup properties
+  // 初始化属性列表
   const setupProperties = async () => {
     let properties: Property[] = [];
 
@@ -167,7 +167,7 @@ const Properties = (props: PropertiesProps) => {
   ];
 
   const handleSelectChange = (value: Property[]) => {
-    // only select one row, filter out the rest
+    // 只允许选中一行，过滤掉其余项
     if (value.length > 1) {
       value = [value[value.length - 1]];
     }
@@ -179,7 +179,7 @@ const Properties = (props: PropertiesProps) => {
     setSelected([]);
   };
 
-  // collection is not found or collection full object is not ready
+  // Collection 不存在或完整信息尚未就绪
   if (!properties || properties.length === 0) {
     return <StatusIcon type={LoadingType.CREATING} />;
   }

@@ -19,10 +19,10 @@ const CreateFields: FC<CreateFieldsProps> = ({
   setFields,
   onValidationChange,
 }) => {
-  // i18n
+  // 国际化
   const { t: collectionTrans } = useTranslation('collection');
 
-  // UI stats
+  // UI 状态
   const localFieldAnalyzers = useRef(
     new Map<string, Record<string, {}>>(new Map())
   );
@@ -35,7 +35,7 @@ const CreateFields: FC<CreateFieldsProps> = ({
     )
   );
 
-  // Add this helper function
+  // 添加此辅助函数
   const updateValidationStatus = useCallback(() => {
     const areFieldsValid = Array.from(
       localFieldsValidation.current.values()
@@ -43,10 +43,10 @@ const CreateFields: FC<CreateFieldsProps> = ({
     onValidationChange(areFieldsValid);
   }, [onValidationChange]);
 
-  // UI icons
+  // UI 图标
   const AddIcon = icons.addOutline;
 
-  // calculate required and scalar fields
+  // 计算必填字段与 Scalar 字段
   const { requiredFields, scalarFields } = useMemo(
     () =>
       fields.reduce(
@@ -77,7 +77,7 @@ const CreateFields: FC<CreateFieldsProps> = ({
     [fields]
   );
 
-  // UI handlers
+  // UI 事件处理
   const changeFields = (
     id: string,
     changes: Partial<FieldType>,
@@ -93,13 +93,13 @@ const CreateFields: FC<CreateFieldsProps> = ({
         ...changes,
       };
 
-      // remove array params, if not array
+      // 非数组类型时移除数组参数
       if (updatedField.data_type !== DataTypeEnum.Array) {
         delete updatedField.max_capacity;
         delete updatedField.element_type;
       }
 
-      // remove varchar params, if not varchar
+      // 非 VarChar 类型时移除 varchar 参数
       if (
         updatedField.data_type !== DataTypeEnum.VarChar &&
         updatedField.element_type !== DataTypeEnum.VarChar
@@ -107,14 +107,14 @@ const CreateFields: FC<CreateFieldsProps> = ({
         delete updatedField.max_length;
       }
 
-      // remove dimension, if not vector
+      // 非 Vector 类型时移除维度
       if (
         !VectorTypes.includes(updatedField.data_type) ||
         updatedField.data_type === DataTypeEnum.SparseFloatVector
       ) {
         delete updatedField.dim;
       } else {
-        // add dimension if not exist
+        // 维度不存在时补充维度
         updatedField.dim = Number(updatedField.dim || DEFAULT_ATTU_DIM);
       }
 
@@ -123,7 +123,7 @@ const CreateFields: FC<CreateFieldsProps> = ({
 
     setFields(newFields);
 
-    // Update validation in ref
+    // 在引用中更新校验状态
     if (isValid !== undefined) {
       localFieldsValidation.current.set(id, isValid);
     } else {
@@ -136,9 +136,9 @@ const CreateFields: FC<CreateFieldsProps> = ({
   const handleAddNewField = (index: number, type = DataTypeEnum.Int16) => {
     const id = generateId();
 
-    // Determine field type and generate appropriate name prefix
+    // 确定字段类型并生成对应的名称前缀
     const isVector = VectorTypes.includes(type);
-    const isPrimaryKey = false; // New fields are never primary keys by default
+    const isPrimaryKey = false; // 新字段默认永远不是 Primary Key
     
     let fieldTypePrefix: string;
     if (isPrimaryKey) {
@@ -149,7 +149,7 @@ const CreateFields: FC<CreateFieldsProps> = ({
       fieldTypePrefix = 'scalar';
     }
 
-    // Count existing fields of the same type to generate new index
+    // 统计同类型已有字段数量以生成新索引
     let fieldCount = fields.filter(f => {
       if (isPrimaryKey) {
         return f.is_primary_key;
@@ -183,7 +183,7 @@ const CreateFields: FC<CreateFieldsProps> = ({
     fields.splice(index + 1, 0, newDefaultItem);
     setFields([...fields]);
 
-    // Add validation to ref
+    // 向引用中添加校验状态
     localFieldsValidation.current.set(id, true);
     updateValidationStatus();
   };
@@ -192,7 +192,7 @@ const CreateFields: FC<CreateFieldsProps> = ({
     const newFields = fields.filter(f => f.id !== id);
     setFields(newFields);
 
-    // Remove validation from ref
+    // 从引用中移除校验状态
     localFieldsValidation.current.delete(id);
     updateValidationStatus();
   };
@@ -203,7 +203,7 @@ const CreateFields: FC<CreateFieldsProps> = ({
     fields: FieldType[],
     requiredFields: FieldType[]
   ) => {
-    // required type is primaryKey or defaultVector
+    // 必填类型为 primaryKey 或 defaultVector
     if (field.createType === 'primaryKey') {
       return (
         <PrimaryKeyFieldRow
@@ -229,7 +229,7 @@ const CreateFields: FC<CreateFieldsProps> = ({
       );
     }
 
-    // generate other vector rows
+    // 生成其他 Vector 行
     return (
       <VectorFieldRow
         field={field}

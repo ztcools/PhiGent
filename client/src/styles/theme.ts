@@ -132,30 +132,30 @@ const colors = {
 
 const spacing = (factor: number) => `${8 * factor}px`;
 
-// Design tokens — single source of truth for the visual language.
-// Applied through getAttuTheme() so every page shares the same look & feel.
+// 设计令牌 — 视觉语言的唯一来源。
+// 通过 getAttuTheme() 应用，使所有页面保持一致的外观与体验。
 export const designTokens = {
-  // Border radius scale
+  // 圆角尺度
   radius: {
-    sm: 4, // chips, small buttons
-    md: 8, // cards, papers, dialogs (default via shape.borderRadius)
-    lg: 12, // large containers
+    sm: 4, // 标签、小按钮
+    md: 8, // 卡片、Paper、对话框（通过 shape.borderRadius 设为默认值）
+    lg: 12, // 大型容器
   },
-  // Elevation / shadow scale — subtle, layered
+  // 阴影层级 — 轻微、有层次
   shadow: {
     card: '0 1px 2px rgba(15, 23, 42, 0.05)',
     cardHover: '0 4px 12px rgba(15, 23, 42, 0.10)',
     popover: '0 5px 15px rgba(0, 0, 0, 0.15)',
   },
-  // Micro-interaction transitions
+  // 微交互过渡
   transition: {
     fast: 'all 0.15s ease-in-out',
     base: 'all 0.2s ease-in-out',
   },
-  // Consistent page-level padding & section spacing
+  // 统一的页面内边距与区块间距
   layout: {
     pagePadding: 3, // theme.spacing(3) = 24px
-    sectionGap: 2, // 16px between sections
+    sectionGap: 2, // 各区块间距 16px
   },
 };
 
@@ -311,7 +311,7 @@ export const getAttuTheme = (mode: PaletteMode) => {
 
   return {
     ...commonThemes,
-    // Global shape — 8px corner radius everywhere unless overridden
+    // 全局形状 — 除非单独覆盖，统一使用 8px 圆角
     shape: { borderRadius: designTokens.radius.md },
     transitions: {
       duration: {
@@ -322,8 +322,8 @@ export const getAttuTheme = (mode: PaletteMode) => {
       },
     },
     components: {
-      // Subtle bordered surfaces by default; cards use a hairline border + soft
-      // shadow on hover instead of heavy elevation.
+      // 默认使用带细边框的表面；卡片使用发丝边框 +
+      // 悬浮时的柔和阴影，而不是厚重的 elevation。
       MuiPaper: {
         defaultProps: { elevation: 0 },
         styleOverrides: {

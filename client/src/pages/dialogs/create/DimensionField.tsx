@@ -15,7 +15,7 @@ interface DimensionFieldProps {
 const DimensionField: FC<DimensionFieldProps> = ({ field, onChange, sx }) => {
   const { t: collectionTrans } = useTranslation('collection');
 
-  // Return null for sparse vectors as they don't support dimension
+  // Sparse Vector 不支持 dimension，直接返回 null
   if (field.data_type === DataTypeEnum.SparseFloatVector) {
     return null;
   }

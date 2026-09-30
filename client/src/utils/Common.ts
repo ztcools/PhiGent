@@ -30,8 +30,8 @@ export const formatNumber = (number: number): string => {
 };
 
 /**
- * Only use in dev env
- * Parent component props is optional but required in child component. Need throw some error
+ * 仅在开发环境使用
+ * 父组件传入的 Props 是可选的，但子组件中为必填，因此需要主动抛出错误
  * @param text
  */
 export const throwErrorForDev = (text: string) => {
@@ -46,7 +46,7 @@ export const generateHashCode = (source: string) => {
   for (i = 0; i < source.length; i++) {
     chr = source.charCodeAt(i);
     hash = (hash << 5) - hash + chr;
-    hash |= 0; // Convert to 32bit integer
+    hash |= 0; // 转换为 32 位整数
   }
   return hash.toString();
 };

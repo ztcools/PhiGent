@@ -1,7 +1,7 @@
 import { parseValue } from '../Insert';
 import { CreateIndexCodeParam } from './Types';
 
-// use replacer to parse extra param from JSON to original object
+// 用 replacer 把 extra param 从 JSON 还原为原始对象
 const replacer = (key: string, value: any) => {
   if (typeof value === 'string') {
     return parseValue(value);

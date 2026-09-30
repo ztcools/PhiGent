@@ -5,7 +5,7 @@ export const useInsertDialogHook = () => {
   const { setDialog } = useContext(rootContext);
 
   const handleInsertDialog = (
-    // stepper container, contains all contents
+    // 步骤容器，包含所有内容
     component: ReactElement
   ) => {
     setDialog({

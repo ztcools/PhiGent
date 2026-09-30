@@ -19,7 +19,7 @@ export interface IndexTypeConfig {
   searchParams?: Record<string, IndexParamConfig>;
 }
 
-// Common parameter configurations
+// 通用参数配置
 const commonParams = {
   nlist: {
     label: 'nlist',
@@ -98,7 +98,7 @@ const commonParams = {
   },
 };
 
-// Common search parameter configurations
+// 通用搜索参数配置
 const commonSearchParams = {
   nprobe: {
     label: 'nprobe',

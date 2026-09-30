@@ -13,8 +13,8 @@ const HighlightText: React.FC<HighlightTextProps> = ({ text, highlight }) => {
   if (!highlight.trim()) {
     return <>{text}</>;
   }
-  // Escape regex metacharacters in the search term — a query like "a(b" or
-  // "c++" would otherwise make `new RegExp` throw and crash the tree render.
+  // 转义搜索词中的正则元字符 —— 否则形如 "a(b" 或 "c++" 的查询
+  // 会让 `new RegExp` 抛错并导致树渲染崩溃。
   const escaped = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
   const parts = text.split(regex);

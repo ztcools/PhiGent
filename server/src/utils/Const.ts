@@ -1,10 +1,10 @@
-// note, this module will be shared between server and client, so please don't import server only module here
+// 注意：该模块会在 server 与 client 之间共享，请勿在此引入仅 server 端的模块
 export const ROW_COUNT = 'row_count';
 
-// use in req header
+// 用于请求 Header
 export const MILVUS_CLIENT_ID = 'milvus-client-id';
 
-// for lru cache
+// 用于 LRU 缓存
 export const CLIENT_TTL = 1000 * 60 * 60 * 24;
 export const INDEX_TTL = 1000 * 60 * 60;
 
@@ -155,7 +155,7 @@ export enum RBACPrivileges {
   OperatePrivilegeGroup = 'OperatePrivilegeGroup',
 }
 
-// RBAC: all privileges
+// RBAC：全部权限
 export const Privileges = {
   ...DatabasePrivileges,
   ...CollectionPrivileges,
@@ -172,7 +172,7 @@ export enum LOADING_STATE {
   UNLOADED = 'unloaded',
 }
 
-export const MIN_INT64 = `-9223372036854775807`; // safe int64 min value
+export const MIN_INT64 = `-9223372036854775807`; // int64 安全最小值
 export const DYNAMIC_FIELD = `$meta`;
 
 export const VectorTypes = [

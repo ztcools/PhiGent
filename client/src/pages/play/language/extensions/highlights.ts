@@ -1,7 +1,7 @@
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
-// highlight color
+// 高亮颜色
 export const highlights = (isDarkMode: boolean = false) => {
   return syntaxHighlighting(
     HighlightStyle.define([

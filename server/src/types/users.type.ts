@@ -21,19 +21,19 @@ export type PrivilegeGroupsRes = ListPrivilegeGroupsResponse;
 export type PrivilegeGroup = PrivelegeGroup;
 
 export type Privilege = {
-  [key: string]: boolean; // key: privilege name, value: whether it's selected
+  [key: string]: boolean; // key 为权限名，value 表示是否选中
 };
 
 export type CollectionPrivileges = {
-  [collectionValue: string]: Privilege; // key: collection value, value: privileges
+  [collectionValue: string]: Privilege; // key 为 Collection 值，value 为权限集合
 };
 
 export type DBPrivileges = {
-  collections: CollectionPrivileges; // Collection-level privileges
+  collections: CollectionPrivileges; // Collection 级权限
 };
 
 export type DBCollectionsPrivileges = {
-  [dbValue: string]: DBPrivileges; // key: DB value, value: DB privileges and collections
+  [dbValue: string]: DBPrivileges; // key 为 Database 值，value 为 Database 权限与 Collection 集合
 };
 
 export type RBACOptions = {

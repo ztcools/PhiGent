@@ -10,7 +10,7 @@ export const useDatabaseManagement = () => {
   const [loadingDatabases, setLoadingDatabases] = useState(true);
   const [database, setDatabase] = useState<string>(authReq.database);
 
-  // API: fetch databases
+  // API：获取 Database 列表
   const fetchDatabases = useCallback(
     async (updateLoading?: boolean): Promise<void> => {
       try {
@@ -35,21 +35,21 @@ export const useDatabaseManagement = () => {
     [logout]
   );
 
-  // Effect to fetch initial databases when authenticated
+  // 认证后获取初始 Database 列表的 Effect
   useEffect(() => {
     if (isAuth) {
       if (database !== authReq.database) setDatabase(authReq.database);
       fetchDatabases(true);
     } else {
-      // Clear data when not authenticated
+      // 未认证时清空数据
       setDatabases([]);
       setLoadingDatabases(false);
     }
-  }, [isAuth, authReq.database, fetchDatabases]); // Added fetchDatabases dependency
+  }, [isAuth, authReq.database, fetchDatabases]); // 已添加 fetchDatabases 依赖
 
-  // Effect to update auth context when local database state changes
+  // 本地 database 状态变化时更新 auth context 的 Effect
   useEffect(() => {
-    // Only update if the database actually changed from the auth context one
+    // 仅当 database 与 auth context 中的值确实不同时才更新
     if (authReq.database !== database && isAuth) {
       setAuthReq({ ...authReq, database });
     }

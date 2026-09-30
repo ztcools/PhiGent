@@ -8,10 +8,10 @@ import {
 import { StateEffect, StateField } from '@codemirror/state';
 import { insertTab } from '@codemirror/commands';
 
-// Use ReturnType<typeof setTimeout> to get the correct type for the timeout
+// 使用 ReturnType<typeof setTimeout> 以获得正确的 timeout 类型
 type Timeout = ReturnType<typeof setTimeout>;
 
-// Define a custom widget by extending WidgetType
+// 通过继承 WidgetType 定义自定义 widget
 class GhostTextWidget extends WidgetType {
   constructor(private text: string) {
     super();
@@ -30,20 +30,20 @@ class GhostTextWidget extends WidgetType {
   }
 }
 
-let timeout: Timeout | null = null; // Change the type to Timeout | null
+let timeout: Timeout | null = null; // 将类型改为 Timeout | null
 let ghostText: { from: number; to: number; text: string } | null = null;
 
 const addGhostText =
   StateEffect.define<{ from: number; to: number; text: string }>();
 const removeGhostText = StateEffect.define<DecorationSet>();
 
-// Create a StateField to store the ghost text
+// 创建 StateField 用于存储 ghost text
 const ghostTextField = StateField.define({
   create() {
-    return Decoration.none; // Start with no decorations
+    return Decoration.none; // 初始时没有任何 decoration
   },
   update(value, tr) {
-    // Start with no decorations
+    // 初始时没有任何 decoration
     for (const effect of tr.effects) {
       if (effect.is(addGhostText)) {
         const { from, to, text } = effect.value;
@@ -51,17 +51,17 @@ const ghostTextField = StateField.define({
           widget: new GhostTextWidget(text),
           side: 1,
         });
-        // Return a DecorationSet with the new widget
+        // 返回包含新 widget 的 DecorationSet
         return Decoration.set(widget.range(from));
       } else if (effect.is(removeGhostText)) {
-        return Decoration.none; // Clear all decorations
+        return Decoration.none; // 清除所有 decoration
       }
     }
     return value;
   },
 });
 
-// Define the autocomplete extension
+// 定义自动补全扩展
 export const tabCompletion = [
   EditorView.updateListener.of(update => {
     if (update.docChanged) {

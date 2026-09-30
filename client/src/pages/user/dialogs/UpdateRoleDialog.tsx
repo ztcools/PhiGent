@@ -28,18 +28,18 @@ const UpdateRoleDialog: FC<CreateRoleProps> = props => {
     onUpdate,
     sameAs,
   } = props;
-  // i18n
+  // 国际化
   const { t: userTrans } = useTranslation('user');
   const { t: btnTrans } = useTranslation('btn');
   const { t: warningTrans } = useTranslation('warning');
 
-  // const
+  // 常量
   const ALL_DB = { name: userTrans('allDatabases'), value: '*' };
 
-  // UI states
+  // UI 状态
   const [options, setOptions] = useState<{
-    rbacOptions: RBACOptions; // Available RBAC options (privileges)
-    dbOptions: DBOption[]; // Available databases
+    rbacOptions: RBACOptions; // 可用的 RBAC 选项（权限）
+    dbOptions: DBOption[]; // 可用的 Database
   }>({
     rbacOptions: {} as RBACOptions,
     dbOptions: [],
@@ -49,13 +49,13 @@ const UpdateRoleDialog: FC<CreateRoleProps> = props => {
     role.privileges
   );
 
-  // Form state
+  // 表单状态
   const [form, setForm] = useState<CreateRoleParams>({
     roleName: role.roleName,
     privileges: selected,
   });
 
-  // update form if selected changes
+  // selected 变化时更新表单
   useEffect(() => {
     setForm(v => ({
       ...v,
@@ -89,16 +89,16 @@ const UpdateRoleDialog: FC<CreateRoleProps> = props => {
     fetchData();
   }, []);
 
-  // Check if editing an existing role
+  // 检查是否为编辑已有角色
   const isEditing = role.roleName !== '' && !sameAs;
 
-  // Form validation
+  // 表单校验
   const checkedForm = useMemo(() => {
     return formatForm(form);
   }, [form]);
   const { validation, checkIsValid, disabled } = useFormValidation(checkedForm);
 
-  // Handle input change
+  // 处理输入变化
   const handleInputChange = (key: 'roleName', value: string) => {
     setForm(v => ({
       ...v,
@@ -106,7 +106,7 @@ const UpdateRoleDialog: FC<CreateRoleProps> = props => {
     }));
   };
 
-  // Handle create/update role
+  // 处理创建/更新角色
   const handleCreateRole = async () => {
     try {
       const res = await UserService.updateRolePrivileges(form);
@@ -117,7 +117,7 @@ const UpdateRoleDialog: FC<CreateRoleProps> = props => {
     }
   };
 
-  // Input configurations
+  // 输入框配置
   const inputSx = { mt: 1, mb: 0.5 };
   const createConfigs: ITextfieldConfig[] = [
     {

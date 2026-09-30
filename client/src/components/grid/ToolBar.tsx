@@ -12,7 +12,7 @@ import type { ToolBarConfig, ToolBarType } from './Types';
 const CustomToolBar: FC<ToolBarType> = props => {
   const { toolbarConfigs, selected = [], hideOnDisable = false } = props;
 
-  // remove hidden button
+  // 过滤掉隐藏的按钮
   const leftConfigs = useMemo(() => {
     return toolbarConfigs.filter(
       (c: ToolBarConfig) =>
@@ -47,15 +47,15 @@ const CustomToolBar: FC<ToolBarType> = props => {
             const disabled = c.disabled ? c.disabled(selected) : false;
 
             if (
-              disabled && // Check if the component is disabled
-              hideOnDisable && // Check if the component should be hidden when disabled
-              !c.alwaysShow && // Check if the button is not marked to always be shown
-              (typeof c.hideOnDisable === 'undefined' || c.hideOnDisable()) // Check if hideOnDisable on button is undefined or returns true
+              disabled && // 判断组件是否被禁用
+              hideOnDisable && // 判断禁用时是否应隐藏该组件
+              !c.alwaysShow && // 判断按钮是否未标记为始终展示
+              (typeof c.hideOnDisable === 'undefined' || c.hideOnDisable()) // 判断按钮的 hideOnDisable 是否未定义或返回 true
             ) {
-              return null; // Return null to hide the component
+              return null; // 返回 null 以隐藏该组件
             }
 
-            // when disabled "disabledTooltip" will replace "tooltip"
+            // disabled 时会用 "disabledTooltip" 替代 "tooltip"
             const tooltip =
               disabled && c.disabledTooltip ? c.disabledTooltip : c.tooltip;
             const isIcon = c.type === 'iconBtn';
@@ -68,7 +68,7 @@ const CustomToolBar: FC<ToolBarType> = props => {
                 startIcon={Icon}
                 color={c.btnColor || 'primary'}
                 disabled={disabled}
-                // use contained variant as default
+                // 默认使用 contained 变体
                 variant={c.btnVariant || 'contained'}
                 tooltip={tooltip}
                 sx={theme => ({

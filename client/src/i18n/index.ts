@@ -78,8 +78,8 @@ export const resources = {
   },
 };
 
-// the translations
-// (tip move them in a JSON file and import them)
+// 翻译资源
+// （建议移到 JSON 文件中再导入）
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -102,7 +102,7 @@ i18n
       cookieDomain: '',
       htmlTag: document.documentElement,
     },
-    supportedLngs: ['en', 'zh-CN'], // Add your supported languages here
+    supportedLngs: ['en', 'zh-CN'], // 在此处添加支持的语言
   });
 
 export default i18n;

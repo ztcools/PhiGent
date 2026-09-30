@@ -49,11 +49,11 @@ export const getCMStyle = (theme: Theme) => {
         backgroundColor: theme.palette.primary.main,
         color: theme.palette.primary.contrastText,
       },
-    // auto completion box style
+    // 自动补全弹框样式
     '.cm-tooltip.cm-tooltip-autocomplete': {
       border: 'none',
       borderRadius: '4px',
-      transform: 'translateX(-20px)', // adjust box position to align with the text
+      transform: 'translateX(-20px)', // 调整弹框位置以与文本对齐
       backgroundColor:
         theme.palette.mode === 'dark'
           ? theme.palette.grey[800]

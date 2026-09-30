@@ -5,9 +5,9 @@ import { sanitize } from 'class-sanitizer';
 import HttpException from '../exception/HttpException';
 
 /**
- * Only check for req.body
- * When use req.query or req.params cant use dto to validate.
- * Because all data are string in req.query.
+ * 只校验 req.body
+ * 使用 req.query 或 req.params 时无法用 DTO 校验，
+ * 因为 req.query 中的数据都是字符串。
  * @param type
  * @param skipMissingProperties
  * @returns
@@ -28,7 +28,7 @@ export const dtoValidationMiddleware = (
             .join(', ');
           next(new HttpException(400, dtoErrors));
         } else {
-          // sanitize the object and call the next middleware
+          // 清洗对象并调用下一个中间件
           sanitize(dtoObj);
           req.body = dtoObj;
           next();

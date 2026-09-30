@@ -62,16 +62,16 @@ import { clients } from '../socket';
 import { WS_EVENTS } from '../utils';
 
 /**
- * Cache backing CollectionsService.fillDescriptions. Keyed by name + collectionID
- * so a dropped-and-recreated collection misses instead of serving a stale
- * description; that makes the entry immutable and removes any need to invalidate.
- * Shared across clients on purpose — collectionIDs are unique per Milvus instance,
- * and reconnecting (which mints a new clientId) shouldn't throw the cache away.
+ * CollectionsService.fillDescriptions 使用的缓存。key 为 name + collectionID，
+ * 这样删除后重建的 Collection 会 cache miss 而不是返回过期的 description；
+ * 由此 entry 本身不可变，也就不需要任何失效逻辑。
+ * 有意跨客户端共享 —— collectionID 在每个 Milvus 实例内唯一，
+ * 重连（会生成新的 clientId）不应该把缓存丢掉。
  */
 const descriptionCache = new Map<string, string>();
-/** Bound the cache so a long-lived server can't grow it without limit. */
+/** 限制缓存大小，避免长时间运行的服务无限增长。 */
 const DESCRIPTION_CACHE_MAX = 20_000;
-/** Parallel describeCollection calls while back-filling descriptions. */
+/** 回填 description 时并行的 describeCollection 调用数。 */
 const DESCRIPTION_CONCURRENCY = 32;
 
 const descriptionCacheKey = (c: { collection_name: string; id: string }) =>
@@ -108,7 +108,7 @@ export class CollectionsService {
       data
     )) as DescribeCollectionRes;
 
-    // get index info for collections
+    // 获取 Collection 的 index 信息
     const indexRes = await this.describeIndex(clientId, {
       collection_name: data.collection_name,
     });
@@ -117,7 +117,7 @@ export class CollectionsService {
     const scalarFields: FieldObject[] = [];
     const functionFields: FieldObject[] = [];
 
-    // assign function to field
+    // 把 function 挂到对应 Field 上
     const fieldMap = new Map(
       res.schema.fields.map(field => [field.name, field])
     );
@@ -133,25 +133,25 @@ export class CollectionsService {
       fn.input_field_names.forEach(assignFunction);
     });
 
-    // get function input fields
+    // 获取 function 的输入 Field
     const inputFieldNames = res.schema.functions.reduce((acc, cur) => {
       return acc.concat(cur.input_field_names);
     }, []);
 
-    // append index info to each field
+    // 为每个 Field 附加 index 信息
     res.schema.fields.forEach((field: FieldObject) => {
-      // add index
+      // 附加 index
       field.index = indexRes.index_descriptions.find(
         index => index.field_name === field.name
       ) as IndexObject;
-      // add dimension
+      // 附加维度
       field.dimension = Number(field.dim) || -1;
-      // add max capacity
+      // 附加最大容量
       field.maxCapacity = Number(field.max_capacity) || -1;
-      // add max length
+      // 附加最大长度
       field.maxLength = Number(field.max_length) || -1;
 
-      // classify fields
+      // 对 Field 分类
       if (VectorTypes.includes(field.data_type)) {
         vectorFields.push(field);
       } else {
@@ -162,13 +162,13 @@ export class CollectionsService {
         res.schema.primaryField = field;
       }
 
-      // add functionFields if field name included in inputFieldNames
+      // 若 Field 名在 inputFieldNames 中，则加入 functionFields
       if (inputFieldNames.includes(field.name)) {
         functionFields.push(field);
       }
     });
 
-    // add extra data to schema
+    // 为 Schema 补充额外数据
     res.schema.hasVectorIndex = vectorFields.every(v => v.index);
     res.schema.enablePartitionKey = res.schema.fields.some(
       v => v.is_partition_key
@@ -250,7 +250,7 @@ export class CollectionsService {
     const { milvusClient } = clientCache.get(clientId);
     await milvusClient.releaseCollection(data);
 
-    // emit update to client
+    // 向客户端推送更新
     this.updateCollectionsDetails(
       clientId,
       [data.collection_name],
@@ -279,7 +279,7 @@ export class CollectionsService {
     const { milvusClient } = clientCache.get(clientId);
     let count = 0;
     try {
-      // check if the collection is loaded
+      // 检查 Collection 是否已 Load
       const loadStateRes = await milvusClient.getLoadState(data);
 
       if (loadStateRes.state === LoadState.LoadStateLoaded) {
@@ -304,17 +304,17 @@ export class CollectionsService {
     const BATCH_SIZE = 1000;
     const fields_data = data.fields_data || data.data;
 
-    // If data size is less than or equal to batch size, insert directly
+    // 数据量不超过批大小时直接插入
     if (!fields_data || fields_data.length <= BATCH_SIZE) {
       const res = await milvusClient.insert(data);
       return res;
     }
 
-    // Handle insertion in batches
+    // 分批插入
     const results = [];
     for (let i = 0; i < fields_data.length; i += BATCH_SIZE) {
       const batchData = fields_data.slice(i, i + BATCH_SIZE);
-      // Create a new request with only the necessary fields
+      // 只带必要字段构造新的请求
       const batchRequest = { ...data, fields_data: batchData } as InsertReq;
       const result = await milvusClient.insert(batchRequest);
 
@@ -350,7 +350,7 @@ export class CollectionsService {
       Array.isArray(searchParams.data) && searchParams.data.length > 1;
     const singleSearchParams = cloneObj(data) as SearchSimpleReq;
 
-    // for 2.3.x milvus
+    // 适配 2.3.x 版本的 Milvus
     if (searchParams.data && searchParams.data.length === 1) {
       delete singleSearchParams.data;
       delete singleSearchParams.params;
@@ -418,7 +418,7 @@ export class CollectionsService {
     return res;
   }
 
-  // get single collection details
+  // 获取单个 Collection 的详情
   async getCollection(
     clientId: string,
     collection: CollectionData,
@@ -427,7 +427,7 @@ export class CollectionsService {
     database?: string
   ) {
     if (lazy) {
-      // return lazy object
+      // 返回 lazy 对象
       return {
         id: collection.id,
         collection_name: collection.name,
@@ -435,7 +435,7 @@ export class CollectionsService {
         schema: undefined,
         rowCount: undefined,
         aliases: undefined,
-        // Back-filled by fillDescriptions() — showCollections doesn't carry it.
+        // 由 fillDescriptions() 回填 —— showCollections 不返回该字段。
         description: '',
         autoID: undefined,
         loadedPercentage: undefined,
@@ -445,13 +445,13 @@ export class CollectionsService {
         db_name: database,
       } as CollectionLazyObject;
     }
-    // get collection schema and properties
+    // 获取 Collection 的 Schema 和属性
     const collectionInfo = await this.describeCollection(clientId, {
       collection_name: collection.name,
       db_name: database,
     });
 
-    // get collection statistic data
+    // 获取 Collection 的统计数据
     let count: number;
 
     try {
@@ -464,12 +464,12 @@ export class CollectionsService {
       console.log('ignore getCollectionStatistics');
     }
 
-    // extract autoID
+    // 提取 autoID
     const autoID = collectionInfo.schema.fields.find(
       v => v.is_primary_key === true
     )?.autoID;
 
-    // get replica info
+    // 获取 replica 信息
     let replicas;
     try {
       replicas = loadCollection
@@ -482,7 +482,7 @@ export class CollectionsService {
       console.log('ignore getReplica');
     }
 
-    // loading info
+    // 加载状态信息
     const loadedPercentage = !loadCollection
       ? -1
       : Number(loadCollection.loadedPercentage);
@@ -513,27 +513,27 @@ export class CollectionsService {
     };
   }
 
-  // get all collections details
+  // 获取全部 Collection 的详情
   async getAllCollections(
     clientId: string,
     collections: string[] = [],
     database?: string
   ): Promise<CollectionObject[]> {
     try {
-      // get all collections(name, timestamp, id)
+      // 获取所有 Collection（name、timestamp、id）
       const allCollections = await this.showCollections(clientId, {
         db_name: database,
       });
-      // get all loaded collection
+      // 获取所有已 Load 的 Collection
       const loadedCollections = await this.showCollections(clientId, {
         type: ShowCollectionsType.Loaded,
         db_name: database,
       });
 
-      // data container
+      // 数据容器
       const data: CollectionObject[] = [];
 
-      // get target collections details
+      // 获取目标 Collection 的详情
       const targetCollections = allCollections.data.filter(
         d => collections.indexOf(d.name) !== -1
       );
@@ -541,13 +541,13 @@ export class CollectionsService {
       const targets =
         targetCollections.length > 0 ? targetCollections : allCollections.data;
 
-      // sort targets by name
+      // 按名称排序
       targets.sort((a, b) => a.name.localeCompare(b.name));
 
-      // if no collection is specified, load all collections without detail
+      // 未指定 Collection 时不取详情，直接列出全部
       const lazy = collections.length === 0;
 
-      // get all collection details
+      // 获取所有 Collection 的详情
       for (let i = 0; i < targets.length; i++) {
         const collection = targets[i];
         const loadedCollection = loadedCollections.data.find(
@@ -565,33 +565,29 @@ export class CollectionsService {
         );
       }
 
-      // Lazy objects carry no description, which is where the repo/branch
-      // hierarchy lives — back-fill it before returning so the list renders the
-      // Branch column on first paint instead of after a second round trip.
+      // lazy 对象不带 description，而仓库/分支层次正来自该字段 —— 返回前先回填，
+      // 这样列表首屏就能渲染出 Branch 列，而不必等第二次请求。
       if (lazy) {
         await this.fillDescriptions(clientId, data, database);
       }
 
-      // return data
+      // 返回数据
       return data;
     } catch (error) {
-      // if error occurs, return empty array, for example, when the client is disconnected
+      // 出错时返回空数组，例如客户端已断开连接
       return [];
     }
   }
 
   /**
-   * Fill in each collection's schema description, which showCollections omits.
-   * The collection list parses `codebasePath:<repoUrl>:<branch>` out of it to
-   * build the repo → branch hierarchy, so a missing description means an empty
-   * Branch column.
+   * 回填每个 Collection 的 Schema description，showCollections 不返回该字段。
+   * Collection 列表会从中解析 `codebasePath:<repoUrl>:<branch>` 来构建
+   * 仓库 → 分支的层次结构，所以 description 缺失就意味着 Branch 列为空。
    *
-   * describeCollection is metadata-only, but there is one call per collection and
-   * a server tracking hundreds of repos × protected branches has thousands of
-   * them. Two things keep that affordable: a bounded concurrency pool instead of
-   * a serial loop, and a cache that never needs invalidating — a description only
-   * changes on create/alter, and a rebuilt collection gets a fresh collectionID,
-   * so the ID is part of the key.
+   * describeCollection 只读元数据，但每个 Collection 都要调用一次，而一个跟踪
+   * 上百个仓库 × 受保护分支的服务器会有上千次调用。两点让开销可控：用有并发上限
+   * 的池替代串行循环，以及一个永远不需要失效的缓存 —— description 只在创建/修改时
+   * 变化，重建的 Collection 会拿到新的 collectionID，所以 ID 也是 key 的一部分。
    */
   private async fillDescriptions(
     clientId: string,
@@ -622,8 +618,8 @@ export class CollectionsService {
           }
           descriptionCache.set(descriptionCacheKey(c), desc);
         } catch (e) {
-          // One unreadable collection must not fail the whole list. The console
-          // falls back to the slug in the collection name for the repo label.
+          // 单个 Collection 读取失败不能让整个列表报错。控制台会退化为用
+          // Collection 名中的 slug 作为仓库名。
         }
         (c as { description: string }).description = desc;
       }
@@ -636,20 +632,20 @@ export class CollectionsService {
     );
   }
 
-  // update collections details
-  // send new info to the client
+  // 更新 Collection 详情
+  // 把新信息推送给客户端
   async updateCollectionsDetails(
     clientId: string,
     collections: string[],
     database: string
   ) {
     try {
-      // get current socket
+      // 获取当前 socket
       const socketClient = clients.get(clientId);
-      // get collections
+      // 获取 Collection
       const res = await this.getAllCollections(clientId, collections, database);
 
-      // emit event to current client
+      // 向当前客户端推送事件
       if (socketClient) {
         socketClient.emit(WS_EVENTS.COLLECTION_UPDATE, { collections: res });
       }
@@ -681,7 +677,7 @@ export class CollectionsService {
   }
 
   /**
-   * Get collections statistics data
+   * 获取 Collection 统计数据
    * @returns {collectionCount:number, totalData:number}
    */
   async getStatistics(clientId: string, db_name?: string) {
@@ -708,7 +704,7 @@ export class CollectionsService {
   }
 
   /**
-   * Load sample data into collection
+   * 向 Collection 导入示例数据
    */
   async importSample(
     clientId: string,
@@ -732,10 +728,10 @@ export class CollectionsService {
         format === 'csv'
           ? parser.parse(fields_data)
           : JSON.stringify(fields_data);
-      // If download is true, return the generated data directly
+      // download 为 true 时直接返回生成的数据
       return { sampleFile };
     } else {
-      // Insert all data at once, batch handling is now in insert method
+      // 一次性插入全部数据，分批逻辑已在 insert 方法中处理
       return await this.insert(clientId, {
         collection_name,
         fields_data,
@@ -823,27 +819,27 @@ export class CollectionsService {
   async describeIndex(clientId: string, data: DescribeIndexReq) {
     const { milvusClient } = clientCache.get(clientId);
 
-    // If the index description is not in the cache, call the Milvus SDK's describeIndex function
+    // 若 index 描述不在缓存中，则调用 Milvus SDK 的 describeIndex
     const res = (await milvusClient.describeIndex(data)) as DescribeIndexRes;
 
     res.index_descriptions.map(index => {
-      // get indexType
+      // 获取 indexType
       index.indexType = (index.params.find(p => p.key === 'index_type')
         ?.value || '') as string;
-      // get metricType
+      // 获取 metricType
       const metricTypePair =
         index.params.filter(v => v.key === 'metric_type') || [];
       index.metricType = findKeyValue(metricTypePair, 'metric_type') as string;
 
-      // copy index.params withouth index_type and metric_type and params
+      // 复制 index.params，排除 index_type、metric_type 和 params
       const indexParams = index.params.filter(
         p =>
           p.key !== 'index_type' &&
           p.key !== 'metric_type' &&
           p.key !== 'params'
       );
-      // get index parameter pairs
-      const paramsJSONstring = findKeyValue(index.params, 'params'); // params is a json string
+      // 获取 index 参数键值对
+      const paramsJSONstring = findKeyValue(index.params, 'params'); // params 是 JSON 字符串
       const params =
         (paramsJSONstring &&
           getKeyValueListFromJsonString(paramsJSONstring as string)) ||
@@ -852,7 +848,7 @@ export class CollectionsService {
       index.indexParameterPairs = [...indexParams, ...params];
     });
 
-    // Return the response from the Milvus SDK's describeIndex function
+    // 返回 Milvus SDK describeIndex 的响应
     return res;
   }
 

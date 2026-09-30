@@ -15,7 +15,7 @@ export const getVectorFieldOptions = (fields: FieldObject[]): FieldOption[] => {
   return options;
 };
 
-// new search: build search params
+// 新版搜索：构造搜索参数
 export const buildSearchParams = (searchParams: SearchParams) => {
   const data: any = [];
   const weightedParams: number[] = [];
@@ -49,12 +49,12 @@ export const buildSearchParams = (searchParams: SearchParams) => {
     params.partition_names = searchParams.partitions.map(p => p.name);
   }
 
-  // group_by_field if exists
+  // 若存在 group_by_field 则设置
   if (searchParams.globalParams.group_by_field) {
     params.group_by_field = searchParams.globalParams.group_by_field;
   }
 
-  // reranker if exists
+  // 若存在 reranker 则设置
   if (data.length > 1) {
     if (searchParams.globalParams.rerank === 'rrf') {
       params.rerank = {

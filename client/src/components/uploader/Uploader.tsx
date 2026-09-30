@@ -25,14 +25,14 @@ const Uploader: FC<UploaderProps> = ({
   const handleUpload = () => {
     const uploader = inputRef.current! as HTMLFormElement;
     const reader = new FileReader();
-    // handle uploaded data
+    // 处理上传完成的数据
     reader.onload = async e => {
       const data = reader.result;
       if (data) {
         handleUploadedData(data as string, inputRef.current!, type.current);
       }
     };
-    // handle upload error
+    // 处理上传错误
     reader.onerror = e => {
       if (handleUploadError) {
         handleUploadError();
@@ -43,7 +43,7 @@ const Uploader: FC<UploaderProps> = ({
       const target = e.target as HTMLInputElement;
       const file: File = (target.files as FileList)[0];
       if (file) {
-        type.current = file.type as FILE_MIME_TYPE; // This will log the MIME type of the file
+        type.current = file.type as FILE_MIME_TYPE; // 记录文件的 MIME 类型
       }
       const isSizeOverLimit = file && maxSize && maxSize < file.size;
 

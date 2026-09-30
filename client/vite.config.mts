@@ -6,8 +6,8 @@ import svgr from 'vite-plugin-svgr';
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '',
-  // This changes the out put dir from dist to build
-  // comment this out if that isn't relevant for your project
+  // 将输出目录从 dist 改为 build
+  // 若对当前项目不适用，请注释掉此项
   build: {
     outDir: 'build',
   },
@@ -30,10 +30,10 @@ export default defineConfig({
   plugins: [
     react(),
     svgr({
-      // A minimatch pattern, or array of patterns, which specifies the files in the build the plugin should include.
+      // 一个 minimatch 模式或模式数组，指定插件在构建中应包含的文件。
       include: '**/*.svg?react',
 
-      //  A minimatch pattern, or array of patterns, which specifies the files in the build the plugin should ignore. By default no files are ignored.
+      //  一个 minimatch 模式或模式数组，指定插件在构建中应忽略的文件。默认不忽略任何文件。
       exclude: '',
     }),
   ],
@@ -41,7 +41,7 @@ export default defineConfig({
     // extensions: [".mjs", ".js", ".ts", ".jsx", ".tsx", ".json"],
     alias: {
       '@': path.resolve(__dirname, './src'),
-      // be careful to include server modules in the client
+      // 注意不要把 server 模块包含进 client
       '@server': path.resolve(__dirname, './../server/src'),
     },
   },

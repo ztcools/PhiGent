@@ -20,12 +20,12 @@ export const ReqHeaderMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  // all ape requests need set milvus address in header.
-  // server will set active address in milvus service.
+  // 所有 API 请求都需要在 Header 中设置 Milvus 地址。
+  // server 会在 milvus service 中设置当前活跃地址。
   const milvusClientId = (req.headers[MILVUS_CLIENT_ID] as string) || '';
   req.clientId = req.headers[MILVUS_CLIENT_ID] as string;
 
-  // merge database from header
+  // 合并 Header 中的 database
   const database = req.headers['x-attu-database'] as string;
   if (database) {
     req.db_name = database;
@@ -56,18 +56,18 @@ export const TransformResMiddleware = (
     const statusCode = data?.statusCode;
     const message = data?.message;
     const error = data?.error;
-    res.json = oldSend; // set function back to avoid the 'double-send'
+    res.json = oldSend; // 还原函数，避免重复发送响应
     if (statusCode || message || error) {
       return res.json({ statusCode, message, error });
     }
-    return res.json({ data, statusCode: 200 }); // just call as normal with data
+    return res.json({ data, statusCode: 200 }); // 按常规方式返回 data
   };
   next();
 };
 
 /**
- * Handle error in here.
- * Normally depend on status which from milvus service.
+ * 在此处处理错误。
+ * 通常取决于 milvus service 返回的状态。
  */
 export const ErrorMiddleware = (
   err: HttpError,
@@ -83,13 +83,13 @@ export const ErrorMiddleware = (
       chalk.red.bold(err)
     );
   }
-  // Boolean property that indicates if the app sent HTTP headers for the response.
-  // Here to prevent sending response after header has been sent.
+  // 布尔属性，表示应用是否已为响应发送过 HTTP Header。
+  // 在此判断是为了避免在 Header 已发送后再发送响应。
   if (res.headersSent) {
     return next(err);
   }
 
-  // handle error from milvus service
+  // 处理来自 milvus service 的错误
   switch (err.code) {
     case 7:
       statusCode = HTTP_STATUS_CODE.FORBIDDEN;

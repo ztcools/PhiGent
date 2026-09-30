@@ -25,8 +25,8 @@ import type { Option } from '@/components/customSelector/Types';
 import type { InsertDataParam } from '@/pages/databases/collections/Types';
 
 /**
- * this component contains processes during insert
- * including import, preview and status
+ * 该组件包含插入过程中的各个步骤
+ * 包括导入、预览和状态
  */
 
 const InsertContainer: FC<InsertContentProps> = ({
@@ -52,33 +52,33 @@ const InsertContainer: FC<InsertContentProps> = ({
 
   const [nextDisabled, setNextDisabled] = useState<boolean>(false);
 
-  // selected collection name
+  // 选中的 Collection 名
   const [collectionValue, setCollectionValue] = useState<string>(
     defaultSelectedCollection
   );
-  // selected partition name
+  // 选中的 Partition 名
   const [partitionValue, setPartitionValue] = useState<string>(
     defaultSelectedPartition
   );
-  // use contain field names yes as default
+  // 默认视作包含 Field 名
   const [isContainFieldNames, setIsContainFieldNames] = useState<number>(1);
-  // uploaded file name
+  // 上传的文件名
   const [fileName, setFileName] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
-  // uploaded csv data (type: string)
+  // 上传的 CSV 数据（类型为 string）
   const [csvData, setCsvData] = useState<any[]>([]);
   const [jsonData, setJsonData] = useState<
     Record<string, unknown> | undefined
   >();
 
-  // handle changed table heads
+  // 处理变化的表头
   const [tableHeads, setTableHeads] = useState<string[]>([]);
 
   const [partitionOptions, setPartitionOptions] = useState<Option[]>([]);
 
   const previewData = useMemo(() => {
-    // we only show top 4 results of uploaded csv data
+    // 只展示上传 CSV 数据的前 4 条
     const end = isContainFieldNames ? 5 : 4;
     return csvData.slice(0, end);
   }, [csvData, isContainFieldNames]);
@@ -86,8 +86,8 @@ const InsertContainer: FC<InsertContentProps> = ({
   useEffect(() => {
     if (activeStep === InsertStepperEnum.import) {
       /**
-       * 1. must choose collection and partition
-       * 2. must upload a csv file
+       * 1. 必须选择 Collection 和 Partition
+       * 2. 必须上传 CSV 文件
        */
       const selectValid = collectionValue !== '' && partitionValue !== '';
       const uploadValid = csvData.length > 0 || typeof jsonData !== 'undefined';
@@ -96,7 +96,7 @@ const InsertContainer: FC<InsertContentProps> = ({
     }
     if (activeStep === InsertStepperEnum.preview) {
       /**
-       * table heads shouldn't be empty
+       * 表头不应为空
        */
       const headsValid = tableHeads.every(h => h !== '');
       setNextDisabled(!headsValid);
@@ -118,7 +118,7 @@ const InsertContainer: FC<InsertContentProps> = ({
     setTableHeads(heads);
   }, [previewData, isContainFieldNames]);
 
-  // every time selected collection value change, partition options and default value will change
+  // 每次所选 Collection 变化时，Partition 选项和默认值都会变化
   const fetchPartition = useCallback(async () => {
     if (collectionValue) {
       const partitions = await PartitionService.getPartitions(collectionValue);
@@ -129,7 +129,7 @@ const InsertContainer: FC<InsertContentProps> = ({
       setPartitionOptions(partitionOptions);
 
       if (partitionOptions.length > 0) {
-        // set first partition option value as default value
+        // 把第一个 Partition 选项的值设为默认值
         const [{ value: defaultPartitionValue }] = partitionOptions;
         setPartitionValue(defaultPartitionValue as string);
       }
@@ -137,7 +137,7 @@ const InsertContainer: FC<InsertContentProps> = ({
   }, [collectionValue]);
 
   useEffect(() => {
-    // if not on partitions page, we need to fetch partitions according to selected collection
+    // 不在 Partition 页面时，需要按所选 Collection 拉取 Partition
     if (!partitions || partitions.length === 0) {
       fetchPartition();
     } else {
@@ -146,8 +146,8 @@ const InsertContainer: FC<InsertContentProps> = ({
           label: p.name,
           value: p.name,
         }))
-        // when there's single selected partition
-        // insert dialog partitions shouldn't selectable
+        // 已选中单个 Partition 时
+        // 插入弹窗中的 Partition 不应可选择
         .filter(
           partition =>
             partition.label === defaultSelectedPartition ||
@@ -159,7 +159,7 @@ const InsertContainer: FC<InsertContentProps> = ({
 
   const BackIcon = icons.back;
 
-  // modal actions part, buttons label text or component
+  // 弹窗操作区：按钮文案或组件
   const { confirm, cancel } = useMemo(() => {
     const labelMap: {
       [key in InsertStepperEnum]: {
@@ -195,7 +195,7 @@ const InsertContainer: FC<InsertContentProps> = ({
     };
   }, [insertStatus]);
 
-  // props children component needed:
+  // 子组件需要的 props：
   const collectionOptions: Option[] = useMemo(
     () =>
       defaultSelectedCollection === ''
@@ -217,8 +217,8 @@ const InsertContainer: FC<InsertContentProps> = ({
     autoIdFieldName,
   }: { schemaOptions: Option[]; autoIdFieldName: string } = useMemo(() => {
     /**
-     * on collection page, we get schema data from collection
-     * on partition page, we pass schema as props
+     * 在 Collection 页面时，Schema 数据取自 Collection
+     * 在 Partition 页面时，Schema 通过 props 传入
      */
     const list = schema
       ? schema.fields
@@ -228,9 +228,9 @@ const InsertContainer: FC<InsertContentProps> = ({
     const autoIdFieldName =
       list?.find(item => item.is_primary_key && item.autoID)?.name || '';
     /**
-     * if below conditions all met, this schema shouldn't be selectable as head:
-     * 1. this field is primary key
-     * 2. this field auto id is true
+     * 若同时满足以下条件，该 Schema 不应作为可选表头：
+     * 1. 该 Field 是 Primary Key
+     * 2. 该 Field 的 auto id 为 true
      */
     const options = (list || [])
       .filter(s => !s.autoID || !s.is_primary_key)
@@ -249,10 +249,10 @@ const InsertContainer: FC<InsertContentProps> = ({
   };
 
   /**
-   * when primary key field auto id is true
-   * no need to upload this field data
-   * @param firstRowItems uploaded file first row items
-   * @returns whether invalid, true means invalid
+   * Primary Key Field 的 auto id 为 true 时
+   * 无需上传该 Field 的数据
+   * @param firstRowItems 上传文件的首行数据
+   * @returns 是否非法，true 表示非法
    */
   const checkIsAutoIdFieldValid = (firstRowItems: string[]): boolean => {
     const isContainAutoIdField = firstRowItems.includes(autoIdFieldName);
@@ -269,19 +269,19 @@ const InsertContainer: FC<InsertContentProps> = ({
     uploader: HTMLFormElement,
     type: FILE_MIME_TYPE
   ) => {
-    // if json, just parse json to object
+    // 如果是 JSON，直接把 JSON 解析成对象
     if (type === FILE_MIME_TYPE.JSON) {
       setJsonData(JSON.parse(content));
       setCsvData([]);
       return;
     }
     const { data } = parse(content);
-    // if uploaded csv contains heads, firstRowItems is the list of all heads
+    // 上传的 CSV 含表头时，firstRowItems 就是全部表头
     const [firstRowItems = []] = data as string[][];
 
     const invalid = checkUploadFileValidation(firstRowItems);
     if (invalid) {
-      // reset uploader value and filename
+      // 重置 uploader 的值和文件名
       setFileName('');
       setFile(null);
       uploader.value = null;
@@ -297,9 +297,9 @@ const InsertContainer: FC<InsertContentProps> = ({
       : collections.find(c => c.collection_name === collectionValue)?.schema
           ?.fields;
 
-    // start loading
+    // 开始加载
     setInsertStatus(InsertStatusEnum.loading);
-    // process data
+    // 处理数据
     const data =
       typeof jsonData !== 'undefined'
         ? convertVectorFields(jsonData, fields!)
@@ -309,7 +309,7 @@ const InsertContainer: FC<InsertContentProps> = ({
             fields!
           );
 
-    // Set the number of records being imported
+    // 设置正在导入的记录数
     setImportingCount(data.length);
 
     const param: InsertDataParam = {
@@ -324,12 +324,12 @@ const InsertContainer: FC<InsertContentProps> = ({
         setInsertStatus(InsertStatusEnum.error);
       } else {
         await DataService.flush(collectionValue);
-        // update collections
+        // 更新 Collection
         await onInsert(collectionValue);
         setInsertStatus(InsertStatusEnum.success);
       }
     } catch (err: any) {
-      // back to import step
+      // 退回导入步骤
       setInsertStatus(InsertStatusEnum.init);
       setActiveStep(InsertStepperEnum.import);
     }
@@ -352,7 +352,7 @@ const InsertContainer: FC<InsertContentProps> = ({
         setActiveStep(activeStep => activeStep + 1);
         handleInsertData();
         break;
-      // default represent InsertStepperEnum.status
+      // default 代表 InsertStepperEnum.status
       default:
         handleCloseDialog();
         break;
@@ -371,8 +371,8 @@ const InsertContainer: FC<InsertContentProps> = ({
       case InsertStepperEnum.preview:
         setActiveStep(activeStep => activeStep - 1);
         break;
-      // default represent InsertStepperEnum.status
-      // status don't have cancel button
+      // default 代表 InsertStepperEnum.status
+      // status 步骤没有取消按钮
       default:
         break;
     }
@@ -407,7 +407,7 @@ const InsertContainer: FC<InsertContentProps> = ({
             handleIsContainedChange={setIsContainFieldNames}
           />
         );
-      // default represents InsertStepperEnum.status
+      // default 代表 InsertStepperEnum.status
       default:
         return (
           <InsertStatus
@@ -430,7 +430,7 @@ const InsertContainer: FC<InsertContentProps> = ({
       confirmDisabled={nextDisabled}
       showActions={showActions}
       showCancel={showCancel}
-      // don't show close icon when insert not finish
+      // 插入未完成时不显示关闭图标
       showCloseIcon={insertStatus !== InsertStatusEnum.loading}
     >
       {generateContent(activeStep)}

@@ -36,7 +36,7 @@ import type {
 } from '../databases/collections/Types';
 import { CollectionService } from '@/http';
 
-// Add this type at the top of your file or in a relevant types file
+// 该类型可以放在文件顶部或相应的 types 文件中
 interface BM25Function {
   name: string;
   description: string;
@@ -70,20 +70,20 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
 
   const [fieldsValidation, setFieldsValidation] = useState(true);
 
-  // State for BM25 selection UI
+  // BM25 选择界面的 State
   const [showBm25Selection, setShowBm25Selection] = useState<boolean>(false);
   const [selectedBm25Input, setSelectedBm25Input] = useState<string>('');
   const [selectedBm25Output, setSelectedBm25Output] = useState<string>('');
 
   const [consistencyLevel, setConsistencyLevel] =
-    useState<ConsistencyLevelEnum>(ConsistencyLevelEnum.Bounded); // Bounded is the default value of consistency level
+    useState<ConsistencyLevelEnum>(ConsistencyLevelEnum.Bounded); // Bounded 是一致性级别的默认值
   const [properties, setProperties] = useState({});
 
   const [fields, setFields] = useState<CreateField[]>([
     {
       data_type: DataTypeEnum.Int64,
       is_primary_key: true,
-      name: 'id', // we need hide helpertext at first time, so we use null to detect user enter input or not.
+      name: 'id', // 首次需要隐藏 helperText，因此用 null 判断用户是否已输入
       description: '',
       isDefault: true,
       id: '1',
@@ -130,12 +130,12 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
       onChange: (value: string) => handleInputChange('collection_name', value),
       variant: 'filled',
       validations: [
-        // cannot be empty
+        // 不能为空
         {
           rule: 'require',
           errorText: warningTrans('requiredOnly'),
         },
-        // length <= 255
+        // 长度 <= 255
         {
           rule: 'range',
           extraParam: {
@@ -144,12 +144,12 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
           },
           errorText: collectionTrans('nameLengthWarning'),
         },
-        // name can only be combined with letters, number or underscores
+        // 名称只能由字母、数字或下划线组成
         {
           rule: 'collectionName',
           errorText: collectionTrans('nameContentWarning'),
         },
-        // name can not start with number
+        // 名称不能以数字开头
         {
           rule: 'firstCharacter',
           extraParam: {
@@ -196,10 +196,10 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
           data_type: v.data_type,
         };
 
-        // remove unused id
+        // 删除无用的 id
         delete data.id;
 
-        // if we need
+        // 按需处理
         if (typeof v.dim !== undefined && !isNaN(Number(v.dim))) {
           data.dim = Number(v.dim);
         }
@@ -215,16 +215,16 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
         }
 
         if (data.analyzer_params) {
-          // if analyzer_params is string, we need to use default value
+          // analyzer_params 为字符串时需要转换为默认对象
           data.analyzer_params = getAnalyzerParams(data.analyzer_params);
         }
 
-        // delete sparse vector dime
+        // 删除稀疏向量的 dim
         if (data.data_type === DataTypeEnum.SparseFloatVector) {
           delete data.dim;
         }
 
-        // delete analyzer if not varchar
+        // 非 VarChar 类型时删除 analyzer 配置
         if (
           data.data_type !== DataTypeEnum.VarChar &&
           data.data_type === DataTypeEnum.Array &&
@@ -244,15 +244,15 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
       },
     };
 
-    // create collection
+    // 创建 Collection
     await CollectionService.createCollection({
       ...param,
     });
 
-    // refresh collection
+    // 刷新 Collection
     await fetchCollection(param.collection_name);
 
-    // show success message
+    // 提示成功信息
     openSnackBar(
       successTrans('create', {
         name: collectionTrans('collection'),
@@ -263,7 +263,7 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
     handleCloseDialog();
   };
 
-  // Filter available fields for BM25 selectors
+  // 过滤出 BM25 选择器可用的 Field
   const varcharFields = useMemo(
     () => fields.filter(f => f.data_type === DataTypeEnum.VarChar && f.name),
     [fields]
@@ -290,36 +290,36 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
     const outputField = fields.find(f => f.name === selectedBm25Output);
 
     if (!inputField || !outputField) {
-      // Should not happen if state is managed correctly, but good to check
+      // 正常情况下 State 管理正确时不会发生，但保留校验更稳妥
       console.error('Selected BM25 fields not found');
       return;
     }
 
-    // Generate a unique name for the function
+    // 为 function 生成唯一名称
     const functionName = `BM25_${inputField.name}_${
       outputField.name
     }_${Math.floor(Math.random() * 1000)}`;
 
-    // Create a new function with the selected fields
+    // 使用选中的 Field 创建一个新 function
     const newFunction: BM25Function = {
       name: functionName,
       description: `BM25 function: ${inputField.name} → ${outputField.name}`,
       type: FunctionType.BM25,
       input_field_names: [inputField.name],
       output_field_names: [outputField.name],
-      params: {}, // Add default params if needed, e.g., { k1: 1.2, b: 0.75 }
+      params: {}, // 如需默认参数可在此补充，例如 { k1: 1.2, b: 0.75 }
     };
 
-    // Update form with the new function
+    // 把新 function 写入 form
     setForm(prev => ({
       ...prev,
       functions: [...(prev.functions || []), newFunction],
     }));
 
-    // Hide selection UI
+    // 隐藏选择界面
     setShowBm25Selection(false);
 
-    // need to update field.is_function_output to true
+    // 需要把 field.is_function_output 置为 true
     const updatedFields = fields.map(field => {
       if (field.name === outputField.name) {
         return {
@@ -336,19 +336,19 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
     setShowBm25Selection(false);
   };
 
-  // Effect to reset selection when fields change or selection UI is hidden
+  // Field 变化或选择界面关闭时重置已选项
   useEffect(() => {
     if (!showBm25Selection) {
       setSelectedBm25Input('');
       setSelectedBm25Output('');
     } else {
-      // Pre-select first available fields when opening selection
+      // 打开选择界面时预选第一个可用 Field
       setSelectedBm25Input(varcharFields[0]?.name || '');
       setSelectedBm25Output(sparseFields[0]?.name || '');
     }
   }, [showBm25Selection, varcharFields, sparseFields]);
 
-  // Effect to filter out functions with invalid field names
+  // 过滤掉 Field 名已失效的 function
   useEffect(() => {
     setForm(prevForm => {
       const fieldNames = fields.map(f => f.name);
@@ -364,7 +364,7 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
     });
   }, [fields]);
 
-  // Import from json
+  // 从 json 导入
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImportClick = () => {
@@ -400,7 +400,7 @@ const CreateCollectionDialog: FC<CollectionCreateProps> = ({ onCreate }) => {
         setForm(importedForm);
         setProperties(importedProperties);
 
-        // enable submit
+        // 启用提交按钮
         setDisabled(false);
 
         openSnackBar('Import successful', 'success');

@@ -136,7 +136,7 @@ const UpdateRoleDialog: FC<CreatePrivilegeGroupProps> = ({
   ];
 
   const handleCreatePrivilegeGroup = async () => {
-    // privileges is an array of strings, should be unique
+    // privileges 是字符串数组，需保证唯一
     const newForm = {
       ...form,
       privileges: Array.from(new Set(form.privileges)),

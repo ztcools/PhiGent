@@ -29,7 +29,7 @@ const StyledButton = styled(CustomButton)(({ theme }) => ({
 const TablePaginationActions = (props: TablePaginationActionsProps) => {
   const { count, page, rowsPerPage, onPageChange } = props;
 
-  // icons
+  // 图标
   const NextIcon = icons.next;
   const PrevIcon = icons.prev;
 

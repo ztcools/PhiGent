@@ -7,13 +7,13 @@ interface UseWebSocketProps {
   isAuth: boolean;
   clientId: string;
   database: string;
-  onCollectionUpdate: (data: any) => void; // Define a more specific type if possible
+  onCollectionUpdate: (data: any) => void; // 如有可能，请定义更精确的类型
 }
 
 export const useWebSocket = ({
   isAuth,
   clientId,
-  database, // Added database dependency
+  database, // 新增 database 依赖
   onCollectionUpdate,
 }: UseWebSocketProps) => {
   const socket = useRef<Socket | null>(null);
@@ -32,18 +32,18 @@ export const useWebSocket = ({
         'milvus-client-id': clientId,
       };
 
-      // Ensure previous connection is cleaned up before creating a new one
+      // 创建新连接前先确保旧连接已清理
       if (socket.current) {
         clearSocket();
       }
 
-      // For Electron, use default config, for web use path configuration
+      // Electron 下使用默认配置，Web 下使用 path 配置
       socket.current = isElectron
         ? io(url as string, { extraHeaders, query: extraHeaders })
         : io(url as string, {
             extraHeaders,
             query: extraHeaders,
-            path: '/socket.io', // Add path configuration for proxy usage
+            path: '/socket.io', // 为代理场景补充 path 配置
           });
 
       socket.current.on('connect', () => {
@@ -58,32 +58,32 @@ export const useWebSocket = ({
 
       socket.current.on('error', error => {
         console.error('WebSocket error:', error);
-        clearSocket(); // Clear on error as well
+        clearSocket(); // 出错时同样需要清理
       });
     } else {
       clearSocket();
     }
 
-    // Cleanup function for when isAuth or clientId changes
+    // isAuth 或 clientId 变化时的清理函数
     return () => {
       clearSocket();
     };
-  }, [isAuth, clientId]); // Removed database from dependency array here, connection depends on auth/client
+  }, [isAuth, clientId]); // 此处已移除 database 依赖，连接仅依赖 auth/client
 
   useEffect(() => {
     if (connected && socket.current) {
-      // Clear previous listener before adding a new one
+      // 添加新监听前先移除旧监听
       socket.current.off(WS_EVENTS.COLLECTION_UPDATE, onCollectionUpdate);
-      // Listen to backend collection event
+      // 监听后端的 Collection 事件
       socket.current.on(WS_EVENTS.COLLECTION_UPDATE, onCollectionUpdate);
     }
 
-    // Cleanup listener when connection state or callback changes
+    // 连接状态或回调变化时清理监听
     return () => {
       socket.current?.off(WS_EVENTS.COLLECTION_UPDATE, onCollectionUpdate);
     };
-    // Add database here if the listener logic depends on it,
-    // but the current onCollectionUpdate is passed from DataProvider which already depends on database
+    // 若监听逻辑依赖 database，可在此加入；但当前 onCollectionUpdate
+    // 由 DataProvider 传入，而它已经依赖 database
   }, [connected, onCollectionUpdate]);
 
   return { connected };

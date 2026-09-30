@@ -43,10 +43,9 @@ const parseBranchList = (text: string): string[] =>
     .filter(Boolean);
 
 /**
- * Platform detection for the URL currently in a form field. Answers locally on
- * every keystroke (gitHost.ts mirrors the service's table) and then confirms
- * against `GET /detect` once typing settles, so a service whose table is newer
- * than this bundle still wins.
+ * 识别表单字段中当前 URL 所属的平台。每次按键都先本地给出结果
+ * （gitHost.ts 复制了一份 service 的映射表），输入停止后再通过
+ * `GET /detect` 确认，这样 service 的映射表比当前前端包更新时仍以其为准。
  */
 const useGitHost = (url: string): GitHostInfo => {
   const trimmed = url.trim();
@@ -58,7 +57,7 @@ const useGitHost = (url: string): GitHostInfo => {
     const t = setTimeout(() => {
       GitIndexService.detect(trimmed)
         .then(info => setRemote(info as GitHostInfo))
-        // Offline / older service without /detect — the local guess stands.
+        // 离线或旧版 service 没有 /detect——以本地判断为准。
         .catch(() => {});
     }, 400);
     return () => clearTimeout(t);
@@ -78,9 +77,8 @@ const PLATFORM_COLOR: Record<string, 'primary' | 'secondary' | 'info' | 'default
 };
 
 /**
- * The detected platform and what it implies for authentication. Shown while the
- * URL is being typed so a paste from the wrong platform — or an SSH URL with a
- * token pasted alongside it — is visible before the repo is saved.
+ * 识别到的平台及其对应的认证方式。URL 输入过程中即时展示，这样贴错平台的
+ * 地址、或 SSH URL 旁边误粘 Token 的情况，都能在保存仓库之前被发现。
  */
 const HostHint = ({ url, hasToken }: { url: string; hasToken: boolean }) => {
   const info = useGitHost(url);
@@ -472,7 +470,7 @@ const GitLabRepos = () => {
         <Typography sx={{ color: 'error.main', mb: 2 }}>连接索引服务失败：{error}</Typography>
       )}
 
-      {/* schedule + index all */}
+      {/* 定时调度 + 全量索引 */}
       <Paper
         variant="outlined"
         sx={{
@@ -515,7 +513,7 @@ const GitLabRepos = () => {
         </Button>
       </Paper>
 
-      {/* add repo */}
+      {/* 添加仓库 */}
       <Box sx={{ mb: 2 }}>
         <Box
           sx={{
@@ -550,7 +548,7 @@ const GitLabRepos = () => {
         </Box>
       </Box>
 
-      {/* repo table */}
+      {/* 仓库列表 */}
       <Paper
         variant="outlined"
         sx={{ borderRadius: 2, overflow: 'hidden' }}
@@ -590,7 +588,7 @@ const GitLabRepos = () => {
 
               return (
                 <Box key={r.name}>
-                  {/* repo main row */}
+                  {/* 仓库主行 */}
                   <Box
                     sx={{
                       display: 'grid',
@@ -618,8 +616,8 @@ const GitLabRepos = () => {
                           <Typography sx={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3 }} noWrap>
                             {r.name}
                           </Typography>
-                          {/* Platform + auth flavor: HTTPS with token, anonymous HTTPS
-                              (public repos), or SSH deploy key. */}
+                          {/* 平台与认证方式：带 Token 的 HTTPS、匿名 HTTPS
+                              （公开仓库）或 SSH 部署公钥。 */}
                           <Tooltip
                             title={
                               r.auth === 'anonymous'
@@ -700,7 +698,7 @@ const GitLabRepos = () => {
                     </Box>
                   </Box>
 
-                  {/* expanded branch rows */}
+                  {/* 展开的分支行 */}
                   {isExpanded && (
                     <Box sx={{ bgcolor: 'action.hover' }}>
                       {allBranches.map((b, idx) => (

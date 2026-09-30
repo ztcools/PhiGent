@@ -228,7 +228,7 @@ const Collections = () => {
             component: (
               <CreateCollectionDialog
                 onCreate={collection_name => {
-                  //navigate to the new collection
+                  // 跳转到新建的 Collection
                   navigate(`/databases/${database}/${collection_name}/schema`);
                 }}
               />
@@ -316,7 +316,7 @@ const Collections = () => {
                     ? selectedCollections[0].collection_name
                     : ''
                 }
-                // user can't select partition on collection page, so default value is ''
+                // Collection 页面无法选择 Partition，所以默认值为 ''
                 defaultSelectedPartition={''}
                 onInsert={async (collectionName: string) => {
                   await fetchCollection(collectionName);
@@ -328,9 +328,9 @@ const Collections = () => {
         });
       },
       /**
-       * insert validation:
-       * 1. At least 1 available collection
-       * 2. selected collections quantity shouldn't over 1
+       * 插入校验：
+       * 1. 至少有 1 个可用 Collection
+       * 2. 选中的 Collection 数量不能超过 1 个
        */
       disabled: () =>
         collectionList.length === 0 || selectedCollections.length > 1,
@@ -659,7 +659,7 @@ const Collections = () => {
 
   const CollectionIcon = icons.navCollection;
 
-  // lazy fetch collections that don't have schema
+  // 懒加载还没有 schema 的 Collection
   useEffect(() => {
     const names = collectionList
       .filter(c => !c.schema)

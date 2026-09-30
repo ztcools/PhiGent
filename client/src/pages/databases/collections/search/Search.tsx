@@ -68,25 +68,25 @@ const emptyExplorerData: GraphData = {
 };
 
 const Search = (props: CollectionDataProps) => {
-  // auth context
+  // 认证 Context
   const { isManaged } = useContext(authContext);
 
-  // props
+  // Props
   const { collections, collectionName, searchParams, setSearchParams } = props;
   const collection = collections.find(
     i => i.collection_name === collectionName
   ) as CollectionFullObject;
 
-  // UI states
+  // UI 状态
   const [tableLoading, setTableLoading] = useState<boolean>();
   const [highlightField, setHighlightField] = useState<string>('');
   const [explorerOpen, setExplorerOpen] = useState<boolean>(false);
 
-  // translations
+  // 国际化文案
   const { t: searchTrans } = useTranslation('search');
   const { t: btnTrans } = useTranslation('btn');
 
-  // UI functions
+  // UI 交互函数
   const handleExpand = useCallback(
     (panel: string) => (event: ChangeEvent<{}>, expanded: boolean) => {
       const s = cloneObj(searchParams);
@@ -117,7 +117,7 @@ const Search = (props: CollectionDataProps) => {
     [JSON.stringify(searchParams)]
   );
 
-  // update search params
+  // 更新搜索参数
   const updateSearchParamCallback = useCallback(
     (updates: SearchSingleParams, index: number) => {
       if (
@@ -125,7 +125,7 @@ const Search = (props: CollectionDataProps) => {
         JSON.stringify(searchParams.searchParams[index].params)
       ) {
         const s = cloneObj(searchParams);
-        // update the searchParams
+        // 更新 searchParams
         s.searchParams[index].params = updates;
         setSearchParams({ ...s });
       }
@@ -133,7 +133,7 @@ const Search = (props: CollectionDataProps) => {
     [JSON.stringify(searchParams)]
   );
 
-  // generate random vectors
+  // 生成随机向量
   const genRandomVectors = useCallback(() => {
     const s = cloneObj(searchParams) as SearchParamsType;
     s.searchParams.forEach((sp: SearchSingleParams) => {
@@ -143,7 +143,7 @@ const Search = (props: CollectionDataProps) => {
     setSearchParams({ ...s });
   }, [JSON.stringify(searchParams)]);
 
-  // on vector input change, update the search params
+  // 向量输入变化时更新搜索参数
   const onSearchInputChange = useCallback(
     (anns_field: string, value: string) => {
       const s = cloneObj(searchParams) as SearchParamsType;
@@ -159,7 +159,7 @@ const Search = (props: CollectionDataProps) => {
     [JSON.stringify(searchParams)]
   );
 
-  // on filter change
+  // 过滤条件变化时
   const onFilterChange = useCallback(
     (value: string) => {
       const s = cloneObj(searchParams) as SearchParamsType;
@@ -171,7 +171,7 @@ const Search = (props: CollectionDataProps) => {
     [JSON.stringify(searchParams)]
   );
 
-  // on partitions change
+  // Partition 变化时
   const onPartitionsChange = useCallback(
     (value: any) => {
       const s = cloneObj(searchParams) as SearchParamsType;
@@ -181,7 +181,7 @@ const Search = (props: CollectionDataProps) => {
     [JSON.stringify(searchParams)]
   );
 
-  // set search result
+  // 设置搜索结果
   const setSearchResult = useCallback(
     (props: VectorSearchResults) => {
       const { results, latency } = props;
@@ -200,7 +200,7 @@ const Search = (props: CollectionDataProps) => {
     [JSON.stringify(searchParams)]
   );
 
-  // execute search
+  // 执行搜索
   const onSearchClicked = useCallback(async () => {
     const params = buildSearchParams(searchParams);
     setExplorerOpen(false);
@@ -219,7 +219,7 @@ const Search = (props: CollectionDataProps) => {
     }
   }, [JSON.stringify(searchParams)]);
 
-  // execute explore
+  // 展开/收起探索视图
   const onExploreClicked = () => {
     setExplorerOpen(explorerOpen => !explorerOpen);
   };
@@ -241,7 +241,7 @@ const Search = (props: CollectionDataProps) => {
           output_fields: ['*'],
         });
 
-        // replace the vector data
+        // 替换向量数据
         params.data[0].data = query.data[0][params.data[0].anns_field];
 
         const search = await DataService.vectorSearchData(
@@ -283,7 +283,7 @@ const Search = (props: CollectionDataProps) => {
     handleGridSort,
   } = usePaginationHook(searchResultMemo || []);
 
-  // reset
+  // 重置
   const onResetClicked = useCallback(() => {
     const s = cloneObj(searchParams) as SearchParamsType;
     s.searchResult = null;
@@ -301,7 +301,7 @@ const Search = (props: CollectionDataProps) => {
     if (!searchParams || !searchParams.collection) {
       return [];
     }
-    // collection fields, combine static and dynamic fields
+    // Collection 的 Field，合并静态 Field 与动态 Field
     const orderArray = [
       primaryKeyField,
       'id',
@@ -319,7 +319,7 @@ const Search = (props: CollectionDataProps) => {
             return indexA - indexB;
           })
           .filter(item => {
-            // if primary key field name is id, don't filter it
+            // Primary Key 字段名为 id 时不过滤它
             const invalidItems = primaryKeyField === 'id' ? [] : ['id'];
             return !invalidItems.includes(item) && orderArray.includes(item);
           })
@@ -354,12 +354,12 @@ const Search = (props: CollectionDataProps) => {
     }),
   ]);
 
-  // methods
+  // 方法
   const handlePageChange = (e: any, page: number) => {
     handleCurrentPage(page);
   };
 
-  // collection is not found or collection full object is not ready
+  // Collection 不存在或其完整对象尚未就绪
   if (
     !searchParams ||
     (searchParams && searchParams.searchParams.length === 0)
@@ -381,17 +381,17 @@ const Search = (props: CollectionDataProps) => {
     );
   }
 
-  // disable search button
+  // 禁用搜索按钮
   let disableSearch = false;
   let disableSearchTooltip = '';
-  // has selected vector fields
+  // 是否已选中向量 Field
   const selectedFields = searchParams.searchParams.filter(s => s.selected);
 
   if (selectedFields.length === 0) {
     disableSearch = true;
     disableSearchTooltip = searchTrans('noSelectedVectorField');
   }
-  // has vector data to search
+  // 是否有可用于搜索的向量数据
   const noDataInSelected = selectedFields.some(s => s.data === '');
 
   if (noDataInSelected) {
@@ -399,7 +399,7 @@ const Search = (props: CollectionDataProps) => {
     disableSearchTooltip = searchTrans('noVectorToSearch');
   }
 
-  // enable partition filter
+  // 是否启用 Partition 过滤
   const enablePartitionsFilter = !collection.schema.enablePartitionKey;
 
   return (

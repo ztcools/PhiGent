@@ -15,7 +15,7 @@ export type SortDirection = 'asc' | 'desc';
 export type SortType = 'string' | 'number';
 
 /**
- * selected: selected data in table checkbox
+ * selected: 表格 checkbox 中选中的数据
  */
 export type ToolBarType = {
   toolbarConfigs: ToolBarConfig[];
@@ -31,19 +31,19 @@ export type TableSwitchType = {
 };
 
 /**
- * postion: toolbar position
- * component: when type is not iconBtn button switch, render component
+ * postion: toolbar 位置
+ * component: type 不是 iconBtn/button/switch 时，渲染该组件
  */
 export type ToolBarConfig = Partial<TableSwitchType> &
   Partial<SearchType> & {
     label: string;
     icon?: IconsType;
     color?: ColorType;
-    // when type is not iconBtn, onClick is optional
+    // type 不是 iconBtn 时，onClick 可选
     onClick?: (arg0: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
     disabled?: (data: any[]) => boolean;
     tooltip?: string;
-    // when disabled "disabledTooltip" will replace "tooltip"
+    // disabled 时会用 "disabledTooltip" 替代 "tooltip"
     disabledTooltip?: string;
     hidden?: boolean;
     type?: 'iconBtn' | 'button' | 'switch' | 'select' | 'groupSelect';
@@ -95,13 +95,13 @@ export type TableType = {
   isLoading?: boolean;
   headEditable?: boolean;
   editHeads: EditableHeads[];
-  // with unit like '20px'
+  // 带单位，如 '20px'
   tableCellMaxWidth?: string;
   handleSort?: (e: any, orderBy: string) => void;
   order?: SortDirection;
   orderBy?: string;
   ref?: Ref<HTMLDivElement>;
-  // whether to add a spacer column to control space distribution
+  // 是否添加 spacer 列以控制空间分配
   addSpacerColumn?: boolean;
 };
 
@@ -114,7 +114,7 @@ export type ColDefinitionsType = {
   showActionCell?: boolean;
   isHoverAction?: boolean;
   notSort?: boolean;
-  // custom sort rule property, default is row id
+  // 自定义排序规则字段，默认为行 id
   sortBy?: string;
   sortType?: 'string' | 'number';
   onClick?: (
@@ -135,7 +135,7 @@ export type AttuGridType = ToolBarType & {
   showPagination?: boolean;
   rowCount: number;
   rowsPerPage?: number;
-  // used to dynamic set page size by table container and row height
+  // 用于根据表格容器与行高动态设置分页大小
   setRowsPerPage?: (size: number) => void;
   primaryKey: string;
   onPageChange?: (e: any, nextPageNum: number) => void;
@@ -153,7 +153,7 @@ export type AttuGridType = ToolBarType & {
   showHoverStyle?: boolean;
   headEditable?: boolean;
   editHeads?: EditableHeads[];
-  // with unit like '20px'
+  // 带单位，如 '20px'
   tableCellMaxWidth?: string;
   handleSort?: (e: any, orderBy: string) => void;
   order?: SortDirection;
@@ -164,7 +164,7 @@ export type AttuGridType = ToolBarType & {
   pagerHeight?: number;
   rowDecorator?: (row: any) => SxProps<Theme> | React.CSSProperties;
   sx?: SxProps<Theme>;
-  // whether to add a spacer column to control space distribution
+  // 是否添加 spacer 列以控制空间分配
   addSpacerColumn?: boolean;
 };
 

@@ -94,7 +94,7 @@ export const useCodeMirror = (props: UseCodeMirrorProps) => {
     return [updateListener, basicSetup(), ...(extensions ?? [])];
   };
 
-  // init editor
+  // 初始化编辑器
   useEffect(() => {
     if (container && !viewRef.current) {
       const startState = EditorState.create({
@@ -117,7 +117,7 @@ export const useCodeMirror = (props: UseCodeMirrorProps) => {
     };
   }, [container]);
 
-  // update value
+  // 更新值
   useEffect(() => {
     if (value === undefined) {
       return;
@@ -137,7 +137,7 @@ export const useCodeMirror = (props: UseCodeMirrorProps) => {
     }
   }, [value]);
 
-  // update extensions
+  // 更新扩展
   useEffect(() => {
     const view = viewRef.current;
     if (view) {

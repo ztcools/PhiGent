@@ -35,7 +35,7 @@ export type GraphNode = {
   color: number;
   nodeY?: number;
   nodeX?: number;
-}; // Add optional x, y for SimulationNodeDatum
+}; // 为 SimulationNodeDatum 添加可选的 x、y
 export type GraphLink = {
   source: string;
   target: string;

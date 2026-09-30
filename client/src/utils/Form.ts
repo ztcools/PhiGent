@@ -93,18 +93,18 @@ export const getMetricOptions = (
 };
 
 export const getScalarIndexOption = (field: FieldObject): Option[] => {
-  // Helper function to check if a type is numeric
+  // 辅助函数：判断类型是否为数值类型
   const isNumericType = (type: DataTypeStringEnum): boolean =>
     ['Int8', 'Int16', 'Int32', 'Int64', 'Float', 'Double'].includes(type);
 
-  // Helper function to check if a type is valid for bitmap
+  // 辅助函数：判断类型是否支持 bitmap 索引
   const isBitmapSupportedType = (type: DataTypeStringEnum): boolean =>
     ['Bool', 'Int8', 'Int16', 'Int32', 'Int64', 'VarChar'].includes(type);
 
-  // Initialize the options array
+  // 初始化选项数组
   const options: Option[] = [];
 
-  // Add options based on fieldType
+  // 根据 fieldType 添加选项
   if (field.data_type === DataTypeStringEnum.VarChar) {
     options.push(
       SCALAR_INDEX_OPTIONS.find(opt => opt.value === INDEX_TYPES_ENUM.Trie)!
@@ -131,7 +131,7 @@ export const getScalarIndexOption = (field: FieldObject): Option[] => {
     );
   }
 
-  // INVERTED index is a general-purpose index for all scalar fields
+  // INVERTED 是适用于所有 Scalar 字段的通用索引
   options.push(
     SCALAR_INDEX_OPTIONS.find(opt => opt.value === INDEX_TYPES_ENUM.INVERTED)!
   );

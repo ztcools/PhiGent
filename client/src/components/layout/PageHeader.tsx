@@ -2,24 +2,24 @@ import { FC, ReactNode } from 'react';
 import { Box, Typography } from '@mui/material';
 
 export interface PageHeaderProps {
-  /** Page title (already translated / localized). */
+  /** 页面标题（已翻译 / 本地化）。 */
   title: ReactNode;
-  /** Optional small subtitle / hint text shown below the title. */
+  /** 可选的副标题 / 提示文案，显示在标题下方。 */
   subtitle?: ReactNode;
-  /** Optional count badge shown next to the title, e.g. total items. */
+  /** 可选的计数徽标，显示在标题旁，例如条目总数。 */
   count?: number;
-  /** Right-aligned actions (buttons / chips / status indicators). */
+  /** 右对齐的操作区（按钮 / chips / 状态指示器）。 */
   actions?: ReactNode;
 }
 
 /**
- * Standard page-level header used by all custom (非 Attu 原生) pages.
+ * 所有自定义（非 Attu 原生）页面使用的标准页面级 Header。
  *
- * Visual spec:
- * - h4 title, weight 600
- * - count in parens, secondary color, sits on the same baseline
- * - subtitle in body2 / text.secondary
- * - actions right-aligned with 16px gap
+ * 视觉规范：
+ * - h4 标题，字重 600
+ * - 计数以括号包裹，次要色，与标题同基线
+ * - 副标题使用 body2 / text.secondary
+ * - 操作区右对齐，间距 16px
  */
 const PageHeader: FC<PageHeaderProps> = ({
   title,

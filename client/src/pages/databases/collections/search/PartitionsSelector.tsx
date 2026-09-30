@@ -12,12 +12,12 @@ interface PartitionsSelectorProps {
 }
 
 export default function PartitionsSelector(props: PartitionsSelectorProps) {
-  // i18n
+  // 国际化
   const { t: searchTrans } = useTranslation('search');
 
-  // props
+  // 属性
   const { collectionName, selected, setSelected } = props;
-  // state
+  // 状态
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<readonly PartitionData[]>([]);
   const [loading, setLoading] = useState(false);

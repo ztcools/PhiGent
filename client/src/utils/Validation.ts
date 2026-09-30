@@ -30,20 +30,20 @@ export interface ICheckMapParam {
   rule: ValidType;
 }
 export interface IExtraParam {
-  // used for confirm or any compare type
+  // 用于 confirm 或任意比较类型
   compareValue?: string | number;
-  // used for length type
+  // 用于长度类型
   min?: number;
   max?: number;
   type?: 'string' | 'number';
 
-  // used for dimension
+  // 用于 dimension
   metricType?: METRIC_TYPES_VALUES;
   multipleNumber?: number;
 
-  // used for check start item
+  // 用于校验起始字符
   invalidTypes?: TypeEnum[];
-  // used for custom validation
+  // 用于自定义校验
   compare?: (value?: any) => boolean;
 }
 export type CheckMap = {
@@ -63,11 +63,11 @@ export const checkEmail = (value: string): boolean => {
   return re.test(value);
 };
 
-/* password rules:
- * 1. at least one uppercase letter
- * 2. at least one lowercase letter
- * 3. at least one number
- * 4. at least one nonalphanumeric character: ! @ # $ % ^ & * ( ) _ + - = [ ] { } | '
+/* 密码规则：
+ * 1. 至少一个大写字母
+ * 2. 至少一个小写字母
+ * 3. 至少一个数字
+ * 4. 至少一个非字母数字字符：! @ # $ % ^ & * ( ) _ + - = [ ] { } | '
  */
 export const checkPasswordStrength = (value: string): boolean => {
   const re = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*([^A-Za-z0-9]))/;
@@ -121,17 +121,17 @@ export const checkIpOrCIDR = (value: string): boolean => {
   return checkIP(value) || checkCIDR(value);
 };
 
-// collection name can only be combined with number, letter or _
+// Collection 名只能由数字、字母或 _ 组成
 export const checkCollectionName = (value: string): boolean => {
   const re = /^[0-9,a-z,A-Z_]+$/;
   return re.test(value);
 };
 
 /**
- * check data type
- * @param type data types, like string, number
+ * 校验数据类型
+ * @param type 数据类型，如 string、number
  * @param value
- * @returns whether value's value is equal to param type
+ * @returns value 的值是否等于 param 指定的类型
  */
 export const checkType = (type: TypeEnum, value: string): boolean => {
   switch (type) {
@@ -143,10 +143,10 @@ export const checkType = (type: TypeEnum, value: string): boolean => {
 };
 
 /**
- * check input first character
+ * 校验输入的首字符
  * @param value
  * @param invalidTypes
- * @returns whether start letter type not belongs to invalid types
+ * @returns 首字符的类型是否不属于非法类型
  */
 export const checkFirstCharacter = (param: {
   value: string;
@@ -193,9 +193,9 @@ export const checkDimension = (param: {
 };
 
 /**
- * function to check whether value(type: number) is equal to specified value or in valid range
- * @param param specValue and params checkRange function needed
- * @returns whether input is valid
+ * 校验数值 value 是否等于指定值，或落在有效区间内
+ * @param param 需要 specValue，以及 checkRange 所需参数
+ * @returns 输入是否合法
  */
 export const checkSpecValueOrRange = (param: {
   value: number;
@@ -229,13 +229,13 @@ export const checkValueLength = (value: string, min: number, max: number) => {
   return value.length >= min && value.length <= max;
 };
 
-// Username must not be empty, and must not exceed 32 characters in length. It must start with a letter, and only contains underscores, letters, or numbers.
+// 用户名不能为空，长度不超过 32 个字符。必须以字母开头，且只能包含下划线、字母或数字。
 export const checkUserName = (value: string): boolean => {
   const re = /^[a-zA-Z][a-zA-Z0-9_]{0,31}$/;
   return re.test(value);
 };
 
-// includ 3 of 4 types of characters: uppercase, lowercase, number, special character
+// 需包含以下 4 类字符中的 3 类：大写字母、小写字母、数字、特殊字符
 export const checkCloudPassword = (value: string): boolean => {
   const re =
     /^(?![A-Za-z]+$)(?![A-Z\d]+$)(?![A-Z\W]+$)(?![a-z\d]+$)(?![a-z\W]+$)(?![\d\W]+$).{3,}$/;
@@ -298,7 +298,7 @@ export const getCheckResult = (param: ICheckMapParam): boolean => {
 };
 
 /**
- * Check collection is loading or not
+ * 检查 Collection 是否正在加载
  */
 export const checkLoading = (v: CollectionObject): boolean => {
   return (
@@ -309,9 +309,9 @@ export const checkLoading = (v: CollectionObject): boolean => {
 };
 
 /**
- * Check collection is index building or not.
+ * 检查 Collection 是否正在构建索引。
  * @param v
- * @returns boolean
+ * @returns 布尔值
  */
 export const checkIndexBuilding = (v: CollectionObject): boolean => {
   return Boolean(

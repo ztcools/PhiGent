@@ -12,16 +12,16 @@ import type { SearchParams, QueryState } from './types';
 import type { CollectionObject, CollectionFullObject } from '@server/types';
 import type { ITab } from '@/components/customTabList/Types';
 
-// Collection tab pages
+// Collection 标签页
 export const CollectionsTabs = (props: {
-  collectionPage: string; // current collection page
-  collectionName: string; // current collection name
-  tabClass: string; // tab class
-  collections: CollectionObject[]; // collections
-  searchParams: SearchParams; // search params
-  setSearchParams: (params: SearchParams) => void; // set search params
-  queryState: QueryState; // query state
-  setQueryState: (state: QueryState) => void; // set query state
+  collectionPage: string; // 当前 Collection 页面
+  collectionName: string; // 当前 Collection 名称
+  tabClass: string; // 标签样式类
+  collections: CollectionObject[]; // Collection 列表
+  searchParams: SearchParams; // 搜索参数
+  setSearchParams: (params: SearchParams) => void; // 设置搜索参数
+  queryState: QueryState; // 查询状态
+  setQueryState: (state: QueryState) => void; // 设置查询状态
 }) => {
   // props
   const {
@@ -44,7 +44,7 @@ export const CollectionsTabs = (props: {
     i => i.collection_name === collectionName
   ) as CollectionFullObject;
 
-  // collection tabs
+  // Collection 标签页配置
   const collectionTabs: ITab[] = [
     {
       label: collectionTrans('schemaTab'),
@@ -92,7 +92,7 @@ export const CollectionsTabs = (props: {
     );
   }
 
-  // get active collection tab
+  // 获取当前激活的 Collection 标签
   const activeColTab = collectionTabs.findIndex(t => t.path === collectionPage);
 
   return (

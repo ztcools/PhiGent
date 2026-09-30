@@ -11,7 +11,7 @@ export const LAST_TIME_HEALTHY_THRESHOLD_CPU =
 export const LAST_TIME_HEALTHY_THRESHOLD_MEMORY =
   'last-time-healthy-threshold-memory';
 
-// new local storage keys
+// 新的 localStorage 键
 export const ATTU_UI_TREE_WIDTH = 'attu.ui.tree.with';
 export const ATTU_AUTH_HISTORY = 'attu.auth.history';
 export const ATTU_THEME_MODE = 'attu.theme.mode';

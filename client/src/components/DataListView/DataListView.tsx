@@ -15,7 +15,7 @@ interface DataListViewProps {
 const DataListView = (props: DataListViewProps) => {
   const { collection, data } = props;
 
-  // Merge dynamic fields into row
+  // 将动态字段合并到行数据
   let row = data[0];
   row = {
     ...row,

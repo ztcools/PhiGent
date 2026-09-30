@@ -19,13 +19,13 @@ export class MilvusService {
   }
 
   static formatAddress(address: string) {
-    // remove http prefix from address
+    // 去掉地址中的 http 前缀
     const ip = address.replace(/(http):\/\//, '');
     return ip.includes(':') ? ip : `${ip}:${DEFAULT_MILVUS_PORT}`;
   }
 
   async connectMilvus(data: AuthReq): Promise<AuthObject> {
-    // Destructure the data object to get the connection details
+    // 从 data 中解构出连接所需的信息
     const {
       address,
       token,
@@ -36,18 +36,18 @@ export class MilvusService {
       checkHealth,
       clientId,
     } = data;
-    // Format the address to remove the http prefix
+    // 格式化地址，去掉 http 前缀
     const milvusAddress = MilvusService.formatAddress(address);
 
-    // if client exists, validate the connection before returning
+    // client 已存在时，先校验连接再返回
     if (clientCache.has(clientId)) {
       const cache = clientCache.get(clientId);
       try {
-        // validate the cached client is still connected and healthy
+        // 校验缓存的 client 是否仍然连接且健康
         if (checkHealth) {
           const healthRes = await cache.milvusClient.checkHealth();
           if (!healthRes.isHealthy) {
-            // remove unhealthy client from cache
+            // 从缓存中移除不健康的 client
             clientCache.delete(clientId);
             throw new Error('Cached client is not healthy');
           }
@@ -58,14 +58,14 @@ export class MilvusService {
           database: cache.database,
         };
       } catch (error) {
-        // if cached client validation fails, remove it and continue with new connection
+        // 缓存的 client 校验失败时先移除它，再继续创建新连接
         clientCache.delete(clientId);
         console.warn(`Cached client validation failed for ${clientId}, creating new connection`);
       }
     }
 
     try {
-      // Create a new Milvus client with the provided connection details
+      // 使用传入的连接信息创建一个新的 Milvus client
       const clientConfig: ClientConfig = {
         address: milvusAddress,
         token,
@@ -97,33 +97,33 @@ export class MilvusService {
           clientConfig.tls.serverName = process.env.SERVER_NAME;
         }
       }
-      // create the client
+      // 创建 client
       const milvusClient: MilvusClient = new MilvusClient(clientConfig);
 
       try {
-        // Attempt to connect to the Milvus server
+        // 尝试连接 Milvus 服务
         await milvusClient.connectPromise;
       } catch (error) {
-        // If the connection fails, clear the cache and throw an error
+        // 连接失败时清理缓存并抛出错误
         clientCache.delete(milvusClient.clientId);
         throw HttpErrors(HTTP_STATUS_CODE.UNAUTHORIZED, error);
       }
 
-      // Check the health of the Milvus server
+      // 检查 Milvus 服务的健康状态
       if (checkHealth) {
         const res = await milvusClient.checkHealth();
 
-        // If the server is not healthy, throw an error
+        // 服务不健康时抛出错误
         if (!res.isHealthy) {
           clientCache.delete(milvusClient.clientId);
           throw new Error('Milvus is not ready yet.');
         }
       }
 
-      // database
+      // 目标 Database
       const db = database || this.DEFAULT_DATABASE;
 
-      // If the server is healthy, set the active address and add the client to the cache
+      // 服务健康时记录地址并把 client 写入缓存
       clientCache.set(milvusClient.clientId, {
         milvusClient,
         address,
@@ -131,12 +131,12 @@ export class MilvusService {
         collectionsQueue: new SimpleQueue<string>(),
       });
 
-      // test ListDatabases permission
+      // 测试 ListDatabases 权限
       try {
         await milvusClient.use({ db_name: db });
         await milvusClient.listDatabases();
       } catch (e) {
-        // ensure proper cleanup on permission failure
+        // 权限不足时确保资源被正确清理
         await milvusClient.closeConnection();
         clientCache.delete(milvusClient.clientId);
         throw HttpErrors(
@@ -147,7 +147,7 @@ export class MilvusService {
 
       await milvusClient.use({ db_name: db });
 
-      // Return the address and the database (if it exists, otherwise return 'default')
+      // 返回地址与 Database（存在则返回它，否则返回 'default'）
       return {
         clientId: milvusClient.clientId,
         database: db,
@@ -179,10 +179,10 @@ export class MilvusService {
 
       const res = await milvusClient.closeConnection();
 
-      // clear crons
+      // 清理定时任务
       cronsManager.deleteCronJob(clientId);
 
-      // clear cache on disconnect
+      // 断开连接时清理缓存
       clientCache.delete(milvusClient.clientId);
       return res;
     }
@@ -191,20 +191,20 @@ export class MilvusService {
   async useDatabase(clientId: string, db: string) {
     const { milvusClient } = clientCache.get(clientId);
 
-    // get the database from the cache
+    // 从缓存中获取 Database
     const cache = clientCache.get(clientId);
     const currentDatabase = cache.database;
 
     if (currentDatabase !== db) {
-      // use the database
+      // 切换 Database
       const res = milvusClient.use({
         db_name: db,
       });
 
-      // clear crons
+      // 清理定时任务
       cronsManager.deleteCronJob(clientId);
 
-      // update the database in the cache
+      // 更新缓存中的 Database
       cache.database = db;
       return res;
     }

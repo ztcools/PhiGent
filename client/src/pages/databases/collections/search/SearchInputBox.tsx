@@ -38,11 +38,11 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
   const theme = useTheme();
   const { t: searchTrans } = useTranslation('search');
 
-  // props
+  // 传入的 Props
   const { searchParams, onChange, collection, type } = props;
   const { field, data } = searchParams;
 
-  // refs
+  // 引用
   const editorEl = useRef<HTMLDivElement>(null);
   const editor = useRef<EditorView>();
   const onChangeRef = useRef(onChange);
@@ -52,11 +52,11 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
 
   const themeCompartment = new Compartment();
 
-  // get validator
+  // 获取校验器
   const validator = Validator[field.data_type as keyof typeof Validator];
 
   useEffect(() => {
-    // update dataRef and onChangeRef when data changes
+    // data 变化时更新 dataRef 与 onChangeRef
     dataRef.current = data;
     onChangeRef.current = onChange;
     fieldRef.current = field;
@@ -67,7 +67,7 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
     if (queryTimeout) {
       clearTimeout(queryTimeout);
     }
-    // only search for text that doesn't have space, comma, or brackets or curly brackets
+    // 只搜索不含空格、逗号、方括号或花括号的文本
     if (!text.trim().match(/[\s,{}]/)) {
       const isVarChar =
         collection.schema.primaryField.data_type === DataTypeStringEnum.VarChar;
@@ -102,10 +102,10 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
     }
   };
 
-  // create editor
+  // 创建编辑器
   useEffect(() => {
     if (!editor.current) {
-      // update outside data timeout handler
+      // 外部数据更新的超时处理
       let updateTimeout: NodeJS.Timeout;
 
       let extensions = [
@@ -115,8 +115,8 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
             type === 'text' ? 'textPlaceHolder' : 'inputVectorPlaceHolder'
           )
         ),
-        keymap.of([{ key: 'Tab', run: insertTab }]), // fix tab behaviour
-        indentUnit.of('    '), // fix tab indentation
+        keymap.of([{ key: 'Tab', run: insertTab }]), // 修复 tab 行为
+        indentUnit.of('    '), // 修复 tab 缩进
         EditorView.theme({
           '&.cm-editor': {
             '&.cm-focused': {
@@ -141,11 +141,11 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
             }
 
             updateTimeout = setTimeout(() => {
-              // get text
+              // 获取文本
               const text = update.state.doc.toString();
-              // validate text
+              // 校验文本
               const { valid } = validator(text, fieldRef.current);
-              // if valid, update search params
+              // 校验通过则更新搜索参数
               if (valid || text === '' || type === 'text') {
                 onChangeRef.current(searchParams.anns_field, text);
               } else {
@@ -167,13 +167,13 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
           linter(view => {
             const text = view.state.doc.toString();
 
-            // ignore empty text
+            // 忽略空文本
             if (!text) return [];
 
-            // validate
+            // 校验
             const { valid, message } = validator(text, field);
 
-            // if invalid, draw a red line
+            // 校验不通过时画红线
             if (!valid) {
               let diagnostics: Diagnostic[] = [];
 
@@ -201,19 +201,19 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
         ];
       }
 
-      // create editor
+      // 创建编辑器
       const startState = EditorState.create({
         doc: data,
         extensions,
       });
 
-      // create editor view
+      // 创建编辑器视图
       const view = new EditorView({
         state: startState,
         parent: editorEl.current!,
       });
 
-      // set editor ref
+      // 设置编辑器引用
       editor.current = view;
     } else {
       if (editor.current.state.doc.toString() !== data) {
@@ -231,7 +231,7 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
   }, [JSON.stringify({ field, data })]);
 
   useEffect(() => {
-    // dispatch dark mode change to editor
+    // 将暗色模式变更分发给编辑器
     if (editor.current) {
       editor.current.dispatch({
         effects: themeCompartment.reconfigure(

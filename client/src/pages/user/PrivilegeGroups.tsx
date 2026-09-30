@@ -16,15 +16,15 @@ import { getLabelDisplayedRows } from '@/pages/search/Utils';
 const PrivilegeGroups = () => {
   useNavigationHook(ROUTE_PATHS.USERS);
 
-  // ui states
+  // UI 状态
   const [groups, setGroups] = useState<PrivilegeGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<PrivilegeGroup[]>([]);
   const [hasPermission, setHasPermission] = useState(true);
-  // context
+  // 全局 Context
   const { setDialog, handleCloseDialog, openSnackBar } =
     useContext(rootContext);
-  // i18n
+  // 国际化
   const { t: successTrans } = useTranslation('success');
   const { t: userTrans } = useTranslation('user');
   const { t: btnTrans } = useTranslation('btn');
@@ -45,9 +45,9 @@ const PrivilegeGroups = () => {
   const onUpdate = async (data: { isEditing: boolean }) => {
     handleCloseDialog();
     await fetchGroups();
-    // update selected groups
+    // 清空已选权限组
     setSelectedGroups([]);
-    // open snackbar
+    // 弹出 snackbar 提示
     openSnackBar(
       successTrans(data.isEditing ? 'update' : 'create', {
         name: userTrans('privilegeGroup'),
@@ -56,17 +56,17 @@ const PrivilegeGroups = () => {
   };
 
   const handleDelete = async () => {
-    // delete selected groups
+    // 删除选中的权限组
     for (const group of selectedGroups) {
       await UserService.deletePrivilegeGroup({ group_name: group.group_name });
     }
-    // open snackbar
+    // 弹出 snackbar 提示
     openSnackBar(successTrans('delete', { name: userTrans('privilegeGroup') }));
-    // update groups
+    // 刷新权限组列表
     await fetchGroups();
-    // update selected groups
+    // 清空已选权限组
     setSelectedGroups([]);
-    // close dialog
+    // 关闭弹窗
     handleCloseDialog();
   };
 

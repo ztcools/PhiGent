@@ -14,16 +14,16 @@ import type { AnalyzerType } from '@/pages/databases/collections/Types';
 import type { FieldObject } from '@server/types';
 
 /**
- * transform large capacity to capacity in b.
- * @param capacity like: 10g, 10gb, 10m, 10mb, 10k, 10kb, 10b,
- * @return number
+ * 把带单位的容量转换为以 b 为单位的容量。
+ * @param capacity 形如：10g、10gb、10m、10mb、10k、10kb、10b
+ * @return 数值
  */
 export const parseByte = (capacity?: string | number): number => {
-  // if it's number return it
+  // 本身是数字则直接返回
   if (!isNaN(Number(capacity))) {
     return capacity as number;
   }
-  // capacity is '' or 0 or undefined
+  // capacity 为 ''、0 或 undefined
   if (!capacity) {
     return 0;
   }
@@ -33,8 +33,8 @@ export const parseByte = (capacity?: string | number): number => {
   const lastStr = lowerCapacity.charAt(lowerCapacity.length - 1);
   const secLastStr = lowerCapacity.charAt(lowerCapacity.length - 2);
 
-  // if last two alpha is string, like: mb gb kb.
-  //  delete last alpha b
+  // 末尾两个字符都是字母时，如 mb、gb、kb
+  //  去掉末尾的字母 b
   if (isAlpha.test(lastStr) && isAlpha.test(secLastStr)) {
     lastStr === 'b' &&
       (lowerCapacity = lowerCapacity.slice(0, lowerCapacity.length - 1));
@@ -89,9 +89,9 @@ export const getCreateFieldType = (field: CreateField): CreateFieldType => {
   return 'number';
 };
 
-// Trim the address
+// 去掉地址两端多余的空白
 export const formatAddress = (address: string): string => {
-  // remove http or https prefix from address
+  // 去掉地址中的 http 或 https 前缀
   const ip = address.replace(/(http):\/\//, '');
   return ip.includes(':') ? ip : `${ip}:${DEFAULT_MILVUS_PORT}`;
 };
@@ -131,7 +131,7 @@ export const formatByteSize = (
   };
 };
 
-// generate a sting like 20.22/98.33MB with proper unit
+// 生成形如 20.22/98.33MB 的字符串，并带上合适的单位
 export const getByteString = (
   value1: number,
   value2: number,
@@ -154,7 +154,7 @@ export const formatSystemTime = (time: string): string => {
 };
 
 /**
- * When number is larger than js max number, transform to string by BigInt.
+ * 数字大于 JS 最大数字时，用 BigInt 转换成字符串。
  * @param bigNumber
  * @returns
  */
@@ -164,7 +164,7 @@ export const formatUtcToMilvus = (bigNumber: number) => {
 };
 
 /**
- * Format field
+ * 格式化 Field
  * @param bigNumber
  * @returns
  */
@@ -220,17 +220,17 @@ export const isSparseVector = (str: string): boolean => {
   }
 };
 
-// transform ObjStr To JSONStr
+// 把 ObjStr 转换为 JSONStr
 // `{a: 1, b: 2}` => `{"a": 1, "b": 2}`
 // `{'a': 1, 'b': 2}` => `{"a": 1, "b": 2}`
 // `{'a': 1, b: 2}` => `{"a": 1, "b": 2}`
-// it may have empty space between key and value
+// key 与 value 之间可能有多余空格
 export const transformObjStrToJSONStr = (str: string): string => {
   const objStr = str.replace(/'/g, '"').replace(/(\w+)\s*:/g, '"$1":');
   return objStr;
 };
 
-// transform object to valid string without quotes
+// 把对象转换为不带引号的合法字符串
 // {a: 1, b: 2} => '{a: 1, b: 2}'
 export const transformObjToStr = (obj: any): string => {
   const str = JSON.stringify(obj);
@@ -316,12 +316,12 @@ export const getAnalyzerParams = (
 };
 
 /**
- * Parse the imported collection JSON and return an object suitable for setForm/setFields/setConsistencyLevel
+ * 解析导入的 Collection JSON，返回适合传给 setForm/setFields/setConsistencyLevel 的对象
  */
 export const parseCollectionJson = (json: any) => {
-  // Parse fields
+  // 解析 fields
   const fields = (json.schema?.fields || []).map((f: any, idx: number) => {
-    // Handle type_params
+    // 处理 type_params
     let dim = undefined;
     let max_length = undefined;
     let enable_analyzer = undefined;
@@ -367,7 +367,7 @@ export const parseCollectionJson = (json: any) => {
     };
   });
 
-  // Parse functions
+  // 解析 functions
   const functions = (json.schema?.functions || []).map((fn: any) => ({
     name: fn.name,
     description: fn.description,
@@ -377,7 +377,7 @@ export const parseCollectionJson = (json: any) => {
     params: fn.params || {},
   }));
 
-  // Parse properties
+  // 解析 properties
   const properties: Record<string, any> = {};
   if (json.properties) {
     json.properties.forEach((property: any) => {
@@ -387,7 +387,7 @@ export const parseCollectionJson = (json: any) => {
     });
   }
 
-  // Parse form
+  // 解析 form
   const form = {
     collection_name: json.collection_name || json.schema?.name || '',
     description: json.schema?.description || '',
@@ -397,7 +397,7 @@ export const parseCollectionJson = (json: any) => {
     functions,
   };
 
-  // Parse consistencyLevel
+  // 解析 consistencyLevel
   const consistencyLevel = json.consistency_level || 'Bounded';
 
   return { form, fields, consistencyLevel, properties };
@@ -421,7 +421,7 @@ export const convertVectorFields = (
             newItem[field] = str.split(',').map(Number);
           }
         } catch {
-          // If parsing fails, keep the original string
+          // 解析失败时保留原始字符串
         }
       }
     });

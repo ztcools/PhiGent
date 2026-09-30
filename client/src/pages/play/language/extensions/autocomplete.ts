@@ -221,7 +221,7 @@ function bodyIdentifierCompletions(context: CompletionContext) {
     return null;
   }
 
-  //map properties from body to cursor position
+  // 将 body 中的属性映射到光标位置
   const bodyNode = requestNode.getChildren('Body')[0];
   const bodyStartLine = doc.lineAt(bodyNode.from).number;
   const properties = getContextStack(

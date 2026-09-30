@@ -9,7 +9,7 @@ import Overview from '@/pages/home/Home';
 import IndexTree from '@/pages/index-tree/IndexTree';
 import GitLabRepos from '@/pages/gitlab/GitLabRepos';
 
-// Route path constants
+// 路由路径常量
 export const ROUTE_PATHS = {
   HOME: '/',
   DATABASES: 'databases',
@@ -27,7 +27,7 @@ export const ROUTE_PATHS = {
 
 export type RoutePath = (typeof ROUTE_PATHS)[keyof typeof ROUTE_PATHS];
 
-// Default navigation configuration
+// 默认导航配置
 const DEFAULT_NAV_CONFIG: NavConfig = {
   showDatabaseSelector: false,
   navTitleKey: '',
@@ -65,7 +65,7 @@ export interface RouteItem {
   routerType: RoutePath;
 }
 
-// Database routes configuration
+// Database 路由配置
 const databaseRoutes: RouteItem[] = [
   {
     path: ROUTE_PATHS.DATABASES,
@@ -113,7 +113,7 @@ const databaseRoutes: RouteItem[] = [
   },
 ];
 
-// User management routes
+// 用户管理路由
 const userRoutes: RouteItem[] = [
   {
     path: ROUTE_PATHS.USERS,
@@ -154,7 +154,7 @@ const userRoutes: RouteItem[] = [
   },
 ];
 
-// Other routes
+// 其他路由
 const otherRoutes: RouteItem[] = [
   {
     path: ROUTE_PATHS.HOME,
@@ -238,8 +238,8 @@ const otherRoutes: RouteItem[] = [
   },
 ];
 
-// Combine all routes. The sidebar menu renders in this order (Milvus WebUI is
-// always appended last in getMenuItems), so the desired top→bottom order is:
+// 合并所有路由。侧边栏菜单按此顺序渲染（Milvus WebUI 在 getMenuItems 中始终
+// 追加到最后），因此自上而下期望的顺序为：
 // 主页 → 数据库 → GitLab仓库 → 索引树 → 用户和角色 → 系统视图 → play → (Milvus WebUI)
 const routeByPath = (arr: RouteItem[], path: string): RouteItem =>
   arr.find(route => route.path === path) as RouteItem;
@@ -252,11 +252,11 @@ export const routes: RouteItem[] = [
   ...userRoutes,
   routeByPath(otherRoutes, ROUTE_PATHS.SYSTEM),
   routeByPath(otherRoutes, ROUTE_PATHS.PLAY),
-  // Non-menu routes (kept for routing only)
+  // 非菜单路由（仅用于路由）
   routeByPath(otherRoutes, ROUTE_PATHS.CONNECT),
 ];
 
-// Helper function to merge navigation config with defaults
+// 将导航配置与默认值合并的辅助函数
 export const mergeNavConfig = (config?: NavConfig): NavConfig => ({
   ...DEFAULT_NAV_CONFIG,
   ...config,
@@ -294,7 +294,7 @@ export const getMenuItems = (
       return menuItem;
     });
 
-  // Add Milvus WebUI menu item for non-managed instances
+  // 为非托管实例添加 Milvus WebUI 菜单项
   if (!isManaged && authReq?.address) {
     menuItems.push({
       icon: icons.newWindow,

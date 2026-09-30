@@ -9,9 +9,9 @@ export interface IForm {
 }
 
 interface IValidationInfo {
-  // check general validation
+  // 校验表单整体合法性
   checkFormValid: Function;
-  // check detail validation
+  // 校验单个表单项
   checkIsValid: Function;
   validation: {
     [key: string]: IValidationItem;
@@ -29,11 +29,11 @@ export interface IValidationItem {
 export interface ICheckValidParam {
   value: string;
   key: string;
-  // one input can contains multiple rules
+  // 一个输入框可以包含多条规则
   rules: IValidation[];
 }
 
-// form and element ref
+// 表单与元素引用
 export const useFormValidation = (form: IForm[]): IValidationInfo => {
   const initValidation = form
     .filter(f => f.needCheck)
@@ -49,9 +49,9 @@ export const useFormValidation = (form: IForm[]): IValidationInfo => {
       {}
     );
 
-  // validation detail about form item
+  // 各表单项的校验详情
   const [validation, setValidation] = useState(initValidation);
-  // overall validation result to control following actions
+  // 整体校验结果，用于控制后续操作
   const isOverallValid = Object.values(validation).every(
     v => !(v as IValidationItem).result
   );
@@ -67,7 +67,7 @@ export const useFormValidation = (form: IForm[]): IValidationInfo => {
 
     const hasRequire = rules.some(r => r.rule === 'require');
 
-    // if value is empty, and no require rule, skip this check
+    // 值为空且没有 require 规则时，跳过本次校验
     if (!checkEmptyValid(value) && !hasRequire) {
       setDisabled(false);
       return validDetail;
@@ -108,15 +108,15 @@ export const useFormValidation = (form: IForm[]): IValidationInfo => {
   };
 
   const checkFormValid = (elementClass: string) => {
-    // find dom element to check
+    // 查找需要校验的 DOM 元素
     const elements = document.querySelectorAll(
       elementClass
     ) as NodeListOf<HTMLElement>;
-    // Trigger blur
+    // 触发 blur
     elements.forEach(element => {
-      // Using setTimeout to trigger blur event after render
+      // 渲染完成后用 setTimeout 触发 blur 事件
       setTimeout(() => {
-        // Using HTMLElement.prototype.blur method to trigger blur event
+        // 调用 HTMLElement.prototype.blur 触发 blur 事件
         element.focus();
         element.blur();
       }, 0);

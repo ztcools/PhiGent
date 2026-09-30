@@ -12,7 +12,7 @@ export const usePaginationHook = (list: any[]) => {
   const total = list.length;
   const { data, offset } = useMemo(() => {
     const offset = pageSize * currentPage;
-    // only when user click sort, orderBy will have value
+    // 仅当用户点击排序时，orderBy 才会有值
     const sortList = orderBy
       ? stableSort(list, getComparator(order || 'asc', orderBy, sortType))
       : list;

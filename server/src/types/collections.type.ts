@@ -29,7 +29,7 @@ export interface IndexObject extends IndexDescription {
 }
 export interface FieldObject extends FieldSchema {
   index: IndexObject;
-  // field type params
+  // Field 类型参数
   dimension: number;
   maxCapacity: number;
   maxLength: number;
@@ -82,10 +82,9 @@ export type CollectionLazyObject = {
   createdTime: number;
   aliases: undefined;
   /**
-   * Schema description. showCollections omits it, so getAllCollections back-fills
-   * it concurrently — the collection list parses the repo/branch hierarchy out of
-   * it and would otherwise render an empty Branch column on first paint. Empty
-   * string when the collection has no description or describeCollection failed.
+   * Schema 描述。showCollections 会省略它，因此 getAllCollections 会并发回填，
+   * 因为 collection 列表需要从中解析 repo/branch 层级，否则首次渲染时
+   * Branch 列会是空的。当 collection 没有描述或 describeCollection 失败时为空字符串。
    */
   description: string;
   autoID: undefined;

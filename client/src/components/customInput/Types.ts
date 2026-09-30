@@ -18,7 +18,7 @@ export type AlignItemsType =
 
 export interface IValidation {
   rule: ValidType;
-  // extra params for some special check like confirm
+  // 某些特殊校验（如 confirm）的额外参数
   extraParam?: IExtraParam;
   errorText: string;
 }
@@ -42,7 +42,7 @@ export interface ICustomInputProps {
   iconConfig?: IIconConfig;
   adornmentConfig?: IAdornmentConfig;
   textConfig?: ITextfieldConfig;
-  // used for validation
+  // 用于校验
   checkValid?: Function;
   validInfo?: IValidInfo;
 }

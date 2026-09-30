@@ -62,14 +62,14 @@ export const makeImageUrl = (): string => {
 };
 
 export const makeRandomVarChar = (maxLength: number) => {
-  // Check if we should generate URL (20% chance)
+  // 判断是否生成 URL（20% 概率）
   if (Math.random() < 0.2) {
     const imageUrl = makeImageUrl();
-    // Only return URL if it fits within maxLength
+    // 仅当长度不超过 maxLength 时才返回 URL
     if (imageUrl.length <= maxLength) {
       return imageUrl;
     }
-    // If URL is too long, fall through to generate text instead
+    // URL 过长则继续往下生成普通文本
   }
 
   const words = [
@@ -98,14 +98,14 @@ export const makeRandomVarChar = (maxLength: number) => {
   const space = ' ';
 
   while (text.length < maxLength) {
-    // Pick a random word from the list
+    // 从词库中随机取一个单词
     const nextWord = words[Math.floor(Math.random() * words.length)];
     const newLength = text.length + nextWord.length + (text ? space.length : 0);
 
     if (newLength <= maxLength) {
       text += (text ? space : '') + nextWord;
     } else {
-      break; // Stop adding words when the limit is reached
+      break; // 达到长度上限后停止追加单词
     }
   }
 
@@ -181,7 +181,7 @@ export const genRow = (
         return;
       }
 
-      // if field is VarChar, and it is primary key, use makeVarCharId
+      // 若字段为 VarChar 且是 Primary Key，则使用 makeVarCharId
       if (field.data_type === 'VarChar' && field.is_primary_key) {
         result[field.name] = makeVarCharId(Number(field.max_length));
         return;
@@ -216,7 +216,7 @@ export const convertFieldSchemaToFieldType = (fieldSchema: FieldSchema) => {
     autoID: fieldSchema.autoID,
   };
 
-  // Convert type_params from array to object
+  // 将 type_params 从数组转换为对象
   if (fieldSchema.type_params) {
     fieldType.type_params = {};
     for (const param of fieldSchema.type_params) {
@@ -229,8 +229,8 @@ export const convertFieldSchemaToFieldType = (fieldSchema: FieldSchema) => {
 
 /**
  *
- * @param obj e.g. {name: 'test'}
- * @returns key value pair, e.g. [{key: 'name', value: 'test'}]
+ * @param obj 例如 {name: 'test'}
+ * @returns key value 键值对，例如 [{key: 'name', value: 'test'}]
  */
 export const getKeyValuePairFromObj = (obj: {
   [key in string]: any;

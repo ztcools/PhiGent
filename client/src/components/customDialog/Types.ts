@@ -37,7 +37,7 @@ export type DialogContainerProps = {
   showActions?: boolean;
   showCancel?: boolean;
   leftActions?: ReactElement;
-  // code mode requirement
+  // 代码模式需求
   showCode?: boolean;
   children: ReactElement;
   dialogClass?: string;

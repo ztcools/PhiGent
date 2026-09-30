@@ -141,20 +141,20 @@ const Topo = (props: any) => {
     }
   }, [nodes.length]);
 
-  const WIDTH = 800; // width for svg
-  const HEIGHT = 600; // height for svg
-  const LINE1 = 180; // line lenght from lv1 node
-  const LINE2 = 290; // line lenght from lv2 node
-  const ANGLE2 = 20; // angle offset for lv2 node
-  const R1 = 78; // root node radius
-  const R2 = 45; // lv1 node radius
-  const R3 = 30; // lv2 node radius
-  const LIMIT = 10; // limit to show lv1 node
-  const BOUNDARY_ANGLE = 45; // boundary angle
-  const START_DRAW_Y = HEIGHT / 3; // where we start to draw y axis
-  const START_DRAW_X = WIDTH / 2; // where we start to draw x axis
+  const WIDTH = 800; // svg 宽度
+  const HEIGHT = 600; // svg 高度
+  const LINE1 = 180; // lv1 节点的连线长度
+  const LINE2 = 290; // lv2 节点的连线长度
+  const ANGLE2 = 20; // lv2 节点的角度偏移
+  const R1 = 78; // 根节点半径
+  const R2 = 45; // lv1 节点半径
+  const R3 = 30; // lv2 节点半径
+  const LIMIT = 10; // 显示 lv1 节点的数量上限
+  const BOUNDARY_ANGLE = 45; // 边界角度
+  const START_DRAW_Y = HEIGHT / 3; // y 轴起始绘制位置
+  const START_DRAW_X = WIDTH / 2; // x 轴起始绘制位置
 
-  let steps = 0; // angle step to avoid graph out of boundary
+  let steps = 0; // 角度步进，避免图形超出边界
   let centerNode: any;
 
   return (

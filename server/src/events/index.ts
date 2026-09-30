@@ -5,7 +5,7 @@ export class PubSub {
     this.handlers = {};
   }
 
-  // sub
+  // 订阅
   on(eventType: string, handler: HandlerFunction) {
     if (!(eventType in this.handlers)) {
       this.handlers[eventType] = [];
@@ -14,9 +14,9 @@ export class PubSub {
     return this;
   }
 
-  // emit
+  // 触发
   emit(eventType: string, ...handlerArgs: any[]) {
-    // get args of handler that event trigger
+    // 获取事件触发时 handler 的参数
     // const handlerArgs = Array.prototype.slice.call(arguments, 1);
     if (!(eventType in this.handlers)) {
       console.warn(`eventType: ${eventType} missing`);
@@ -28,13 +28,13 @@ export class PubSub {
     return this;
   }
 
-  // delete
+  // 注销
   off(eventType: string, handler: HandlerFunction) {
     if (!(eventType in this.handlers)) {
       console.warn(`eventType: ${eventType} missing`);
       return;
     }
-    // delete handler
+    // 移除 handler
     this.handlers[eventType] = this.handlers[eventType].filter(
       item => item !== handler
     );

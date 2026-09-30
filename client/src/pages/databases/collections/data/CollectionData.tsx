@@ -23,16 +23,16 @@ export interface CollectionDataProps {
 }
 
 const CollectionData = (props: CollectionDataProps) => {
-  // props
+  // Props 参数
   const { queryState, setQueryState } = props;
   const collection = queryState && queryState.collection;
 
-  // collection is not found or collection full object is not ready
+  // Collection 不存在，或 Collection 完整对象尚未就绪
   if (!collection || !collection.consistency_level) {
     return <StatusIcon type={LoadingType.CREATING} />;
   }
 
-  // UI state
+  // UI 状态
   const [tableLoading, setTableLoading] = useState<boolean>(false);
   const [selectedData, setSelectedData] = useState<any[]>([]);
   const exprInputRef = useRef<string>(queryState.expr);
@@ -41,17 +41,17 @@ const CollectionData = (props: CollectionDataProps) => {
   const [isCollectionSwitching, setIsCollectionSwitching] =
     useState<boolean>(false);
 
-  // UI functions
+  // UI 函数
   const { fetchCollection } = useContext(dataContext);
-  // translations
+  // 国际化文案
   const { t: searchTrans } = useTranslation('search');
   const { t: commonTrans } = useTranslation();
 
-  // UI ref
+  // UI 引用
   const filterRef = useRef();
   const inputRef = useRef<HTMLInputElement>();
 
-  // Query hook
+  // 查询 Hook
   const {
     currentPage,
     total,
@@ -65,12 +65,12 @@ const CollectionData = (props: CollectionDataProps) => {
   } = useQuery({
     collection,
     onQueryStart: (expr: string = '') => {
-      // Clear any existing timeout
+      // 清除已有定时器
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
 
-      // Set a timeout to show loading after 200ms to avoid flickering for fast queries
+      // 延迟 200ms 再显示 loading，避免快速查询时闪烁
       loadingTimeoutRef.current = setTimeout(() => {
         setTableLoading(true);
       }, 200);
@@ -81,7 +81,7 @@ const CollectionData = (props: CollectionDataProps) => {
       }
     },
     onQueryFinally: () => {
-      // Clear the timeout if it exists
+      // 若定时器存在则清除
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
         loadingTimeoutRef.current = null;
@@ -93,7 +93,7 @@ const CollectionData = (props: CollectionDataProps) => {
     setQueryState: setQueryState,
   });
 
-  // Memoized handlers
+  // 记忆化的处理函数
   const handleExprChange = useCallback(
     (value: string) => {
       exprInputRef.current = value;
@@ -112,7 +112,7 @@ const CollectionData = (props: CollectionDataProps) => {
           expr: exprInputRef.current,
           tick: queryState.tick + 1,
         });
-        // reset page
+        // 重置页码
         setCurrentPage(0);
         e.preventDefault();
       }
@@ -122,7 +122,7 @@ const CollectionData = (props: CollectionDataProps) => {
 
   const handleFilterSubmit = useCallback(
     async (expression: string) => {
-      // update UI expression
+      // 更新 UI 中的表达式
       setQueryState({ ...queryState, expr: expression });
       exprInputRef.current = expression;
       forceUpdate({});
@@ -130,12 +130,12 @@ const CollectionData = (props: CollectionDataProps) => {
     [queryState, setQueryState]
   );
 
-  // UI event handlers
+  // UI 事件处理函数
   const handleFilterReset = useCallback(async () => {
-    // reset advanced filter
+    // 重置高级筛选
     const currentFilter: any = filterRef.current;
     currentFilter?.getReset();
-    // update UI expression
+    // 更新 UI 中的表达式
     exprInputRef.current = '';
     setQueryState({
       ...queryState,
@@ -150,9 +150,9 @@ const CollectionData = (props: CollectionDataProps) => {
 
   const handlePageChange = useCallback(
     async (e: any, page: number) => {
-      // do the query
+      // 执行查询
       await query(page, queryState);
-      // update page number
+      // 更新页码
       setCurrentPage(page);
     },
     [query, queryState.consistencyLevel, setCurrentPage]
@@ -163,13 +163,13 @@ const CollectionData = (props: CollectionDataProps) => {
   }, []);
 
   const onDelete = useCallback(async () => {
-    // clear selection
+    // 清空选中项
     setSelectedData([]);
     // reset();
     reset();
-    // update count
+    // 更新总数
     count(ConsistencyLevelEnum.Strong);
-    // update query
+    // 更新查询
     query(0, { ...queryState, consistencyLevel: ConsistencyLevelEnum.Strong });
   }, [count, query, reset]);
 
@@ -182,7 +182,7 @@ const CollectionData = (props: CollectionDataProps) => {
 
   const getEditData = useCallback(
     (data: any, collection: CollectionFullObject) => {
-      // sort data by collection schema order
+      // 按 Collection Schema 的字段顺序排序
       const schema = collection.schema;
       let sortedData: { [key: string]: any } = {};
       schema.fields.forEach(field => {
@@ -191,7 +191,7 @@ const CollectionData = (props: CollectionDataProps) => {
         }
       });
 
-      // add dynamic fields if exist
+      // 若存在动态字段则补充
       const isDynamicSchema = collection.schema.dynamicFields.length > 0;
       if (isDynamicSchema) {
         sortedData = { ...sortedData, ...data[DYNAMIC_FIELD] };
@@ -202,7 +202,7 @@ const CollectionData = (props: CollectionDataProps) => {
     []
   );
 
-  // Get toolbar configs directly from CollectionToolbar component
+  // 直接从 CollectionToolbar 组件获取工具栏配置
   const toolbarConfigs = CollectionToolbar({
     collection,
     selectedData,
@@ -222,15 +222,15 @@ const CollectionData = (props: CollectionDataProps) => {
   }, []);
 
   useEffect(() => {
-    // reset selection
+    // 重置选中项
     setSelectedData([]);
     exprInputRef.current = queryState.expr;
     forceUpdate({});
 
-    // Set collection switching state when collection changes
+    // Collection 变化时设置切换状态
     setIsCollectionSwitching(true);
 
-    // Clean up timeout on unmount or when collection changes
+    // 组件卸载或 Collection 变化时清理定时器
     return () => {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -239,7 +239,7 @@ const CollectionData = (props: CollectionDataProps) => {
     };
   }, [collection.collection_name, queryState.expr]);
 
-  // Cleanup timeout on component unmount
+  // 组件卸载时清理定时器
   useEffect(() => {
     return () => {
       if (loadingTimeoutRef.current) {
@@ -274,7 +274,7 @@ const CollectionData = (props: CollectionDataProps) => {
             colDefinitions={queryState.outputFields.map(i => {
               const field = collection.schema.fields.find(f => f.name === i);
 
-              // if field is function output, return a special col definition
+              // 若字段为函数输出，返回特殊的列定义
               if (field?.is_function_output) {
                 const inputFields = collection.schema.functions.find(fn =>
                   fn.output_field_names?.includes(i)
@@ -308,7 +308,7 @@ const CollectionData = (props: CollectionDataProps) => {
                 disablePadding: false,
                 needCopy: true,
                 formatter(_: any, cellData: any) {
-                  const fieldType = field?.data_type || 'JSON'; // dynamic
+                  const fieldType = field?.data_type || 'JSON'; // 动态字段
 
                   return <DataView type={fieldType} value={cellData} />;
                 },

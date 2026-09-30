@@ -72,14 +72,14 @@ const Partitions = () => {
     handleGridSort,
   } = usePaginationHook(list);
 
-  // on delete
+  // 删除后回调
   const onDelete = (res: ResStatus[]) => {
     fetchPartitions(collectionName);
 
     openSnackBar(successTrans('delete', { name: t('partition') }));
   };
 
-  // on handle search
+  // 处理搜索
   const handleSearch = (value: string) => {
     setSearch(value);
   };
@@ -129,9 +129,9 @@ const Partitions = () => {
         );
       },
       /**
-       * insert validation:
-       * 1. At least 1 available partition
-       * 2. selected partition quantity shouldn't over 1
+       * 插入校验：
+       * 1. 至少存在 1 个可用 Partition
+       * 2. 选中的 Partition 数量不能超过 1 个
        */
       disabled: () => partitions.length === 0 || selectedPartitions.length > 1,
     },
@@ -156,7 +156,7 @@ const Partitions = () => {
         });
       },
       label: btnTrans('drop'),
-      // can't delete default partition
+      // 不能删除默认 Partition
       disabled: () =>
         selectedPartitions.length === 0 ||
         selectedPartitions.some(p => p.name === '_default'),
@@ -245,7 +245,7 @@ const Partitions = () => {
 
   const onCreate = () => {
     openSnackBar(successTrans('create', { name: t('partition') }));
-    // refresh partitions
+    // 刷新 Partition 列表
     fetchPartitions(collectionName);
     setSelectedPartitions([]);
   };

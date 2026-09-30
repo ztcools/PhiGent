@@ -4,7 +4,7 @@ import { CollectionService } from '@/http';
 import type { CollectionFullObject } from '@server/types';
 import { QueryState } from '@/pages/databases/types';
 
-// TODO: refactor this, a little bit messy
+// TODO: 重构这里，代码有点乱
 export const useQuery = (params: {
   collection: CollectionFullObject;
   onQueryStart: Function;
@@ -13,20 +13,20 @@ export const useQuery = (params: {
   queryState: QueryState;
   setQueryState: (state: QueryState) => void;
 }) => {
-  // params
+  // 参数
   const { collection, onQueryStart, onQueryEnd, onQueryFinally, queryState } =
     params;
 
-  // states
+  // 状态
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(0);
   const [total, setTotal] = useState<number>(0);
   const [queryResult, setQueryResult] = useState<any>({ data: [], latency: 0 });
 
-  // build local cache for pk ids
+  // 为 Primary Key 的 id 建立本地缓存
   const pageCache = useRef(new Map());
 
-  // get next/previous expression
+  // 获取上一页/下一页的表达式
   const getPageExpr = (page: number, expr = queryState.expr) => {
     const cache = pageCache.current.get(
       page > currentPage ? currentPage : page
@@ -36,7 +36,7 @@ export const useQuery = (params: {
     const formatPKValue = (pkId: string | number) =>
       primaryKey?.data_type === DataTypeStringEnum.VarChar ? `'${pkId}'` : pkId;
 
-    // If cache does not exist, return expression based on primaryKey type
+    // 缓存不存在时，根据 primaryKey 类型返回表达式
     let condition = '';
     if (!cache) {
       const defaultValue =
@@ -58,14 +58,14 @@ export const useQuery = (params: {
     return expr ? `${expr} && ${condition}` : condition;
   };
 
-  // query function
+  // 查询函数
   const query = async (page: number = currentPage, queryState: QueryState) => {
     if (!collection || !collection.loaded) return;
     const _expr = getPageExpr(page, queryState.expr);
 
     onQueryStart(_expr);
 
-    // each queryState.outputFields can not be a function output
+    // queryState.outputFields 里不能包含函数输出的字段
     const outputFields = queryState.outputFields.filter(
       f =>
         !collection.schema.fields.find(ff => ff.name === f)?.is_function_output
@@ -80,24 +80,24 @@ export const useQuery = (params: {
         // travel_timestamp: timeTravelInfo.timestamp,
       };
 
-      // execute query
+      // 执行查询
       const res = await CollectionService.queryData(
         collection.collection_name,
         queryParams
       );
 
-      // get last item of the data
+      // 取出最后一条数据
       const lastItem = res.data[res.data.length - 1];
-      // get first item of the data
+      // 取出第一条数据
       const firstItem = res.data[0];
-      // get last pk id
+      // 取最后一个 Primary Key
       const lastPKId: string | number =
         lastItem && lastItem[collection!.schema.primaryField.name];
-      // get first pk id
+      // 取第一个 Primary Key
       const firstPKId: string | number =
         firstItem && firstItem[collection!.schema.primaryField.name];
 
-      // store pk id in the cache with the page number
+      // 按页码把 Primary Key 存入缓存
       if (lastItem) {
         pageCache.current.set(page, {
           firstPKId,
@@ -107,7 +107,7 @@ export const useQuery = (params: {
 
       // console.log('query result page', page, pageCache.current);
 
-      // update query result
+      // 更新查询结果
       setQueryResult(res);
 
       onQueryEnd?.(res);
@@ -142,7 +142,7 @@ export const useQuery = (params: {
     }
   };
 
-  // reset
+  // 重置
   const reset = (clearData = false) => {
     setCurrentPage(0);
     if (clearData) {
@@ -152,23 +152,23 @@ export const useQuery = (params: {
     pageCache.current.clear();
   };
 
-  // query if expression or other dependencies change
+  // 表达式或其他依赖变化时触发查询
   useEffect(() => {
-    // Skip query execution if prerequisites are not met
+    // 前置条件不满足时跳过查询
     if (!collection || !collection.loaded || !pageSize) {
-      // Reset result and use collection row count as total when not ready to query
+      // 还不能查询时，重置结果并把 Collection 的行数作为 total
       setQueryResult({ data: [], latency: 0 });
       setTotal(collection.rowCount);
       return;
     }
 
-    // When all prerequisites are met, perform query
+    // 前置条件全部满足后执行查询
     reset();
 
-    // First get total count
+    // 先获取总数
     count(queryState.consistencyLevel, queryState.expr);
 
-    // Then fetch actual data
+    // 再拉取实际数据
     query(currentPage, queryState);
   }, [
     pageSize,
@@ -179,39 +179,39 @@ export const useQuery = (params: {
     queryState.tick,
   ]);
 
-  // Reset state when collection changes
+  // Collection 变化时重置状态
   useEffect(() => {
-    // Immediately reset when collection changes to avoid showing stale data
+    // Collection 变化时立即重置，避免展示过期数据
     setQueryResult({ data: [], latency: 0 });
     setCurrentPage(0);
     pageCache.current.clear();
 
-    // Set total to collection row count as fallback
+    // 兜底把 total 设为 Collection 的行数
     if (collection) {
       setTotal(collection.rowCount || 0);
     }
   }, [collection.collection_name]);
 
   return {
-    // total query count
+    // 查询总数
     total,
-    // page size
+    // 每页条数
     pageSize,
-    // update page size
+    // 更新每页条数
     setPageSize,
-    // current page
+    // 当前页
     currentPage,
-    // query current data page
+    // 查询当前数据页
     setCurrentPage,
-    // query result
+    // 查询结果
     queryResult,
-    // query
+    // 查询
     query,
-    // reset
+    // 重置
     reset,
-    // count
+    // 统计总数
     count,
-    // get expression
+    // 获取表达式
     getPageExpr,
   };
 };

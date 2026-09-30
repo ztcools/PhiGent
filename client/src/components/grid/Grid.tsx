@@ -11,29 +11,29 @@ import type { AttuGridType } from './Types';
 
 /**
  *
- * @param rowCount required. totoal data count for pagination
- * @param rowsPerPage per page for pagination, default is 10
- * @param primaryKey required. The unique column for your data. use for checkbox and render key.
- * @param onPageChange handle page change
- * @param labelDisplayedRows Custom pagination label function, return string;
- * @param page current page for pagination
- * @param showToolbar control toolbar display. default is false
- * @param rows table data you want to render
- * @param colDefinitions Define how to render table heder.
- * @param isLoading table loading status
- * @param title  Render breadcrumbs
- * @param openCheckBox control checkbox display. default is true
- * @param disableSelect disable table row select. default false
- * @param enableSelectAll control select all checkbox display. default true
- * @param noData when table is empty, what tip we need to show.
- * @param showHoverStyle control table row hover style display
- * @param headEditable if true, user can edit header.
- * @param editHeads Only headEditable is true will render editHeads
- * @param tableCellMaxWidth Define table cell max width, default is 300
- * @param handlesort how to sort table, if it's undefined, then you can not sort table
- * @param order 'desc' | 'asc'. sort direction
- * @param order order by which table field
- * @param addSpacerColumn control spacer column display. default is false
+ * @param rowCount 必填。用于分页的数据总条数
+ * @param rowsPerPage 分页每页条数，默认 10
+ * @param primaryKey 必填。数据的唯一列，用于 checkbox 和渲染 key。
+ * @param onPageChange 处理翻页
+ * @param labelDisplayedRows 自定义分页文案函数，返回字符串；
+ * @param page 分页当前页
+ * @param showToolbar 控制工具栏是否显示，默认 false
+ * @param rows 需要渲染的表格数据
+ * @param colDefinitions 定义表头如何渲染。
+ * @param isLoading 表格加载状态
+ * @param title  渲染面包屑
+ * @param openCheckBox 控制 checkbox 是否显示，默认 true
+ * @param disableSelect 禁用表格行选择，默认 false
+ * @param enableSelectAll 控制全选 checkbox 是否显示，默认 true
+ * @param noData 表格为空时展示的提示文案。
+ * @param showHoverStyle 控制表格行悬浮样式是否显示
+ * @param headEditable 为 true 时用户可编辑表头。
+ * @param editHeads 仅当 headEditable 为 true 时才渲染 editHeads
+ * @param tableCellMaxWidth 定义单元格最大宽度，默认 300
+ * @param handlesort 表格排序方式，未定义时不可排序
+ * @param order 'desc' | 'asc'。排序方向
+ * @param order 按哪个表格字段排序
+ * @param addSpacerColumn 控制占位空列是否显示，默认 false
  * @returns
  */
 const AttuGrid: FC<AttuGridType> = props => {
@@ -149,10 +149,10 @@ const AttuGrid: FC<AttuGridType> = props => {
     // const timer = setTimeout(() => {
     calculateRowCountAndPageSize();
     // }, 16);
-    // Add event listener for window resize
+    // 监听窗口 resize 事件
     window.addEventListener('resize', calculateRowCountAndPageSize);
 
-    // Clean up event listener on unmount
+    // 卸载时移除事件监听
     return () => {
       window.removeEventListener('resize', calculateRowCountAndPageSize);
       // clearTimeout(timer);

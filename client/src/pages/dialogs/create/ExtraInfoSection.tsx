@@ -47,8 +47,8 @@ const ExtraInfoSection: React.FC<ExtraInfoSectionProps> = ({
     >
       <fieldset>
         <CustomSelector
-          wrapperClass="consistency-select" // Keep class for potential external styling if needed, or remove
-          sx={{ width: '400px', mb: 2 }} // Corresponds to consistencySelect style
+          wrapperClass="consistency-select" // 保留 class 以备需要时进行外部样式定制，否则可移除
+          sx={{ width: '400px', mb: 2 }} // 对应 consistencySelect 样式
           size="small"
           options={CONSISTENCY_LEVEL_OPTIONS}
           onChange={e => {
@@ -62,10 +62,10 @@ const ExtraInfoSection: React.FC<ExtraInfoSectionProps> = ({
       <Box
         component="fieldset"
         sx={{
-          pt: 1, // Corresponds to paddingTop: 8
+          pt: 1, // 对应 paddingTop: 8
           fontSize: 14,
-          ml: -1, // Corresponds to marginLeft: -8
-          borderTop: theme => `1px solid ${theme.palette.divider}`, // Corresponds to borderTop style
+          ml: -1, // 对应 marginLeft: -8
+          borderTop: theme => `1px solid ${theme.palette.divider}`, // 对应 borderTop 样式
           '& label': {
             display: 'inline-block',
           },
@@ -85,7 +85,7 @@ const ExtraInfoSection: React.FC<ExtraInfoSectionProps> = ({
                     !form.enableDynamicField
                   );
                 }}
-                sx={{ py: 0.5 }} // Adjust padding if needed
+                sx={{ py: 0.5 }} // 如有需要可调整内边距
               />
               {collectionTrans('enableDynamicSchema')}
             </label>
@@ -108,7 +108,7 @@ const ExtraInfoSection: React.FC<ExtraInfoSectionProps> = ({
                     !form.loadAfterCreate
                   );
                 }}
-                sx={{ py: 0.5 }} // Adjust padding if needed
+                sx={{ py: 0.5 }} // 如有需要可调整内边距
               />
               {collectionTrans('loadCollectionAfterCreate')}
             </label>

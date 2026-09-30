@@ -128,9 +128,9 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
   const repoMap = useCodeRepoMap();
 
   const flattenedNodes = useMemo(() => {
-    // Group code collections into 「仓库(main) → 各分支」 two-level hierarchy.
-    // Only hcc_/cc_ code collections get grouped; other collections (user data,
-    // code_index_state, embedding_cache_*) stay flat at the top level.
+    // 将 code collection 归组为「仓库(main) → 各分支」的两层结构。
+    // 仅 hcc_/cc_ 开头的 code collection 会被归组；其他 collection（用户数据、
+    // code_index_state、embedding_cache_*）仍平铺在顶层。
     const isCodeCollection = (name: string) => /^(hcc|cc)_/i.test(name);
     const codeInfos = filteredCollections
       .filter(c => isCodeCollection(c.collection_name))
@@ -390,12 +390,12 @@ const DatabaseTree: React.FC<DatabaseTreeProps> = props => {
     }
   }, [collectionName]);
 
-  // Add scroll handler for scroll-to-top button
+  // 为「回到顶部」按钮添加滚动监听
   useEffect(() => {
     const handleScroll = () => {
       if (!parentRef.current) return;
       const scrollTop = parentRef.current.scrollTop;
-      setShowScrollTop(scrollTop > 200); // Show button when scrolled more than 200px
+      setShowScrollTop(scrollTop > 200); // 滚动超过 200px 时显示按钮
     };
 
     const scrollElement = parentRef.current;

@@ -17,38 +17,38 @@ export const SystemProvider = (props: { children: React.ReactNode }) => {
 
   const fetchData = async () => {
     try {
-      // fetch all data
+      // 获取全部数据
       const [metrics, users, roles] = await Promise.all([
         MilvusService.getMetrics(),
         !isServerless ? UserService.getUsers() : { usernames: [] },
         !isServerless ? UserService.getRoles() : { results: [] },
       ]);
 
-      // parse data
+      // 解析数据
       const parsedJson = parseJson(metrics);
 
-      // get query nodes
+      // 获取 query 节点
       const queryNodes = getNode(
         parsedJson.allNodes,
         MILVUS_NODE_TYPE.QUERYNODE
       );
 
-      // get data nodes
+      // 获取 data 节点
       const dataNodes = getNode(parsedJson.allNodes, MILVUS_NODE_TYPE.DATANODE);
 
-      // get data nodes
+      // 获取 data 节点
       const indexNodes = getNode(
         parsedJson.allNodes,
         MILVUS_NODE_TYPE.INDEXNODE
       );
 
-      // get root coord
+      // 获取 root coord
       const rootCoord = getNode(
         parsedJson.allNodes,
         MILVUS_NODE_TYPE.ROOTCOORD
       )[0];
 
-      // get system config
+      // 获取系统配置
       const systemConfig = getSystemConfigs(parsedJson.workingNodes);
       const deployMode = rootCoord.infos.system_info?.deploy_mode;
       const systemInfo = rootCoord.infos.system_info;
@@ -66,10 +66,10 @@ export const SystemProvider = (props: { children: React.ReactNode }) => {
         systemInfo,
       };
 
-      // store other datas
+      // 保存其余数据
       setData(data);
     } catch (error) {
-      // do nothing
+      // 不做处理
       console.log('fetch data error', error);
     }
   };

@@ -54,17 +54,17 @@ const Overview = () => {
     Eventually: collectionTrans('consistencyEventuallyTooltip'),
   };
 
-  // get collection
+  // 获取 Collection
   const collection = collections.find(
     c => c.collection_name === collectionName
   );
 
-  // fetch collection if not loaded
+  // 若 Collection Schema 尚未加载则拉取
   if (collection && !collection.schema) {
     fetchCollection(collectionName);
   }
 
-  // get fields
+  // 获取 Field 列表
   const fields = collection?.schema?.fields || [];
 
   const colDefinitions: ColDefinitionsType[] = [
@@ -276,7 +276,7 @@ const Overview = () => {
     },
   ];
 
-  // only show create index element when there is only one vector field
+  // 仅当只有一个 Vector Field 时才展示创建 Index 的入口
   let CreateIndexElement = null;
   if (
     collection &&
@@ -297,21 +297,21 @@ const Overview = () => {
     );
   }
 
-  // enable modify replica if there are more than one query node
+  // 当 Query Node 数量大于 1 时允许修改 Replica
   const enableModifyReplica =
     data && data.queryNodes && data.queryNodes.length > 1;
 
-  // if is autoID enabled
+  // 是否启用 autoID
   const isAutoIDEnabled = collection?.schema?.fields.some(
     f => f.autoID === true
   );
 
-  // check if collection is mmap enabled
+  // 判断 Collection 是否启用 mmap
   const isCollectionMmapEnabled = collection?.properties?.some((p: any) => {
     return p.key === 'mmap.enabled' && p.value === 'true';
   });
 
-  // get loading state label
+  // 获取加载状态标签
   return (
     <Wrapper>
       {collection && (

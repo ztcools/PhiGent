@@ -3,14 +3,14 @@ import { DataTypeEnum } from '@/consts';
 import { FieldObject } from '@server/types';
 
 export interface SearchParamsProps {
-  // if user created index, pass metric type choosed when creating
-  // else pass empty string
+  // 若用户已创建 Index，则传入创建时选择的 metric type
+  // 否则传空字符串
   metricType: string;
-  // used for getting metric type options
+  // 用于获取 metric type 选项
   embeddingType: DataTypeEnum.FloatVector | DataTypeEnum.BinaryVector;
-  // default index type is FLAT
+  // 默认 Index 类型为 FLAT
   indexType: string;
-  // index extra params, e.g. nlist
+  // Index 额外参数，例如 nlist
   indexParams: { key: string; value: string }[];
   searchParamsForm: {
     [key in string]: number;
@@ -22,7 +22,7 @@ export interface SearchParamsProps {
 }
 
 export interface SearchResultView {
-  // dynamic field names
+  // 动态字段名
   [key: string]: string | number;
   rank: number;
   distance: number;
@@ -33,7 +33,7 @@ export interface FieldOption extends Option {
 }
 
 export interface SearchResult {
-  // dynamic field names
+  // 动态字段名
   [key: string]: string | number;
   score: number;
 }

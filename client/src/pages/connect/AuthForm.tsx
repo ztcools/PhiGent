@@ -26,24 +26,24 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { isElectron } from '@/http/Axios';
 
-// Add Connection type definition back
+// 重新加回 Connection 的类型定义
 type Connection = AuthReq & {
   time: number;
 };
 
-// Utility function to clean address by preserving protocol prefixes
+// 清理地址的工具函数，保留协议前缀
 const cleanAddress = (address: string): string => {
-  // Keep http:// or https:// prefixes, just trim whitespace
+  // 保留 http:// 或 https:// 前缀，仅去掉首尾空白
   return address.trim();
 };
 
-// Parse server list from environment variables
+// 从环境变量解析服务器列表
 const parseFixedConnections = (): Connection[] => {
   const serverList = MILVUS_SERVERS || '';
   const defaultUrl = MILVUS_URL || '127.0.0.1:19530';
   const defaultDatabase = MILVUS_DATABASE;
 
-  // If MILVUS_SERVERS exists and is not empty, parse it
+  // MILVUS_SERVERS 存在且非空时解析它
   if (serverList && serverList.trim() !== '') {
     return serverList.split(',').map((server: string) => {
       const [address, database] = server.trim().split('/');
@@ -61,7 +61,7 @@ const parseFixedConnections = (): Connection[] => {
     });
   }
 
-  // If MILVUS_SERVERS is empty or doesn't exist, use MILVUS_URL
+  // MILVUS_SERVERS 为空或不存在时，使用 MILVUS_URL
   return [
     {
       address: defaultUrl,
@@ -77,11 +77,11 @@ const parseFixedConnections = (): Connection[] => {
   ];
 };
 
-// Get fixed connections from environment variables
+// 从环境变量获取固定连接
 const FIXED_CONNECTIONS: Connection[] = parseFixedConnections();
 
 export const AuthForm = () => {
-  // context
+  // Context
   const { openSnackBar } = useContext(rootContext);
   const { authReq, setAuthReq, login } = useContext(authContext);
   const { setDatabase } = useContext(dataContext);
@@ -92,23 +92,23 @@ export const AuthForm = () => {
   const { t: successTrans } = useTranslation('success');
   const { t: dbTrans } = useTranslation('database');
 
-  // hooks
+  // Hooks
   const navigate = useNavigate();
 
-  // UI states
+  // UI 状态
   const [withPass, setWithPass] = useState(false);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // form validation
+  // 表单校验
   const checkedForm = useMemo(() => {
     return formatForm(authReq);
   }, [authReq]);
   const { validation, checkIsValid, resetValidation } =
     useFormValidation(checkedForm);
 
-  // UI handlers
-  // handle input change
+  // UI 事件处理
+  // 处理输入变化
   const handleInputChange = (
     key:
       | 'address'
@@ -121,17 +121,17 @@ export const AuthForm = () => {
     value: string | boolean
   ) => {
     if (key === 'address' && typeof value === 'string') {
-      // Clean the address by preserving protocol prefixes
+      // 清理地址，保留协议前缀
       const cleanedAddress = cleanAddress(value);
 
-      // Check if address contains database name (format: address/database)
-      // Handle URLs with protocols like http://127.0.0.1:19530/default
+      // 检查地址中是否包含 Database 名（格式：address/database）
+      // 处理带协议的 URL，如 http://127.0.0.1:19530/default
       if (
         cleanedAddress.includes('/') &&
         !cleanedAddress.startsWith('http://') &&
         !cleanedAddress.startsWith('https://')
       ) {
-        // Simple format without protocol: address/database
+        // 不带协议的简单格式：address/database
         const parts = cleanedAddress.split('/');
         if (parts.length === 2) {
           setAuthReq(v => ({
@@ -146,7 +146,7 @@ export const AuthForm = () => {
         (cleanedAddress.startsWith('http://') ||
           cleanedAddress.startsWith('https://'))
       ) {
-        // URL format with protocol: http://address:port/database or https://address:port/database
+        // 带协议的 URL 格式：http://address:port/database 或 https://address:port/database
         const urlMatch = cleanedAddress.match(/^(https?:\/\/[^\/]+)\/(.+)$/);
         if (urlMatch) {
           setAuthReq(v => ({
@@ -158,27 +158,27 @@ export const AuthForm = () => {
         }
       }
 
-      // Set the cleaned address without database parsing
+      // 直接写入清理后的地址，不解析 Database
       setAuthReq(v => ({ ...v, address: cleanedAddress }));
       return;
     }
     setAuthReq(v => ({ ...v, [key]: value }));
   };
 
-  // handle auth toggle
+  // 处理认证开关
   const handleEnableAuth = (val: boolean) => {
     setWithPass(val);
   };
 
-  // handle connect
+  // 处理连接
   const handleConnect = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    // set connecting
+    // 设置为连接中
     setIsConnecting(true);
 
     try {
-      // login
+      // 登录
       const loginParams = { ...authReq };
 
       if (!withPass) {
@@ -188,17 +188,17 @@ export const AuthForm = () => {
       }
       await login(loginParams);
 
-      // set database
+      // 设置 Database
       setDatabase(authReq.database);
-      // success message
+      // 成功提示
       openSnackBar(successTrans('connect'));
 
-      // get connection history
+      // 获取连接历史
       const history = JSON.parse(
         window.localStorage.getItem(ATTU_AUTH_HISTORY) || '[]'
       );
 
-      // add new connection to history, filter out the same connection
+      // 把新连接写入历史，并过滤掉相同的连接
       const newHistory = [
         ...history.filter(
           (item: any) =>
@@ -216,24 +216,24 @@ export const AuthForm = () => {
         },
       ];
 
-      // if the count of history connections are more than 16, remove the first one, but it should keep the default one
+      // 历史连接超过 16 条时移除最早的一条，但要保留默认连接
       if (newHistory.length > 16) {
         newHistory.shift();
       }
 
-      // save to local storage
+      // 保存到 localStorage
       window.localStorage.setItem(
         ATTU_AUTH_HISTORY,
         JSON.stringify(newHistory)
       );
 
-      // set title
+      // 设置标题
       document.title = authReq.address ? `${authReq.address} - PhiGent` : 'PhiGent';
 
-      // redirect to homepage
+      // 跳转到首页
       navigate('/');
     } catch (error: any) {
-      // if not authorized, show auth inputs
+      // 未授权时显示认证输入项
       if (error.response.data.message.includes('UNAUTHENTICATED')) {
         handleEnableAuth(true);
       }
@@ -242,14 +242,14 @@ export const AuthForm = () => {
     }
   };
 
-  // connect history clicked
+  // 点击了历史连接
   const handleClickOnHisotry = (connection: Connection) => {
-    // set auth request
+    // 设置认证请求
     setAuthReq(connection);
   };
 
   const handleDeleteConnection = (connection: Connection) => {
-    // Don't allow deletion of fixed connections
+    // 不允许删除固定连接
     if (
       FIXED_CONNECTIONS.some(
         fixed =>
@@ -270,13 +270,13 @@ export const AuthForm = () => {
         item.database !== connection.database
     );
 
-    // save to local storage
+    // 保存到 localStorage
     window.localStorage.setItem(ATTU_AUTH_HISTORY, JSON.stringify(newHistory));
 
-    // Start with fixed connections
+    // 先放入固定连接
     const allConnections = [...FIXED_CONNECTIONS];
 
-    // Add history connections, filtering out any that match fixed connections
+    // 追加历史连接，过滤掉与固定连接重复的项
     const uniqueHistoryConnections = newHistory.filter(
       historyConn =>
         !FIXED_CONNECTIONS.some(
@@ -287,38 +287,38 @@ export const AuthForm = () => {
     );
     allConnections.push(...uniqueHistoryConnections);
 
-    // sort by time
+    // 按时间排序
     allConnections.sort((a, b) => {
       return new Date(b.time).getTime() - new Date(a.time).getTime();
     });
 
-    // Update connections
+    // 更新连接列表
     setConnections(allConnections);
   };
 
-  // Add clear all history handler
+  // 清空全部历史的处理函数
   const handleClearAllHistory = () => {
-    // Clear all history, only keep empty array
+    // 清空全部历史，只保留空数组
     window.localStorage.setItem(ATTU_AUTH_HISTORY, JSON.stringify([]));
-    // Set connections to only fixed connections
+    // 连接列表只保留固定连接
     setConnections([...FIXED_CONNECTIONS]);
-    // Reset the form to default values
+    // 把表单重置为默认值
     setAuthReq(FIXED_CONNECTIONS[0]);
   };
 
-  // is button should be disabled
+  // 按钮是否应禁用
   const btnDisabled = authReq.address.trim().length === 0 || isConnecting;
 
-  // load connection from local storage
+  // 从 localStorage 加载连接
   useEffect(() => {
     const historyConnections: Connection[] = JSON.parse(
       window.localStorage.getItem(ATTU_AUTH_HISTORY) || '[]'
     );
 
-    // Start with fixed connections
+    // 先放入固定连接
     const allConnections = [...FIXED_CONNECTIONS];
 
-    // Add history connections, filtering out any that match fixed connections
+    // 追加历史连接，过滤掉与固定连接重复的项
     const uniqueHistoryConnections = historyConnections.filter(
       historyConn =>
         !FIXED_CONNECTIONS.some(
@@ -329,7 +329,7 @@ export const AuthForm = () => {
     );
     allConnections.push(...uniqueHistoryConnections);
 
-    // Sort by time
+    // 按时间排序
     allConnections.sort((a, b) => {
       return new Date(b.time).getTime() - new Date(a.time).getTime();
     });
@@ -337,18 +337,18 @@ export const AuthForm = () => {
     setConnections(allConnections);
   }, []);
 
-  // UI effect
+  // UI 副作用
   useEffect(() => {
-    // if address contains zilliz, or username or password is not empty
-    //  set withpass to true
+    // 地址包含 zilliz，或用户名/密码非空时
+    //  把 withPass 置为 true
     const withPass =
       (authReq.address.length > 0 && authReq.address.includes('zilliz')) ||
       authReq.username.length > 0 ||
       authReq.password.length > 0;
 
-    // set with pass
+    // 设置是否带认证
     setWithPass(withPass);
-    // reset form
+    // 重置表单
     resetValidation(formatForm(authReq));
   }, [authReq.address, authReq.username, authReq.password]);
 
@@ -423,7 +423,7 @@ export const AuthForm = () => {
             </Box>
           )}
 
-        {/* Replace address input with Autocomplete */}
+        {/* 用 Autocomplete 替换地址输入框 */}
         <Autocomplete
           freeSolo={true}
           options={connections}
@@ -436,16 +436,16 @@ export const AuthForm = () => {
           onChange={(event, newValue) => {
             if (newValue) {
               if (typeof newValue === 'string') {
-                // Handle free text input
+                // 处理自由文本输入
                 const cleanedValue = cleanAddress(newValue);
 
-                // Handle URLs with protocols like http://127.0.0.1:19530/default
+                // 处理带协议的 URL，如 http://127.0.0.1:19530/default
                 if (
                   cleanedValue.includes('/') &&
                   !cleanedValue.startsWith('http://') &&
                   !cleanedValue.startsWith('https://')
                 ) {
-                  // Simple format without protocol: address/database
+                  // 不带协议的简单格式：address/database
                   const [address, database] = cleanedValue.split('/');
                   setAuthReq(v => ({
                     ...v,
@@ -457,7 +457,7 @@ export const AuthForm = () => {
                   (cleanedValue.startsWith('http://') ||
                     cleanedValue.startsWith('https://'))
                 ) {
-                  // URL format with protocol: http://address:port/database or https://address:port/database
+                  // 带协议的 URL 格式：http://address:port/database 或 https://address:port/database
                   const urlMatch = cleanedValue.match(
                     /^(https?:\/\/[^\/]+)\/(.+)$/
                   );
@@ -487,7 +487,7 @@ export const AuthForm = () => {
             }
           }}
           onInputChange={(event, newInputValue) => {
-            // Only update if the input matches a valid connection
+            // 仅在输入匹配到有效连接时更新
             const matchingConnection = connections.find(
               c =>
                 `${c.address}/${c.database}`.toLowerCase() ===
@@ -496,16 +496,16 @@ export const AuthForm = () => {
             if (matchingConnection) {
               handleClickOnHisotry(matchingConnection);
             } else if (newInputValue) {
-              // Handle free text input
+              // 处理自由文本输入
               const cleanedValue = cleanAddress(newInputValue);
 
-              // Handle URLs with protocols like http://127.0.0.1:19530/default
+              // 处理带协议的 URL，如 http://127.0.0.1:19530/default
               if (
                 cleanedValue.includes('/') &&
                 !cleanedValue.startsWith('http://') &&
                 !cleanedValue.startsWith('https://')
               ) {
-                // Simple format without protocol: address/database
+                // 不带协议的简单格式：address/database
                 const [address, database] = cleanedValue.split('/');
                 setAuthReq(v => ({
                   ...v,
@@ -517,7 +517,7 @@ export const AuthForm = () => {
                 (cleanedValue.startsWith('http://') ||
                   cleanedValue.startsWith('https://'))
               ) {
-                // URL format with protocol: http://address:port/database or https://address:port/database
+                // 带协议的 URL 格式：http://address:port/database 或 https://address:port/database
                 const urlMatch = cleanedValue.match(
                   /^(https?:\/\/[^\/]+)\/(.+)$/
                 );
@@ -544,7 +544,7 @@ export const AuthForm = () => {
             }
           }}
           filterOptions={(options, state) => {
-            // Only filter when there's input text
+            // 只有存在输入文本时才过滤
             if (!state.inputValue) {
               return options;
             }
@@ -591,7 +591,7 @@ export const AuthForm = () => {
             },
           }}
           renderOption={(props, option, { index }) => {
-            // Extract key from props
+            // 从 props 中取出 key
             const { key, ...otherProps } = props;
 
             const isLastOption = index === connections.length - 1;
@@ -599,7 +599,7 @@ export const AuthForm = () => {
 
             return (
               <React.Fragment key={`${option.address}-${option.database}`}>
-                {/* Regular connection option */}
+                {/* 普通连接选项 */}
                 <Box
                   component="li"
                   {...otherProps}
@@ -686,7 +686,7 @@ export const AuthForm = () => {
                     )}
                 </Box>
 
-                {/* Add clear history option after the last connection */}
+                {/* 在最后一个连接后追加清空历史的选项 */}
                 {isLastOption && hasMultipleConnections && (
                   <Box
                     component="li"
@@ -750,7 +750,7 @@ export const AuthForm = () => {
           key={commonTrans('attu.database')}
         />
 
-        {/* toggle auth */}
+        {/* 认证开关 */}
         <Box
           sx={{
             display: 'flex',

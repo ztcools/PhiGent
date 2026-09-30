@@ -3,7 +3,7 @@ import type { Option } from '@/components/customSelector/Types';
 import type { SxProps, Theme } from '@mui/material';
 
 export interface SearchParamsProps {
-  // default index type is FLAT
+  // 默认索引类型为 FLAT
   indexType?: string;
   searchParamsForm: {
     [key in string]: number | string | boolean;
@@ -16,7 +16,7 @@ export interface SearchParamsProps {
 }
 
 export interface SearchResultView {
-  // dynamic field names
+  // 动态字段名
   [key: string]: any;
   rank: number;
   distance: number;
@@ -27,7 +27,7 @@ export interface FieldOption extends Option {
 }
 
 export interface SearchResult {
-  // dynamic field names
+  // 动态字段名
   [key: string]: string | number;
   score: number;
 }

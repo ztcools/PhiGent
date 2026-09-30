@@ -33,8 +33,8 @@ export class DatabasesService {
 
     const res = await milvusClient.listDatabases(data);
 
-    // test if the user has permission to access the database, loop through all databases
-    // and check if the user has permission to access the database
+    // 测试用户是否有权限访问该 Database，遍历所有 Database
+    // 并检查用户是否具备访问该 Database 的权限
     const availableDatabases: DatabaseObject[] = [];
 
     for (let i = 0; i < res.db_names.length; i++) {
@@ -51,7 +51,7 @@ export class DatabasesService {
             db_name: dbName,
           });
         } catch (e) {
-          // ignore
+          // 忽略
           console.warn('error', e.details);
         }
 
@@ -62,12 +62,12 @@ export class DatabasesService {
           ...dbObject,
         });
       } catch (e) {
-        // ignore
+        // 忽略
         console.warn('error', e.details);
       }
     }
 
-    // recover current database
+    // 恢复当前 Database
     await milvusClient.use({ db_name: database });
 
     return availableDatabases;
@@ -83,7 +83,7 @@ export class DatabasesService {
   async use(clientId: string, db_name: string) {
     const currentClient = clientCache.get(clientId);
 
-    // clear collectionsQueue when switching database
+    // 切换 Database 时清空 collectionsQueue
     currentClient.collectionsQueue.stop();
     currentClient.collectionsQueue = new SimpleQueue<string>();
 

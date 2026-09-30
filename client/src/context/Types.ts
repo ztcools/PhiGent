@@ -22,7 +22,7 @@ export type RootContextType = {
   setDrawer: (params: DrawerType) => void;
 };
 
-// this is for any custom dialog
+// 用于任意自定义对话框
 export type DialogType = {
   open: boolean;
   type: 'notice' | 'custom';
@@ -35,13 +35,13 @@ export type DialogType = {
     cancelLabel?: string;
     confirmClass?: string;
     /**
-     * Usually we control open status in root context,
-     * if we need a hoc component depend on setDialog in context,
-     * we may need control open status by ourself
+     * 通常我们在 root context 中控制打开状态，
+     * 若需要一个依赖 context 中 setDialog 的 hoc 组件，
+     * 则可能需要自行控制打开状态
      **/
     handleClose?: () => void;
 
-    // used for dialog position
+    // 用于对话框定位
     containerClass?: string;
   };
 };
@@ -115,7 +115,7 @@ export type DataContextType = {
   fetchDatabases: () => Promise<void>;
   fetchCollections: () => Promise<void>;
   fetchCollection: (name: string, drop?: boolean) => Promise<void>;
-  // UI preferences
+  // UI 偏好设置
   ui: {
     tree: {
       width: number;

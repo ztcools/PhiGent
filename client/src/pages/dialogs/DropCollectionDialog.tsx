@@ -21,7 +21,7 @@ const DropCollectionDialog: FC<DropCollectionProps> = props => {
       fetchCollection(item.collection_name, true);
     }
 
-    // show success message
+    // 显示成功提示
     openSnackBar(
       successTrans('delete', {
         name: collectionTrans('collection'),

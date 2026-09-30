@@ -3,40 +3,40 @@ import { EditorView } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 
 export const milvusHttpLinter = [
-  lintGutter(), // Enable the lint gutter to display error indicators
+  lintGutter(), // 启用 lint gutter 以显示错误标记
   linter((view: EditorView) => {
     const state = view.state;
-    const tree = syntaxTree(state); // Get the syntax tree of the current document
+    const tree = syntaxTree(state); // 获取当前文档的语法树
 
-    // Array to store linting diagnostics (errors/warnings)
+    // 存放 lint 诊断信息（错误/警告）的数组
     const diagnostics: Diagnostic[] = [];
 
-    // Iterate through the syntax tree
+    // 遍历语法树
     tree.iterate({
       enter(node) {
         if (node.type.isError) {
-          // Get the start and end positions of the error node
+          // 获取错误节点的起止位置
           const from = node.from;
           const to = node.to;
 
-          // check if this line is empty
+          // 检查该行是否为空
           const line = state.doc.lineAt(from);
           if (line.length === 0) {
             return;
           }
 
-          // Add the error to the diagnostics array
+          // 将错误加入诊断数组
           diagnostics.push({
             from,
             to,
-            severity: 'error', // Set the severity level (error/warning/info)
-            message: 'Syntax error detected', // Error message to display
+            severity: 'error', // 设置严重级别（error/warning/info）
+            message: 'Syntax error detected', // 待展示的错误信息
           });
         }
       },
     });
 
-    // Return the list of diagnostics to be displayed in the editor
+    // 返回需要在编辑器中展示的诊断列表
     return diagnostics;
   }),
 ];

@@ -31,12 +31,12 @@ const Filter = forwardRef((props: FilterProps, ref) => {
   const [isConditionsLegal, setIsConditionsLegal] = useState(false);
   const [filterExpression, setFilterExpression] = useState('');
   
-  // Use ref to track previous expression to prevent unnecessary updates
+  // 用 ref 记录上一次的表达式，避免不必要的更新
   const prevExpressionRef = useRef<string>('');
 
   const FilterIcon = icons.filter;
 
-  // if fields if empty array, reset all conditions
+  // fields 为空数组时，重置所有条件
   useEffect(() => {
     if (fields.length === 0) {
       setFlatConditions([]);
@@ -44,9 +44,9 @@ const Filter = forwardRef((props: FilterProps, ref) => {
     }
   }, [fields]);
 
-  // Check all conditions are all correct.
+  // 检查所有条件是否都正确
   useEffect(() => {
-    // Calc the sum of conditions.
+    // 累加条件数量
     for (let i = 0; i < flatConditions.length; i++) {
       const { data, type } = flatConditions[i];
       if (type !== 'condition') continue;
@@ -61,7 +61,7 @@ const Filter = forwardRef((props: FilterProps, ref) => {
     }
     setIsConditionsLegal(true);
     
-    // Only generate expression if conditions are legal
+    // 条件合法时才生成表达式
     if (flatConditions.length > 0) {
       generateExpression(flatConditions, setFilterExpression);
     }
@@ -95,14 +95,14 @@ const Filter = forwardRef((props: FilterProps, ref) => {
 
       let n = name;
 
-      // if type is json, format json expression
+      // 类型为 JSON 时，格式化 JSON 表达式
       if (data.field.data_type === 'JSON') {
         n = `${name}["${jsonKey}"]`;
       }
 
       let newExpr = `${n} ${op} ${value}`;
 
-      // rewrite expression if the op is JSON_CONTAINS/ARRAY_CONTAINS
+      // 操作符为 JSON_CONTAINS/ARRAY_CONTAINS 时，重写表达式
       if (
         op === 'JSON_CONTAINS' ||
         op === 'ARRAY_CONTAINS' ||
@@ -110,11 +110,11 @@ const Filter = forwardRef((props: FilterProps, ref) => {
       ) {
         newExpr = `${op}(${n}, ${value})`;
       }
-      // rewrite expression if the op is ARRAY_CONTAINS_ALL/ARRAY_CONTAINS_ANY
+      // 操作符为 ARRAY_CONTAINS_ALL/ARRAY_CONTAINS_ANY 时，重写表达式
       if (op === 'ARRAY_CONTAINS_ALL' || op === 'ARRAY_CONTAINS_ANY') {
         newExpr = `${op}(${n}, ${value})`;
       }
-      // rewrite expression if the op is JSON_CONTAINS_ANY/JSON_CONTAINS_ANY
+      // 操作符为 JSON_CONTAINS_ALL/JSON_CONTAINS_ANY 时，重写表达式
       if (op === 'JSON_CONTAINS_ALL' || op === 'JSON_CONTAINS_ANY') {
         newExpr = `${op}(${n}, ${value})`;
       }
@@ -124,8 +124,8 @@ const Filter = forwardRef((props: FilterProps, ref) => {
   };
 
   /**
-   * Insert "OR" operator into specified position.
-   * @param targetId The break operator will be inserted after the target one.
+   * 在指定位置插入 "OR" 操作符。
+   * @param targetId break 操作符会插入到目标项之后。
    */
   const addOrOp = (targetId?: string) => {
     if (!targetId) {
@@ -156,17 +156,17 @@ const Filter = forwardRef((props: FilterProps, ref) => {
     setFilteredFlatConditions(newConditions);
   };
   /**
-   * Remove "OR" operator in specified position.
-   * @param targetId Remove the break operator after the target one.
+   * 移除指定位置的 "OR" 操作符。
+   * @param targetId 移除目标项之后的 break 操作符。
    */
   const removeOrOp = (targetId: string) => {
     setFilteredFlatConditions(flatConditions.filter(i => i.id !== targetId));
   };
   /**
-   * Add new condition to specified position.
-   * @param targetId Position where new condition item will be inserted.
-   * Will be pushed to tail if empty.
-   * @param beforeTarget Will be inserted before the target item.
+   * 在指定位置新增条件。
+   * @param targetId 新条件项的插入位置。
+   * 为空时追加到末尾。
+   * @param beforeTarget 插入到目标项之前。
    */
   const addCondition = (targetId?: string, beforeTarget?: boolean) => {
     const formerConditions = [...flatConditions];
@@ -203,8 +203,8 @@ const Filter = forwardRef((props: FilterProps, ref) => {
     setFilteredFlatConditions(newConditions);
   };
   /**
-   * Remove condition from specified position.
-   * @param targetId Position where new condition item will be removed.
+   * 移除指定位置的条件。
+   * @param targetId 要移除的条件项位置。
    */
   const removeCondition = (targetId: string) => {
     setFilteredFlatConditions(flatConditions.filter(i => i.id !== targetId));
@@ -217,9 +217,9 @@ const Filter = forwardRef((props: FilterProps, ref) => {
     }
   };
   /**
-   * Update specified condition's data.
-   * @param id Specify one item that will be updated.
-   * @param data Data that will be updated to condition.
+   * 更新指定条件的数据。
+   * @param id 指定要更新的条件项。
+   * @param data 要更新到该条件上的数据。
    */
   const updateConditionData = (id: string, data: ConditionData) => {
     const formerFlatConditions = flatConditions.map(i => {
@@ -228,7 +228,7 @@ const Filter = forwardRef((props: FilterProps, ref) => {
     });
     setFilteredFlatConditions(formerFlatConditions);
   };
-  // Reset conditions.
+  // 重置条件
   const resetConditions = () => {
     setIsConditionsLegal(false);
     setFilteredFlatConditions([
@@ -280,7 +280,7 @@ const Filter = forwardRef((props: FilterProps, ref) => {
     setInitConditions(flatConditions);
     setOpen(false);
   };
-  // Only reset current conditions. Former conditions are remained.
+  // 只重置当前条件，之前提交的条件保留。
   const handleReset = () => {
     setFilteredFlatConditions([
       {
@@ -292,7 +292,7 @@ const Filter = forwardRef((props: FilterProps, ref) => {
       },
     ]);
   };
-  // Reset all conditions(both current and former).
+  // 重置全部条件（当前的和之前提交的）。
   const handleHardReset = () => {
     setInitConditions([]);
     handleReset();
@@ -300,11 +300,11 @@ const Filter = forwardRef((props: FilterProps, ref) => {
   const handleFallback = () => {
     setFilteredFlatConditions(initConditions);
   };
-  // Expose func
-  // useImperativeHandle customizes the instance value that is exposed to parent components when using ref.
+  // 暴露方法
+  // useImperativeHandle 用于自定义通过 ref 暴露给父组件的实例值。
   // https://reactjs.org/docs/hooks-reference.html#useimperativehandle
   useImperativeHandle(ref, () => ({
-    // Expose handleHardReset, parent components can call it by `ref.current.getReset()`
+    // 暴露 handleHardReset，父组件可通过 `ref.current.getReset()` 调用
     getReset() {
       handleHardReset();
     },

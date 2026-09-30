@@ -5,10 +5,10 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const container = document.getElementById('root');
-const root = createRoot(container!); // createRoot(container!) if you use TypeScript
+const root = createRoot(container!); // 若使用 TypeScript，则写 createRoot(container!)
 root.render(<App />);
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+// 若要开始衡量应用性能，可传入一个函数
+// 记录结果（例如 reportWebVitals(console.log)）
+// 或发送到分析服务端点。详见 https://bit.ly/CRA-vitals
 reportWebVitals();

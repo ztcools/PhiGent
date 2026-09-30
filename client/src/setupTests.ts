@@ -1,5 +1,5 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
+// jest-dom 提供用于断言 DOM 节点的自定义 jest 匹配器
+// 允许这样使用：
 // expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
+// 更多信息：https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';

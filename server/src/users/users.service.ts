@@ -200,10 +200,10 @@ export class UserService {
   }
 
   async revokeAllRolePrivileges(clientId: string, data: { roleName: string }) {
-    // get existing privileges
+    // 获取已有权限
     const existingPrivileges = await this.listGrants(clientId, data.roleName);
 
-    // revoke all existing privileges
+    // 撤销所有已有权限
     for (const entity of existingPrivileges.entities) {
       const res = await this.revokePrivilegeV2(clientId, {
         db_name: entity.db_name,
@@ -214,7 +214,7 @@ export class UserService {
     }
   }
 
-  // create privilege group
+  // 创建权限组
   async createPrivilegeGroup(clientId: string, data: { group_name: string }) {
     const { milvusClient } = clientCache.get(clientId);
 
@@ -225,7 +225,7 @@ export class UserService {
     return res;
   }
 
-  // get privilege groups
+  // 获取权限组列表
   async getPrivilegeGroups(clientId: string) {
     const { milvusClient } = clientCache.get(clientId);
 
@@ -234,7 +234,7 @@ export class UserService {
     return res;
   }
 
-  // get privilege groups and find the one with the name
+  // 获取权限组列表并查找指定名称的权限组
   async getPrivilegeGroup(clientId: string, data: { group_name: string }) {
     const res = await this.getPrivilegeGroups(clientId);
 
@@ -245,7 +245,7 @@ export class UserService {
     return group;
   }
 
-  // delete privilege group
+  // 删除权限组
   async deletePrivilegeGroup(clientId: string, data: { group_name: string }) {
     const { milvusClient } = clientCache.get(clientId);
 
@@ -256,7 +256,7 @@ export class UserService {
     return res;
   }
 
-  // update privilege group
+  // 更新权限组
   async addPrivilegeToGroup(
     clientId: string,
     data: { group_name: string; privileges: string[] }
@@ -271,7 +271,7 @@ export class UserService {
     return res;
   }
 
-  // remove privilege from group
+  // 从权限组中移除权限
   async removePrivilegeFromGroup(
     clientId: string,
     data: { group_name: string; privileges: string[] }
@@ -286,7 +286,7 @@ export class UserService {
     return res;
   }
 
-  // grantPrivilegeV2
+  // 授予权限 V2
   async grantPrivilegeV2(clientId: string, data: GrantPrivilegeV2Request) {
     const { milvusClient } = clientCache.get(clientId);
 
@@ -295,7 +295,7 @@ export class UserService {
     return res;
   }
 
-  // revokePrivilegeV2
+  // 撤销权限 V2
   async revokePrivilegeV2(clientId: string, data: RevokePrivilegeV2Request) {
     const { milvusClient } = clientCache.get(clientId);
 

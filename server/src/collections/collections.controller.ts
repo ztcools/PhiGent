@@ -36,14 +36,14 @@ export class CollectionController {
   }
 
   generateRoutes() {
-    // get all collections
+    // 获取所有 Collection
     this.router.get('/', this.showCollections.bind(this));
     this.router.get('/names', this.getCollectionNames.bind(this));
     this.router.post('/details', this.getCollections.bind(this));
 
-    // get all collections statistics
+    // 获取所有 Collection 的统计信息
     this.router.get('/statistics', this.getStatistics.bind(this));
-    // index
+    // Index
     this.router.post(
       '/index',
       dtoValidationMiddleware(ManageIndexDto),
@@ -52,54 +52,54 @@ export class CollectionController {
 
     this.router.get('/index', this.describeIndex.bind(this));
 
-    // get collection with index info
+    // 获取带 Index 信息的 Collection
     this.router.get('/:name', this.describeCollection.bind(this));
     this.router.get(
       '/:name/unformatted',
       this.describeUnformattedCollection.bind(this)
     );
-    // get count
+    // 获取数据行数
     this.router.get('/:name/count', this.count.bind(this));
-    // create collection
+    // 创建 Collection
     this.router.post(
       '/',
       dtoValidationMiddleware(CreateCollectionDto),
       this.createCollection.bind(this)
     );
-    // drop collection
+    // 删除 Collection
     this.router.delete('/:name', this.dropCollection.bind(this));
-    // rename collection
+    // 重命名 Collection
     this.router.post(
       '/:name',
       dtoValidationMiddleware(RenameCollectionDto),
       this.renameCollection.bind(this)
     );
 
-    // duplicate collection
+    // 复制 Collection
     this.router.post(
       '/:name/duplicate',
       dtoValidationMiddleware(DuplicateCollectionDto),
       this.duplicateCollection.bind(this)
     );
 
-    // get collection statistics
+    // 获取单个 Collection 的统计信息
     this.router.get(
       '/:name/statistics',
       this.getCollectionStatistics.bind(this)
     );
 
-    // load / release
+    // 加载 / 释放
     this.router.put('/:name/load', this.loadCollection.bind(this));
     this.router.put('/:name/release', this.releaseCollection.bind(this));
     this.router.put('/:name/empty', this.empty.bind(this));
 
-    // alter collection
+    // 修改 Collection 属性
     this.router.put(
       '/:name/properties',
       this.setCollectionProperties.bind(this)
     );
 
-    // insert data
+    // 插入数据
     this.router.post(
       '/:name/insert',
       dtoValidationMiddleware(InsertDataDto),
@@ -111,37 +111,37 @@ export class CollectionController {
       this.upsert.bind(this)
     );
 
-    // insert sample data
+    // 插入示例数据
     this.router.post(
       '/:name/importSample',
       dtoValidationMiddleware(ImportSampleDto),
       this.importSample.bind(this)
     );
-    // we need use req.body, so we can't use delete here
+    // 这里需要用 req.body，所以不能用 delete 请求
     this.router.put('/:name/entities', this.deleteEntities.bind(this));
     this.router.post('/:name/search', this.vectorSearch.bind(this));
-    // query
+    // 查询
     this.router.post(
       '/:name/query',
       dtoValidationMiddleware(QueryDto),
       this.query.bind(this)
     );
-    // create alias
+    // 创建 Alias
     this.router.post(
       '/:name/alias',
       dtoValidationMiddleware(CreateAliasDto),
       this.createAlias.bind(this)
     );
-    // drop alias
+    // 删除 Alias
     this.router.delete('/:name/alias/:alias', this.dropAlias.bind(this));
 
-    // segments
+    // Segment
     this.router.get('/:name/psegments', this.getPSegment.bind(this));
     this.router.get('/:name/qsegments', this.getQSegment.bind(this));
-    // compact
+    // 手动 Compact
     this.router.put('/:name/compact', this.compact.bind(this));
 
-    // mmap settings
+    // mmap 配置
     this.router.put('/:name/mmap', this.updateMmapSettings.bind(this));
 
     return this.router;
@@ -198,7 +198,7 @@ export class CollectionController {
       res.send(
         result.data
           .sort((a, b) => {
-            // sort by name
+            // 按名称排序
             return a.name.localeCompare(b.name);
           })
           .map((item: any) => item.name)
@@ -224,7 +224,7 @@ export class CollectionController {
     const createCollectionData = req.body;
 
     if (createCollectionData.loadAfterCreate) {
-      // build index_params for all fields
+      // 为所有 Field 构建 index_params
       const fields = createCollectionData.fields;
       const index_params = fields
         .filter((f: any) => f.data_type !== DataType.JSON)
@@ -249,7 +249,7 @@ export class CollectionController {
         createCollectionData
       );
 
-      // load collection after create
+      // 创建完成后加载 Collection
       if (createCollectionData.loadAfterCreate) {
         await this.collectionsService.loadCollectionAsync(req.clientId, {
           collection_name: createCollectionData.collection_name,
@@ -680,7 +680,7 @@ export class CollectionController {
     const data = req.body;
     try {
       const promises = [];
-      // loop through all fields and update the mmap settings, if it is raw, update fieldproperties, if it is index, update index
+      // 遍历所有 Field 更新 mmap 配置：raw 类型更新 field properties，index 类型更新 index
       for (const field of data) {
         if (typeof field.rawMmapEnabled !== 'undefined') {
           promises.push(
@@ -710,7 +710,7 @@ export class CollectionController {
       }
       const results = await Promise.all(promises);
 
-      // loop through results, if any of them is not success, return the promise
+      // 遍历返回结果，只要有一个不成功就直接返回该结果
       for (const result of results) {
         if (result.error_code !== ErrorCode.SUCCESS) {
           return result;

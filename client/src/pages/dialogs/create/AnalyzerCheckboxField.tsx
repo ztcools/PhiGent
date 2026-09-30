@@ -28,7 +28,7 @@ const AnalyzerCheckboxField: FC<AnalyzerCheckboxFieldProps> = ({
   const { t: collectionTrans } = useTranslation('collection');
   const { t: dialogTrans } = useTranslation('dialog');
 
-  // Determine which analyzer type is selected
+  // 判断当前选中的 analyzer 类型
   let analyzer = 'standard';
   if (typeof field.analyzer_params === 'string') {
     analyzer = field.analyzer_params;
@@ -53,12 +53,12 @@ const AnalyzerCheckboxField: FC<AnalyzerCheckboxFieldProps> = ({
 
   const handleAnalyzerChange = (selectedAnalyzer: string) => {
     if (selectedAnalyzer === 'custom') {
-      // If custom, set the analyzer_params to a JSON editable format
+      // 若为自定义，将 analyzer_params 设为可编辑的 JSON 格式
       onChange(field.id!, {
         analyzer_params: localAnalyzer,
       });
     } else {
-      // If standard, chinese, or english, set the analyzer_params to the selected type
+      // 若为标准、中文或英文，将 analyzer_params 设为选中的类型
       onChange(field.id!, {
         analyzer_params: selectedAnalyzer,
       });
