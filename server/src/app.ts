@@ -112,12 +112,12 @@ app.use(ReqHeaderMiddleware);
 app.use('/api/v1', router);
 // 返回前端构建产物。
 // 使用绝对路径解析构建后的 SPA：服务端运行在 /app/dist/src，而运行时镜像中前端
-// bundle 被复制到 /app/build。相对路径 'build' 会基于进程 CWD 解析（'../build'
-// 则相对 dist/src），在容器内会 404。Dockerfile 把产物放在 /app/build；
-// 本地开发时回退到基于 CWD 的 'build'。
-const clientBuildDir = fs.existsSync('/app/build/index.html')
-  ? '/app/build'
-  : path.join(process.cwd(), 'build');
+// bundle 被复制到 /app/dist-client。相对路径 'dist' 会基于进程 CWD 解析，
+// 在容器内会 404。Dockerfile 把产物放在 /app/dist-client；
+// 本地开发时回退到基于 CWD 的 'dist'。
+const clientBuildDir = fs.existsSync('/app/dist-client/index.html')
+  ? '/app/dist-client'
+  : path.join(process.cwd(), 'dist');
 app.use(express.static(clientBuildDir));
 
 // 其余所有路由都返回 index.html，其中包含引入

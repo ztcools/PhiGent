@@ -1,9 +1,46 @@
 {
-  "name": "phigent",
+  "name": "phigent-workspace",
   "version": "0.1.0",
   "description": "PhiGent - Milvus management console",
   "license": "Apache-2.0",
   "private": true,
+  "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace phigent-client start\" \"yarn workspace phigent start\"",
+    "build": "yarn workspace phigent-client build && yarn workspace phigent build",
+    "lint": "yarn workspace phigent-client lint && yarn workspace phigent lint",
+    "test": "yarn workspace phigent test && yarn workspace phigent-client test",
+    "format": "prettier --write \"{client,server}/**/*.{ts,tsx,js,jsx,css,json,md}\" \"*.{json,md,yml,yaml}\" \"docs/**/*.md\"",
+    "format:check": "prettier --check \"{client,server}/**/*.{ts,tsx,js,jsx,css,json,md}\" \"*.{json,md,yml,yaml}\" \"docs/**/*.md\"",
+    "lint-staged": "lint-staged",
+    "commitlint": "commitlint"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  },
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.1",
+    "@typescript-eslint/parser": "^8.8.1",
+    "concurrently": "^9.0.1",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "rollup-plugin-visualizer": "^5.12.0"
+  }
 }

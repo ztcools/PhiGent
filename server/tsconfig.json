@@ -3,7 +3,8 @@
     "experimentalDecorators": true,
     "module": "commonjs",
     "esModuleInterop": true,
-    "target": "es6",
+    "target": "ES2022",
+    "strict": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
@@ -11,9 +12,11 @@
     "outDir": "dist",
     "baseUrl": ".",
     "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "paths": {
       "*": ["node_modules/*"]
     }
   },
-  "include": ["src/**/*", "../../src/**/server"]
+  "include": ["src/**/*"]
 }

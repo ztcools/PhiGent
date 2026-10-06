@@ -1,42 +1,48 @@
 # => Building container
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
+ARG NPM_REGISTRY=https://registry.yarnpkg.com
 
-# apt before COPY: a source edit shouldn't invalidate the (slow) package install layer.
 # git is needed by yarn install — some transitive deps resolve from git URLs.
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
-# Enable corepack so `yarn` is available (node:20-bookworm-slim ships corepack but not yarn).
 RUN corepack enable
 
+COPY package.json yarn.lock ./
+COPY client/package.json ./client/package.json
+COPY server/package.json ./server/package.json
+RUN yarn install --registry ${NPM_REGISTRY} --network-timeout 1000000
+
 COPY . .
+RUN yarn workspace phigent-client build
+RUN yarn workspace phigent build
 
-# => Building Client
-WORKDIR /app/client
-RUN yarn install --registry https://registry.npmmirror.com --network-timeout 1000000
-RUN yarn build
-
-# => Building Server
-WORKDIR /app/server
-RUN yarn install --registry https://registry.npmmirror.com --network-timeout 1000000
-ENV NODE_ENV=production
-ENV PORT=80
-RUN yarn build
+# => Production dependencies
+FROM node:20-bookworm-slim AS prod-deps
+WORKDIR /app
+ARG NPM_REGISTRY=https://registry.yarnpkg.com
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN corepack enable
+COPY package.json yarn.lock ./
+COPY server/package.json ./server/package.json
+RUN yarn install --production --registry ${NPM_REGISTRY} --network-timeout 1000000 --ignore-scripts
 
 # => Final runtime container
 FROM node:20-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production
-# Reuse the dependencies already resolved in the builder (avoids a runtime
-# network re-install, which flakes on git-hosted transitive deps).
-COPY --from=builder /app/server/dist /app/dist
-COPY --from=builder /app/client/build /app/build
-COPY --from=builder /app/server/package.json /app/package.json
-COPY --from=builder /app/server/node_modules /app/node_modules
 
-RUN chmod +x /app/build/env.sh && \
+COPY --from=builder /app/server/dist /app/dist
+COPY --from=builder /app/client/dist /app/dist-client
+COPY --from=builder /app/server/package.json /app/package.json
+COPY --from=prod-deps /app/node_modules /app/node_modules
+
+RUN chmod +x /app/dist-client/env.sh && \
     chgrp -R 0 /app && \
     chmod -R g=u /app
 
 EXPOSE 3000
 
-CMD [ "/bin/bash", "-c", "/app/build/env.sh && yarn start:prod" ]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3000/api/v1/healthy').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["/bin/bash", "-c", "/app/dist-client/env.sh && node dist/src/app.js"]
