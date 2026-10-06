@@ -110,6 +110,10 @@ app.use(LoggingMiddleware);
 app.use(ReqHeaderMiddleware);
 // 挂载路由
 app.use('/api/v1', router);
+// API 未匹配路径返回 JSON 404，避免落入 SPA fallback 返回 HTML。
+app.use('/api', (req, res) => {
+  res.status(404).json({ statusCode: 404, message: 'API route not found' });
+});
 // 返回前端构建产物。
 // 使用绝对路径解析构建后的 SPA：服务端运行在 /app/dist/src，而运行时镜像中前端
 // bundle 被复制到 /app/dist-client。相对路径 'dist' 会基于进程 CWD 解析，
@@ -122,7 +126,7 @@ app.use(express.static(clientBuildDir));
 
 // 其余所有路由都返回 index.html，其中包含引入
 // 应用 JavaScript 文件的 script 标签。
-app.get('*', (request, response) => {
+app.get(/.*/, (request, response) => {
   response.sendFile(path.join(clientBuildDir, 'index.html'));
 });
 // 错误处理拦截器
