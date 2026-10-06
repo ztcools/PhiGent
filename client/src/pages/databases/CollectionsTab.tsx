@@ -4,7 +4,6 @@ import RouteTabList from '@/components/customTabList/RouteTabList';
 import Partitions from './collections/partitions/Partitions';
 import Schema from './collections/schema/Schema';
 import CollectionData from './collections/data/CollectionData';
-import Segments from './collections/segments/Segments';
 import Properties from './collections/properties/Properties';
 import Search from './collections/search/Search';
 import { authContext } from '@/context';
@@ -78,18 +77,11 @@ export const CollectionsTabs = (props: {
   ];
 
   if (!isManaged) {
-    collectionTabs.push(
-      {
-        label: collectionTrans('segmentsTab'),
-        component: <Segments />,
-        path: `segments`,
-      },
-      {
-        label: collectionTrans('propertiesTab'),
-        component: <Properties type="collection" target={collection} />,
-        path: `properties`,
-      }
-    );
+    collectionTabs.push({
+      label: collectionTrans('propertiesTab'),
+      component: <Properties type="collection" target={collection} />,
+      path: `properties`,
+    });
   }
 
   // 获取当前激活的 Collection 标签

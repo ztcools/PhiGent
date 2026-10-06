@@ -1,9 +1,8 @@
 import { FC, useState } from 'react';
-import { Box, useTheme } from '@mui/material';
+import { Box, TextField, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import DialogTemplate from '@/components/customDialog/DialogTemplate';
 
-import { JSONEditor } from '../play/JSONEditor';
 
 type EditJSONDialogProps = {
   data: { [key: string]: any };
@@ -68,7 +67,25 @@ const EditJSONDialog: FC<EditJSONDialogProps> = props => {
               overflow: 'auto',
             }}
           >
-            <JSONEditor value={originalData} onChange={handleChange} />
+            <TextField
+              value={value}
+              onChange={event => handleChange(event.target.value)}
+              multiline
+              minRows={12}
+              maxRows={24}
+              fullWidth
+              variant="standard"
+              InputProps={{
+                disableUnderline: true,
+                sx: {
+                  alignItems: 'flex-start',
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  fontSize: 12,
+                  lineHeight: '20px',
+                  padding: 1.5,
+                },
+              }}
+            />
           </Box>
         </>
       }

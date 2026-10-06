@@ -1,7 +1,6 @@
 # => Building container
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
-ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
 
 # apt before COPY: a source edit shouldn't invalidate the (slow) package install layer.
 # git is needed by yarn install — some transitive deps resolve from git URLs.

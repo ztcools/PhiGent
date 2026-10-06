@@ -31,7 +31,6 @@ node_modules
 server/node_modules
 server/dist
 server/build
-server/electron-app
 
 express/dist
 

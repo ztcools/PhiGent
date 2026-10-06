@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { isElectron, url } from '@/http';
+import { url } from '@/http';
 import { WS_EVENTS } from '@server/utils/Const';
 
 interface UseWebSocketProps {
@@ -37,14 +37,11 @@ export const useWebSocket = ({
         clearSocket();
       }
 
-      // Electron 下使用默认配置，Web 下使用 path 配置
-      socket.current = isElectron
-        ? io(url as string, { extraHeaders, query: extraHeaders })
-        : io(url as string, {
-            extraHeaders,
-            query: extraHeaders,
-            path: '/socket.io', // 为代理场景补充 path 配置
-          });
+      socket.current = io(url as string, {
+        extraHeaders,
+        query: extraHeaders,
+        path: '/socket.io', // 为代理场景补充 path 配置
+      });
 
       socket.current.on('connect', () => {
         // console.info('--- ws connected ---', clientId);

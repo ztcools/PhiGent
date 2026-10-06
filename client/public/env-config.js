@@ -3,7 +3,6 @@
 window._env_ = {
   MILVUS_URL: '10.50.4.149:19530',
   HOST_URL: '',
-  IS_ELECTRON: '',
   DATBASE: 'default',
   MILVUS_SERVERS: '',
   GIT_INDEX_HOST: 'http://10.50.4.149:8795',

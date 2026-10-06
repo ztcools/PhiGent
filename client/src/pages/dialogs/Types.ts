@@ -15,7 +15,6 @@ interface CollectionDialogBaseProps {
   cb?: () => void;
 }
 
-export interface CompactDialogProps extends CollectionDialogBaseProps {}
 export interface FlushDialogProps extends CollectionDialogBaseProps {}
 
 export interface LoadSampleParam {

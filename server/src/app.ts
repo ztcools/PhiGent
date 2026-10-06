@@ -13,14 +13,13 @@ import { router as databasesRouter } from './database';
 import { router as partitionsRouter } from './partitions';
 import { router as cronsRouter } from './crons';
 import { router as userRouter } from './users';
-import { router as playgroundRouter } from './playground';
 import {
   TransformResMiddleware,
   LoggingMiddleware,
   ErrorMiddleware,
   ReqHeaderMiddleware,
 } from './middleware';
-import { CLIENT_TTL, SimpleQueue, isElectron } from './utils';
+import { CLIENT_TTL, SimpleQueue } from './utils';
 import { getIp } from './utils/Network';
 import { MilvusClient } from './types';
 import { initWebSocket } from './socket';
@@ -53,7 +52,6 @@ router.use('/collections', collectionsRouter);
 router.use('/partitions', partitionsRouter);
 router.use('/crons', cronsRouter);
 router.use('/users', userRouter);
-router.use('/playground', playgroundRouter);
 router.get('/healthy', (req, res, next) => {
   res.json({ status: 200 });
   next();
@@ -80,9 +78,7 @@ app.use(express.json({ limit: '256MB' }));
 // 响应格式转换拦截器
 app.use(TransformResMiddleware);
 // 日志拦截器
-if (!isElectron()) {
-  app.use(LoggingMiddleware);
-}
+app.use(LoggingMiddleware);
 // 请求头统一处理
 app.use(ReqHeaderMiddleware);
 // 挂载路由
@@ -112,12 +108,8 @@ const PORT = process.env.SERVER_PORT || 3000;
 
 // 启动服务
 server.listen(PORT, () => {
-  if (!isElectron()) {
-    const ips = getIp();
-    ips.forEach(ip => {
-      console.info(
-        chalk.cyanBright(`Attu server started: http://${ip}:${PORT}`)
-      );
-    });
-  }
+  const ips = getIp();
+  ips.forEach(ip => {
+    console.info(chalk.cyanBright(`Attu server started: http://${ip}:${PORT}`));
+  });
 });

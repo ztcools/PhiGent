@@ -48,8 +48,6 @@ const commonTrans = {
     collections: 'Collections',
     field: '字段',
     fields: '字段',
-    segment: 'Segment',
-    segments: 'Segment',
     partition: '分区',
     partitions: '分区',
     property: '属性',

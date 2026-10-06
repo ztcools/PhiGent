@@ -9,9 +9,7 @@ import { javascript } from '@codemirror/lang-javascript';
 import { linter, Diagnostic } from '@codemirror/lint';
 import { CollectionService } from '@/http';
 import { DataTypeStringEnum } from '@/consts';
-import { useTheme } from '@mui/material';
-import { githubLight } from '@ddietr/codemirror-themes/github-light';
-import { githubDark } from '@ddietr/codemirror-themes/github-dark';
+import { useTheme, type Theme } from '@mui/material';
 import { Validator } from './utils';
 import type { CollectionFullObject } from '@server/types';
 import type { SearchSingleParams } from '../../types';
@@ -34,6 +32,35 @@ export type SearchInputBoxProps = {
 
 let queryTimeout: NodeJS.Timeout;
 
+const createSearchEditorTheme = (theme: Theme) =>
+  EditorView.theme(
+    {
+      '&.cm-editor': {
+        color: theme.palette.text.primary,
+        backgroundColor: theme.palette.background.paper,
+        '&.cm-focused': {
+          outline: 'none',
+        },
+      },
+      '.cm-content': {
+        caretColor: theme.palette.primary.main,
+      },
+      '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
+        backgroundColor:
+          theme.palette.mode === 'light'
+            ? 'rgba(25, 118, 210, 0.18)'
+            : 'rgba(144, 202, 249, 0.28)',
+      },
+      '.cm-line': {
+        color: theme.palette.text.primary,
+      },
+      '.cm-diagnosticText': {
+        color: theme.palette.error.main,
+      },
+    },
+    { dark: theme.palette.mode === 'dark' }
+  );
+
 export default function SearchInputBox(props: SearchInputBoxProps) {
   const theme = useTheme();
   const { t: searchTrans } = useTranslation('search');
@@ -50,7 +77,7 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
   const fieldRef = useRef(field);
   const searchParamsRef = useRef(searchParams);
 
-  const themeCompartment = new Compartment();
+  const themeCompartment = useRef(new Compartment());
 
   // 获取校验器
   const validator = Validator[field.data_type as keyof typeof Validator];
@@ -118,11 +145,6 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
         keymap.of([{ key: 'Tab', run: insertTab }]), // 修复 tab 行为
         indentUnit.of('    '), // 修复 tab 缩进
         EditorView.theme({
-          '&.cm-editor': {
-            '&.cm-focused': {
-              outline: 'none',
-            },
-          },
           '.cm-content': {
             fontSize: '12px',
             fontFamily: 'IBM Plex Mono, monospace',
@@ -132,6 +154,7 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
             display: 'none',
           },
         }),
+        themeCompartment.current.of(createSearchEditorTheme(theme)),
         EditorView.lineWrapping,
         EditorView.updateListener.of(update => {
           if (update.docChanged) {
@@ -234,14 +257,10 @@ export default function SearchInputBox(props: SearchInputBoxProps) {
     // 将暗色模式变更分发给编辑器
     if (editor.current) {
       editor.current.dispatch({
-        effects: themeCompartment.reconfigure(
-          themeCompartment.of(
-            theme.palette.mode === 'light' ? githubLight : githubDark
-          )
-        ),
+        effects: themeCompartment.current.reconfigure(createSearchEditorTheme(theme)),
       });
     }
-  }, [theme.palette.mode]);
+  }, [theme]);
 
   return <SearchInputBoxWrapper ref={editorEl}></SearchInputBoxWrapper>;
 }

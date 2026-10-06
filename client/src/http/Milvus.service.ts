@@ -43,16 +43,4 @@ export class MilvusService extends BaseModel {
     return super.create({ path: `/milvus/usedb`, data });
   }
 
-  static request(data: PlaygroundRequestOptions) {
-    return super.create({ path: `/playground`, data });
-  }
 }
-
-type PlaygroundRequestOptions = {
-  url: string;
-  method?: string;
-  host?: string;
-  headers?: Record<string, string | undefined>;
-  params?: Record<string, string>;
-  body?: Record<string, any>;
-};

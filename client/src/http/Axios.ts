@@ -5,13 +5,9 @@ import { MILVUS_CLIENT_ID } from '@/consts';
 const hostUrl: { [key: string]: string | undefined } = {
   development: ``,
   production: ((window as any)._env_ && (window as any)._env_.HOST_URL) || '',
-  electron: `http://127.0.0.1:3080`,
 };
 
-export const isElectron =
-  (window as any)._env_ && (window as any)._env_.IS_ELECTRON === 'yes';
-
-export const url = hostUrl[isElectron ? 'electron' : import.meta.env.MODE];
+export const url = hostUrl[import.meta.env.MODE];
 
 const axiosInstance = axios.create({
   baseURL: `${url}/api/v1`,

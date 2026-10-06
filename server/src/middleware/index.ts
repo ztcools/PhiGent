@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import morgan from 'morgan';
 import chalk from 'chalk';
-import { MILVUS_CLIENT_ID, HTTP_STATUS_CODE, isElectron } from '../utils';
+import { MILVUS_CLIENT_ID, HTTP_STATUS_CODE } from '../utils';
 import { HttpError } from 'http-errors';
 import HttpErrors from 'http-errors';
 import { clientCache } from '../app';
@@ -76,13 +76,11 @@ export const ErrorMiddleware = (
   next: NextFunction
 ) => {
   let statusCode = err.statusCode || 500;
-  if (!isElectron()) {
-    console.log(
-      chalk.blue.bold(req.method, req.url),
-      chalk.magenta.bold(statusCode),
-      chalk.red.bold(err)
-    );
-  }
+  console.log(
+    chalk.blue.bold(req.method, req.url),
+    chalk.magenta.bold(statusCode),
+    chalk.red.bold(err)
+  );
   // 布尔属性，表示应用是否已为响应发送过 HTTP Header。
   // 在此判断是为了避免在 Header 已发送后再发送响应。
   if (res.headersSent) {

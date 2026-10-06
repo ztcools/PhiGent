@@ -4,7 +4,6 @@ import icons from '@/components/icons/Icons';
 import Databases from '@/pages/databases/Databases';
 import Users from '@/pages/user/UsersAndRoles';
 import System from '@/pages/system/SystemView';
-import Play from '@/pages/play/Play';
 import Overview from '@/pages/home/Home';
 import IndexTree from '@/pages/index-tree/IndexTree';
 import GitLabRepos from '@/pages/gitlab/GitLabRepos';
@@ -18,7 +17,6 @@ export const ROUTE_PATHS = {
   USERS: 'users',
   ROLES: 'roles',
   PRIVILEGE_GROUPS: 'privilege-groups',
-  PLAY: 'play',
   SYSTEM: 'system',
   INDEX_TREE: 'index-tree',
   GITLAB: 'gitlab',
@@ -171,20 +169,6 @@ const otherRoutes: RouteItem[] = [
     },
   },
   {
-    path: ROUTE_PATHS.PLAY,
-    element: Play,
-    showInMenu: true,
-    menuConfig: {
-      icon: icons.code,
-      label: 'play',
-      key: 'play',
-    },
-    routerType: ROUTE_PATHS.PLAY,
-    navConfig: {
-      navTitleKey: 'play',
-    },
-  },
-  {
     path: ROUTE_PATHS.SYSTEM,
     element: System,
     showInMenu: true,
@@ -240,7 +224,7 @@ const otherRoutes: RouteItem[] = [
 
 // 合并所有路由。侧边栏菜单按此顺序渲染（Milvus WebUI 在 getMenuItems 中始终
 // 追加到最后），因此自上而下期望的顺序为：
-// 主页 → 数据库 → GitLab仓库 → 索引树 → 用户和角色 → 系统视图 → play → (Milvus WebUI)
+// 主页 → 数据库 → GitLab仓库 → 索引树 → 用户和角色 → 系统视图 → (Milvus WebUI)
 const routeByPath = (arr: RouteItem[], path: string): RouteItem =>
   arr.find(route => route.path === path) as RouteItem;
 
@@ -251,7 +235,6 @@ export const routes: RouteItem[] = [
   routeByPath(otherRoutes, ROUTE_PATHS.INDEX_TREE),
   ...userRoutes,
   routeByPath(otherRoutes, ROUTE_PATHS.SYSTEM),
-  routeByPath(otherRoutes, ROUTE_PATHS.PLAY),
   // 非菜单路由（仅用于路由）
   routeByPath(otherRoutes, ROUTE_PATHS.CONNECT),
 ];

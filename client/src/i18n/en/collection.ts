@@ -132,7 +132,6 @@ const collectionTrans = {
   searchTab: 'Vector Search',
   dataTab: 'Data',
   previewTab: 'Data Preview',
-  segmentsTab: 'Segments',
   propertiesTab: 'Properties',
   startTip: 'Start Your Data Query',
   exprPlaceHolder: 'Please enter your query expression, eg: id > 0',
@@ -148,21 +147,6 @@ const collectionTrans = {
   // duplicate dialog
   duplicateNameExist: 'A collection with this name already exists.',
   fieldNameExist: 'field name is already exist',
-
-  // segment
-  segments: 'Segments',
-  segPState: 'Persistent Segment State',
-  partitionID: 'Partition ID',
-  segmentID: 'Segment ID',
-  num_rows: 'Row Count',
-  q_nodeIds: 'Query Node IDs',
-  q_index_name: 'Index Name',
-  q_indexID: 'Index ID',
-  q_state: 'Query Segment State',
-  q_mem_size: 'Memory Size',
-  compact: 'Compact',
-  compactDialogInfo: `Compaction is a process that optimizes storage and query performance by organizing segments.  <a href='https://milvus.io/blog/2022-2-21-compact.md' target="_blank">Learn more</a><br /><br />  Please note that this operation may take some time to complete, especially for large datasets. We recommend running compaction during periods of lower system activity or during scheduled maintenance to minimize disruption.
-    `,
 
   // column tooltip
   dynamicSchemaTooltip: `Dynamic schema enables users to insert entities with new fields into a Milvus collection without modifying the existing schema.`,

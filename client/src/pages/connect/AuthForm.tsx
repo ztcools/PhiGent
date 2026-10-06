@@ -24,7 +24,6 @@ import Box from '@mui/material/Box';
 import type { Theme } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { isElectron } from '@/http/Axios';
 
 // 重新加回 Connection 的类型定义
 type Connection = AuthReq & {
@@ -391,9 +390,8 @@ export const AuthForm = () => {
           </Typography>
         </Box>
 
-        {!isElectron &&
-          (authReq.address.toLowerCase().includes('127.0.0.1') ||
-            authReq.address.toLowerCase().includes('localhost')) && (
+        {(authReq.address.toLowerCase().includes('127.0.0.1') ||
+          authReq.address.toLowerCase().includes('localhost')) && (
             <Box
               sx={{
                 display: 'flex',

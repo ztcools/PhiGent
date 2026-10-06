@@ -124,7 +124,6 @@ const collectionTrans = {
   searchTab: '向量搜索',
   dataTab: '数据',
   previewTab: '数据预览',
-  segmentsTab: 'Segment',
   propertiesTab: '属性',
   startTip: '开始你的数据查询',
   exprPlaceHolder: '请输入你的查询表达式，例如 id > 0',
@@ -140,21 +139,6 @@ const collectionTrans = {
   // duplicate dialog
   duplicateNameExist: 'Collection 已经存在。',
   fieldNameExist: '字段名称已存在。',
-
-  // segment
-  segments: 'Segment',
-  segPState: '持久 Segment 状态',
-  partitionID: '分区 ID',
-  segmentID: 'Segment ID',
-  num_rows: '行数',
-  q_nodeIds: '查询节点 IDs',
-  q_index_name: 'Index 名称',
-  q_indexID: 'Index ID',
-  q_state: '查询 Segment 状态',
-  q_mem_size: '内存大小',
-  compact: '压缩',
-  compactDialogInfo:
-    "压缩是通过组织 Segment 来优化存储和查询性能的过程。<a href='https://milvus.io/blog/2022-2-21-compact.md' target='blank'>了解更多</a><br /><br />请注意，这个操作可能需要一些时间来完成，特别是对于大型数据集。建议在系统活动较低的时期或在计划的维护期间运行压缩以最小化干扰。",
 
   // column tooltip
   dynamicSchemaTooltip:

@@ -7,7 +7,6 @@ const navTrans = {
   system: 'System View',
   user: 'User and Role',
   database: 'Database',
-  play: 'Play(beta)',
   indexTree: 'Index Tree',
   gitlab: 'Code Repos',
 };

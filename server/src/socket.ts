@@ -2,7 +2,6 @@
 import { Server, Socket } from 'socket.io';
 import * as http from 'http';
 import chalk from 'chalk';
-import { isElectron } from './utils';
 
 export let io: Server;
 export let clients = new Map<string, Socket>();
@@ -13,9 +12,6 @@ export const logWebSocketRequest = (
   message?: any,
   direction: 'in' | 'out' = 'in'
 ) => {
-  if (isElectron()) {
-    return;
-  }
   const clientId = socket.handshake.query['milvus-client-id'] as string;
   const remoteAddress =
     socket.handshake.address === '::1' ? '127.0.0.1' : socket.handshake.address;
@@ -93,8 +89,6 @@ export const initWebSocket = (server: http.Server) => {
 
   // 处理服务端级别的错误
   io.on('error', (error: Error) => {
-    if (!isElectron()) {
-      console.error(chalk.red(`ws server error: ${error.message}`));
-    }
+    console.error(chalk.red(`ws server error: ${error.message}`));
   });
 };

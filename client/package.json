@@ -6,21 +6,16 @@
   "bugs": "https://github.com/zilliztech/attu/issues",
   "private": false,
   "dependencies": {
-    "@codemirror/autocomplete": "^6.18.4",
     "@codemirror/commands": "^6.6.0",
     "@codemirror/lang-javascript": "^6.2.2",
-    "@codemirror/lang-json": "^6.0.1",
     "@codemirror/language": "6.10.2",
     "@codemirror/lint": "^6.8.0",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.28.6",
     "@date-io/dayjs": "1.x",
-    "@ddietr/codemirror-themes": "^1.4.2",
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@json2csv/plainjs": "^7.0.6",
-    "@lezer/common": "^1.2.3",
-    "@lezer/highlight": "^1.2.1",
     "@mui/icons-material": "^5.17.1",
     "@mui/material": "^5.17.1",
     "@mui/styles": "^5.17.1",
@@ -45,7 +40,6 @@
     "web-vitals": "^1.0.1"
   },
   "devDependencies": {
-    "@lezer/generator": "^1.7.2",
     "@types/codemirror": "^5.60.15",
     "@types/d3": "^7.4.3",
     "@types/file-saver": "^2.0.5",
@@ -66,7 +60,6 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "lezer": "lezer-generator src/pages/play/language/milvus.http.grammar -o  src/pages/play/language/milvus.http.parser.js",
     "format": "prettier --write '**/*.{ts,js,tsx,jsx,css}'"
   },
   "eslintConfig": {

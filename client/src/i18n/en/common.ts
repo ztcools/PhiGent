@@ -47,8 +47,6 @@ const commonTrans = {
     collections: 'Collections',
     field: 'Field',
     fields: 'Fields',
-    segment: 'Segment',
-    segments: 'Segments',
     partition: 'Partition',
     partitions: 'Partitions',
     property: 'Property',
