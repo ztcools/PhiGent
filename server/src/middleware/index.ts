@@ -6,6 +6,7 @@ import {
   HTTP_STATUS_CODE,
   MAX_CLIENT_ID_LENGTH,
   MILVUS_CLIENT_ID,
+  PHIGENT_DATABASE_HEADER,
 } from '../utils';
 import { HttpError } from 'http-errors';
 import HttpErrors from 'http-errors';
@@ -31,7 +32,9 @@ export const ReqHeaderMiddleware = (
   req.clientId = req.headers[MILVUS_CLIENT_ID] as string;
 
   // 合并 Header 中的 database
-  const database = req.headers[ATTU_DATABASE_HEADER] as string;
+  const database =
+    (req.headers[PHIGENT_DATABASE_HEADER] as string) ||
+    (req.headers[ATTU_DATABASE_HEADER] as string);
   if (database) {
     req.db_name = database;
   }

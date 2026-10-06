@@ -88,7 +88,7 @@ export class MilvusService {
         username,
         password,
         ssl,
-        logLevel: process.env.ATTU_LOG_LEVEL || 'info',
+        logLevel: process.env.PHIGENT_LOG_LEVEL || process.env.ATTU_LOG_LEVEL || 'info',
         database: database || this.DEFAULT_DATABASE,
         id: clientId,
         pool: {

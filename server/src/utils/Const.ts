@@ -4,6 +4,7 @@ export const ROW_COUNT = 'row_count';
 // 用于请求 Header
 export const MILVUS_CLIENT_ID = 'milvus-client-id';
 export const ATTU_DATABASE_HEADER = 'x-attu-database';
+export const PHIGENT_DATABASE_HEADER = 'x-phigent-database';
 export const MAX_CLIENT_ID_LENGTH = 128;
 
 // 用于 LRU 缓存

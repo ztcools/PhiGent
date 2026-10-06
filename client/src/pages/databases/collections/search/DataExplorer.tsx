@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import * as d3 from 'd3';
+import { drag } from 'd3-drag';
+import { forceCenter, forceLink, forceManyBody, forceSimulation, type SimulationNodeDatum } from 'd3-force';
+import { scaleOrdinal } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
+import { select } from 'd3-selection';
+import { zoom as d3Zoom } from 'd3-zoom';
 import { useTheme } from '@mui/material';
 import { cloneObj } from '@/utils';
 import { DataExplorerRoot, SelectedNodes } from './StyledComponents';
@@ -25,7 +30,7 @@ function linkExists(links: any[], source: string, target: string) {
 }
 
 // 节点颜色使用的 d3 颜色比例尺
-const color = d3.scaleOrdinal(d3.schemeCategory10);
+const color = scaleOrdinal(schemeCategory10);
 
 // 把 Milvus 搜索结果格式化为图数据
 export const formatMilvusData = (
@@ -135,15 +140,14 @@ const DataExplorer = ({
     // 状态
     let _isDragging = false;
 
-    const svg = d3.select(svgRef.current);
-    const g = d3.select(gRef.current);
+    const svg = select(svgRef.current);
+    const g = select(gRef.current);
 
     // 渲染新数据前先清除之前的节点和连线
     g.selectAll('*').remove(); // 这会移除 <g> 元素的所有子元素
 
     // 定义缩放行为
-    const zoom = d3
-      .zoom()
+    const zoom = d3Zoom()
       .scaleExtent([0.1, 10]) // 限制缩放比例
       .on('zoom', event => {
         // 把变换应用到 g 元素（图所在的位置）
@@ -157,12 +161,10 @@ const DataExplorer = ({
     const links = cloneObj(data.links) as GraphLink[];
     const nodes = cloneObj(data.nodes) as GraphNode[];
 
-    const simulation = d3
-      .forceSimulation(nodes as d3.SimulationNodeDatum[])
+    const simulation = forceSimulation(nodes as SimulationNodeDatum[])
       .force(
         'link',
-        d3
-          .forceLink(links)
+        forceLink(links)
           .id((d: any) => d.id)
           .distance(d => {
             const maxDistance = 150;
@@ -170,8 +172,8 @@ const DataExplorer = ({
             return maxDistance - d.score * (maxDistance - minDistance);
           })
       )
-      .force('charge', d3.forceManyBody().strength(-200))
-      .force('center', d3.forceCenter(width / 3, height / 3));
+      .force('charge', forceManyBody().strength(-200))
+      .force('center', forceCenter(width / 3, height / 3));
 
     // 绘制连线
     const link = g
@@ -236,7 +238,7 @@ const DataExplorer = ({
         }
 
         // 为选中的节点加上外圈，取消选中时移除
-        d3.select(this)
+        select(this)
           .attr('r', isAlreadySelected ? 8 : 16)
           .attr('stroke', isAlreadySelected ? 'transparent' : 'black')
           .attr('stroke-width', isAlreadySelected ? 0 : 2);
@@ -250,8 +252,7 @@ const DataExplorer = ({
         setHoveredNode(null);
       })
       .call(
-        d3
-          .drag<SVGCircleElement, any>()
+        drag<SVGCircleElement, any>()
           .on('start', (event, d) => {
             _isDragging = true;
             if (!event.active) simulation.alphaTarget(0.3).restart();

@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import * as d3 from 'd3';
+import { hierarchy, tree } from 'd3-hierarchy';
+import { select } from 'd3-selection';
+import { zoom, zoomIdentity } from 'd3-zoom';
 import { useTranslation } from 'react-i18next';
 import { useTheme, Box } from '@mui/material';
 import CustomButton from '@/components/customButton/CustomButton';
@@ -135,12 +137,11 @@ const D3PrivilegeTree: React.FC<Props> = ({
     const marginLeft = role.length * fontSize; // 根据 role 名称长度调整左边距
 
     // 清空 SVG
-    d3.select(svgRef.current).selectAll('*').remove();
+    select(svgRef.current).selectAll('*').remove();
 
     // 创建层级结构并布局
-    const root = d3.hierarchy<TreeNode>(treeNode);
-    const treeLayout = d3
-      .tree<TreeNode>()
+    const root = hierarchy<TreeNode>(treeNode);
+    const treeLayout = tree<TreeNode>()
       .size([height - margin.top - margin.bottom, svgWidth / 2])
       .separation((a: any, b: any) => {
         return a.parent === b.parent ? 3 : 4;
@@ -160,7 +161,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
     });
 
     // 创建高度扩展后的 SVG 容器
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
 
     // 添加一个可缩放的容器分组
     const g = svg.append('g').attr('transform', `translate(0, ${margin.top})`); // 添加上边距
@@ -245,22 +246,21 @@ const D3PrivilegeTree: React.FC<Props> = ({
       (svgHeight - treeHeight * scale) / 2 - x0 * scale + margin.top;
 
     // 添加缩放功能
-    const zoom: any = d3
-      .zoom()
+    const zoomBehavior: any = zoom()
       .scaleExtent([scale, 4]) // 最小缩放比例设为可容纳整棵树
       .on('zoom', event => {
         g.attr('transform', event.transform);
       });
 
-    svg.call(zoom); // 为 SVG 应用缩放
+    svg.call(zoomBehavior); // 为 SVG 应用缩放
 
     // 应用初始变换以展示整棵树
     svg
       .transition()
       .duration(250)
       .call(
-        zoom.transform,
-        d3.zoomIdentity.translate(centerX, centerY).scale(scale)
+        zoomBehavior.transform,
+        zoomIdentity.translate(centerX, centerY).scale(scale)
       );
   }, [JSON.stringify({ privileges, margin, groupPrivileges, role })]);
 
@@ -274,12 +274,12 @@ const D3PrivilegeTree: React.FC<Props> = ({
       };
 
       // 更新连线颜色
-      d3.select(svgRef.current)
+      select(svgRef.current)
         .selectAll('.link')
         .attr('stroke', (d: any) => colorMap[d.source.data.type!]);
 
       // 更新节点颜色
-      d3.select(svgRef.current)
+      select(svgRef.current)
         .selectAll('.node circle')
         .attr('stroke', theme.palette.primary.main)
         .attr('fill', (d: any, index) =>
@@ -289,7 +289,7 @@ const D3PrivilegeTree: React.FC<Props> = ({
         );
 
       // 更新文字颜色
-      d3.select(svgRef.current)
+      select(svgRef.current)
         .selectAll('.node text')
         .attr('fill', (d: any) =>
           groupPrivileges.has(d.data.name)

@@ -36,7 +36,14 @@
     "react-router-dom": "^6.23.1",
     "react-syntax-highlighter": "^15.6.1",
     "socket.io-client": "^4.8.1",
-    "web-vitals": "^5.0.3"
+    "web-vitals": "^5.0.3",
+    "d3-drag": "^3.0.0",
+    "d3-force": "^3.0.0",
+    "d3-hierarchy": "^3.0.0",
+    "d3-scale": "^3.0.0",
+    "d3-scale-chromatic": "^3.0.0",
+    "d3-selection": "^3.0.0",
+    "d3-zoom": "^3.0.0"
   },
   "devDependencies": {
     "@types/codemirror": "^5.60.15",

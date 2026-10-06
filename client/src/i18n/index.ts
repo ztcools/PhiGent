@@ -78,6 +78,18 @@ export const resources = {
   },
 };
 
+const PHIGENT_LANG_KEY = 'phigent.ui.lang';
+const ATTU_LANG_KEY = 'attu.ui.lang';
+
+try {
+  const legacyLang = localStorage.getItem(ATTU_LANG_KEY);
+  if (legacyLang && !localStorage.getItem(PHIGENT_LANG_KEY)) {
+    localStorage.setItem(PHIGENT_LANG_KEY, legacyLang);
+  }
+} catch (e) {
+  // localStorage 不可用时使用语言探测器的其它来源。
+}
+
 // 翻译资源
 // （建议移到 JSON 文件中再导入）
 i18n
@@ -93,7 +105,7 @@ i18n
     },
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag', 'path', 'subdomain'],
-      lookupLocalStorage: 'attu.ui.lang',
+      lookupLocalStorage: PHIGENT_LANG_KEY,
       lookupFromPathIndex: 0,
       lookupFromSubdomainIndex: 0,
       caches: ['localStorage', 'cookie'],

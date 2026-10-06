@@ -1,7 +1,11 @@
 import React, { useContext, useEffect } from 'react';
 import axiosInstance from '@/http/Axios';
 import { rootContext, authContext, dataContext } from '@/context';
-import { HTTP_STATUS_CODE } from '@server/utils/Const';
+import {
+  ATTU_DATABASE_HEADER,
+  HTTP_STATUS_CODE,
+  PHIGENT_DATABASE_HEADER,
+} from '@server/utils/Const';
 
 let axiosResInterceptor: number | null = null;
 
@@ -14,7 +18,8 @@ const GlobalEffect = ({ children }: { children: React.ReactNode }) => {
     // 为所有 axios 请求添加 database Header
     const requestInterceptor = axiosInstance.interceptors.request.use(
       config => {
-        config.headers['x-attu-database'] = database;
+        config.headers[PHIGENT_DATABASE_HEADER] = database;
+        config.headers[ATTU_DATABASE_HEADER] = database;
         return config;
       },
       error => Promise.reject(error)

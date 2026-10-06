@@ -19,7 +19,7 @@ export const logWebSocketRequest = (
   const timestamp = new Date().toLocaleTimeString();
   const directionLabel = direction === 'in' ? '←' : '→';
   const mes =
-    process.env.ATTU_LOG_LEVEL === 'debug'
+    (process.env.PHIGENT_LOG_LEVEL || process.env.ATTU_LOG_LEVEL) === 'debug'
       ? JSON.stringify(message)
       : message
         ? JSON.stringify(message).length
