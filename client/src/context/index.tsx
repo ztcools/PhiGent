@@ -5,4 +5,5 @@ export * from './Root';
 export * from './Types';
 export * from './Data';
 export * from './ColorMode';
+export * from './SessionProvider';
 

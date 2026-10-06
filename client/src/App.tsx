@@ -3,9 +3,7 @@ import Router from './router/Router';
 import {
   RootProvider,
   NavProvider,
-  AuthProvider,
-  DataProvider,
-  SystemProvider,
+  SessionProvider,
   ColorModeProvider,
 } from './context';
 
@@ -13,17 +11,13 @@ function App() {
   return (
     <StyledEngineProvider injectFirst>
       <ColorModeProvider>
-        <AuthProvider>
-          <DataProvider>
-            <RootProvider>
-              <SystemProvider>
-                <NavProvider>
-                  <Router></Router>
-                </NavProvider>
-              </SystemProvider>
-            </RootProvider>
-          </DataProvider>
-        </AuthProvider>
+        <SessionProvider>
+          <RootProvider>
+            <NavProvider>
+              <Router></Router>
+            </NavProvider>
+          </RootProvider>
+        </SessionProvider>
       </ColorModeProvider>
     </StyledEngineProvider>
   );
