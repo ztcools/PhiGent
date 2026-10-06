@@ -68,7 +68,7 @@ export const DataProvider = (props: { children: React.ReactNode }) => {
     } else {
       setCollections([]);
     }
-  }, [connected, database]);
+  }, [connected, database, fetchCollections, setCollections]);
 
   return (
     <Provider

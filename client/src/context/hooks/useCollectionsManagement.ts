@@ -19,6 +19,7 @@ export function useCollectionsManagement(database: string) {
   const [isBatchRefreshing, setIsBatchRefreshing] = useState(false);
   const requestIdRef = useRef(0);
   const databaseRef = useRef(database);
+  const collectionsRef = useRef(collections);
 
   const detectLoadingIndexing = useCallback(
     (collections: CollectionObject[]) => {
@@ -128,6 +129,10 @@ export function useCollectionsManagement(database: string) {
     }
   }, [isAuth]);
 
+  useEffect(() => {
+    collectionsRef.current = collections;
+  }, [collections]);
+
   // database 变化时更新 ref
   useEffect(() => {
     databaseRef.current = database;
@@ -136,7 +141,7 @@ export function useCollectionsManagement(database: string) {
     clearRefreshCollectionsDebounceMapRef();
   }, [database]);
 
-  const fetchCollections = async () => {
+  const fetchCollections = useCallback(async () => {
     const currentRequestId = ++requestIdRef.current;
     try {
       setLoading(true);
@@ -157,7 +162,7 @@ export function useCollectionsManagement(database: string) {
       }
       throw error;
     }
-  };
+  }, [detectLoadingIndexing]);
 
   const fetchCollection = useCallback(
     async (name: string, drop?: boolean) => {
@@ -182,7 +187,7 @@ export function useCollectionsManagement(database: string) {
         refreshCollectionsDebounceMapRef.current.set(key, ref);
       }
       const filteredCollectionNames = collectionNames.filter(name => {
-        const collection = collections.find(v => v.collection_name === name);
+        const collection = collectionsRef.current.find(v => v.collection_name === name);
         return collection && !collection.schema && !ref!.pending.has(name);
       });
       ref.names = filteredCollectionNames;
@@ -209,7 +214,7 @@ export function useCollectionsManagement(database: string) {
             const batchSize = getRandomBatchSize();
             let batch = ref!.names.slice(0, batchSize);
             batch = batch.filter(name => {
-              const collection = collections.find(
+              const collection = collectionsRef.current.find(
                 v => v.collection_name === name
               );
               return collection && !collection.schema;
@@ -241,7 +246,7 @@ export function useCollectionsManagement(database: string) {
         }
       }, 200);
     },
-    [collections, updateCollections, isAuth] // 已移除 database 依赖
+    [updateCollections, isAuth] // 已移除 database/collections 依赖
   );
 
   return {

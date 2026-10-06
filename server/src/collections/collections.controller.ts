@@ -684,23 +684,20 @@ export class CollectionController {
       for (const field of data) {
         if (typeof field.rawMmapEnabled !== 'undefined') {
           promises.push(
-            await this.collectionsService.alterCollectionFieldProperties(
-              req.clientId,
-              {
-                collection_name: name,
-                field_name: field.fieldName,
-                properties: {
-                  'mmap.enabled': field.rawMmapEnabled,
-                },
-              }
-            )
+            this.collectionsService.alterCollectionFieldProperties(req.clientId, {
+              collection_name: name,
+              field_name: field.fieldName,
+              properties: {
+                'mmap.enabled': field.rawMmapEnabled,
+              },
+            })
           );
         }
         if (typeof field.indexMmapEnabled !== 'undefined') {
           promises.push(
             this.collectionsService.alterIndex(req.clientId, {
               collection_name: name,
-              index_name: field.fieldName,
+              index_name: field.indexName || field.fieldName,
               params: {
                 'mmap.enabled': field.indexMmapEnabled,
               },
@@ -710,10 +707,10 @@ export class CollectionController {
       }
       const results = await Promise.all(promises);
 
-      // 遍历返回结果，只要有一个不成功就直接返回该结果
+      // 遍历返回结果，只要有一个不成功就发送该结果并结束请求
       for (const result of results) {
         if (result.error_code !== ErrorCode.SUCCESS) {
-          return result;
+          return res.send(result);
         }
       }
       res.send(results[0]);

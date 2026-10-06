@@ -106,8 +106,12 @@ export class MilvusController {
     }
   }
 
-  closeConnection(req: Request, res: Response, next: NextFunction) {
-    const result = this.milvusService.closeConnection(req.clientId);
-    res.send({ result });
+  async closeConnection(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await this.milvusService.closeConnection(req.clientId);
+      res.send({ result });
+    } catch (error) {
+      next(error);
+    }
   }
 }

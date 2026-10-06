@@ -80,18 +80,18 @@ export const RootProvider = (props: { children: React.ReactNode }) => {
         horizontal: 'center',
       });
       // 隐藏 dialog
-      setDialog({
-        ...dialog,
+      setDialog(prev => ({
+        ...prev,
         open: false,
-      });
-      setDialog2({
-        ...dialog2,
+      }));
+      setDialog2(prev => ({
+        ...prev,
         open: false,
-      });
-      setDrawer({
-        ...drawer,
+      }));
+      setDrawer(prev => ({
+        ...prev,
         open: false,
-      });
+      }));
     }
   }, [isAuth, setSnackBar, setDialog, setDialog2, setDrawer]);
 

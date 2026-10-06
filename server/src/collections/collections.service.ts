@@ -293,7 +293,14 @@ export class CollectionsService {
         count = collectionStatisticsRes.data.row_count;
       }
     } catch (error) {
-      console.log('ignore count error');
+      const message = `${error?.details || error?.message || error}`;
+      const canFallbackToZero = /not loaded|not load|collection not loaded/i.test(
+        message
+      );
+      if (!canFallbackToZero) {
+        throw error;
+      }
+      console.warn('Count is unavailable because collection is not loaded', data);
     }
 
     return { rowCount: Number(count) } as CountObject;
@@ -664,11 +671,11 @@ export class CollectionsService {
       for (const item of res.data) {
         const { id, name } = item;
 
-        const count = this.count(clientId, { collection_name: name, db_name });
+        const count = await this.count(clientId, { collection_name: name, db_name });
         data.push({
           id,
           collection_name: name,
-          rowCount: count,
+          rowCount: count.rowCount,
           ...item,
         });
       }
@@ -767,11 +774,6 @@ export class CollectionsService {
     return res;
   }
 
-  async hasCollection(clientId: string, data: HasCollectionReq) {
-    const { milvusClient } = clientCache.get(clientId);
-    const res = await milvusClient.hasCollection(data);
-    return res;
-  }
 
   async duplicateCollection(clientId: string, data: RenameCollectionReq) {
     const collection = await this.describeCollection(clientId, {

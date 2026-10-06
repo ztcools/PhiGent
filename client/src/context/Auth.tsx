@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useMemo } from 'react';
+import { createContext, useCallback, useEffect, useState, useMemo } from 'react';
 import { AuthContextType } from './Types';
 import { MilvusService } from '@/http';
 import {
@@ -33,68 +33,93 @@ export const authContext = createContext<AuthContextType>({
 });
 
 const { Provider } = authContext;
-export const AuthProvider = (props: { children: React.ReactNode }) => {
-  // 从 localStorage 读取数据
-  let localClientId = '';
-  let localAuthReq: AuthReq = {
-    username: '',
-    password: '',
-    address: MILVUS_URL,
-    token: '',
-    database: MILVUS_DATABASE,
-    checkHealth: true,
-    clientId: '',
-    ssl: false,
-  };
+
+const getDefaultAuthReq = (): AuthReq => ({
+  username: '',
+  password: '',
+  address: MILVUS_URL,
+  token: '',
+  database: MILVUS_DATABASE,
+  checkHealth: true,
+  clientId: '',
+  ssl: false,
+});
+
+const loadStoredAuth = () => {
+  let storedClientId = '';
+  let storedAuthReq = getDefaultAuthReq();
+
   try {
-    localClientId = window.localStorage.getItem(MILVUS_CLIENT_ID) || '';
-    const storedAuthReq = window.localStorage.getItem(ATTU_AUTH_REQ);
-    if (storedAuthReq) {
-      localAuthReq = { ...localAuthReq, ...JSON.parse(storedAuthReq) };
+    storedClientId = window.localStorage.getItem(MILVUS_CLIENT_ID) || '';
+    const rawAuthReq = window.localStorage.getItem(ATTU_AUTH_REQ);
+    if (rawAuthReq) {
+      storedAuthReq = { ...storedAuthReq, ...JSON.parse(rawAuthReq) };
     } else {
-      localAuthReq.clientId = localClientId;
+      storedAuthReq.clientId = storedClientId;
     }
   } catch (e) {
-    // JSON 解析失败时回退到默认值
+    // localStorage 不可用或 JSON 解析失败时回退到默认值
   }
 
+  return { storedClientId, storedAuthReq };
+};
+
+export const AuthProvider = (props: { children: React.ReactNode }) => {
+  const [initialAuth] = useState(loadStoredAuth);
+
   // 状态
-  const [authReq, setAuthReq] = useState<AuthReq>(localAuthReq);
-  const [clientId, setClientId] = useState<string>(localClientId);
+  const [authReq, setAuthReq] = useState<AuthReq>(initialAuth.storedAuthReq);
+  const [clientId, setClientId] = useState<string>(initialAuth.storedClientId);
 
   // authReq 变化时更新 localStorage
   useEffect(() => {
-    window.localStorage.setItem(
-      ATTU_AUTH_REQ,
-      JSON.stringify({ ...authReq, password: '', token: '' })
-    );
+    try {
+      window.localStorage.setItem(
+        ATTU_AUTH_REQ,
+        JSON.stringify({ ...authReq, password: '', token: '' })
+      );
+    } catch (e) {
+      // localStorage 不可用时仍允许页面继续运行。
+    }
     document.title = authReq.address ? `${authReq.address} - PhiGent` : 'PhiGent';
   }, [authReq]);
 
   // 登录 API
-  const login = async (params: AuthReq) => {
+  const login = useCallback(async (params: AuthReq) => {
     params.clientId = Math.random().toString(36).substring(7);
     // clientId 只设置一次
-    window.localStorage.setItem(MILVUS_CLIENT_ID, params.clientId);
+    try {
+      window.localStorage.setItem(MILVUS_CLIENT_ID, params.clientId);
+    } catch (e) {
+      // localStorage 不可用时仍继续发起连接。
+    }
     const res = await MilvusService.connect(params);
     setAuthReq({ ...params, database: res.database });
     setClientId(res.clientId);
     // clientId 变化时同步更新 localStorage
     if (res.clientId !== params.clientId) {
-      window.localStorage.setItem(MILVUS_CLIENT_ID, res.clientId);
+      try {
+        window.localStorage.setItem(MILVUS_CLIENT_ID, res.clientId);
+      } catch (e) {
+        // localStorage 不可用时仍保留内存中的 clientId。
+      }
     }
     return res;
-  };
+  }, []);
 
   // 登出 API
-  const logout = async (pass?: boolean) => {
+  const logout = useCallback(async (pass?: boolean) => {
     if (!pass) {
       await MilvusService.closeConnection();
     }
     setClientId('');
-    window.localStorage.removeItem(MILVUS_CLIENT_ID);
-    window.localStorage.removeItem(ATTU_AUTH_REQ);
-  };
+    try {
+      window.localStorage.removeItem(MILVUS_CLIENT_ID);
+      window.localStorage.removeItem(ATTU_AUTH_REQ);
+    } catch (e) {
+      // localStorage 不可用时忽略清理失败。
+    }
+  }, []);
 
   // 用 useMemo 缓存计算值
   const isManaged = useMemo(

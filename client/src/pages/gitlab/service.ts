@@ -64,7 +64,7 @@ export interface GitIndexStatus {
 const base = (): string => {
   const env = (window as any)._env_ || {};
   // GIT_INDEX_HOST 允许部署时把前端指向远程 git-index-service
-  // （例如 http://10.50.4.149:8795），而不是假定它与页面同主机。
+  // （例如 http://git-index-service:8795），而不是假定它与页面同主机。
   // 同主机部署时回退为同 hostname:GIT_INDEX_PORT。
   if (env.GIT_INDEX_HOST) return String(env.GIT_INDEX_HOST).replace(/\/$/, '');
   const port = env.GIT_INDEX_PORT || '8795';

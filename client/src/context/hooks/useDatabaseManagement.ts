@@ -4,7 +4,7 @@ import { authContext } from '@/context';
 import type { DatabaseObject } from '@server/types';
 
 export const useDatabaseManagement = () => {
-  const { authReq, isAuth, logout, setAuthReq } = useContext(authContext);
+  const { authReq, isAuth, setAuthReq } = useContext(authContext);
 
   const [databases, setDatabases] = useState<DatabaseObject[]>([]);
   const [loadingDatabases, setLoadingDatabases] = useState(true);
@@ -32,7 +32,7 @@ export const useDatabaseManagement = () => {
         updateLoading && setLoadingDatabases(false);
       }
     },
-    [logout]
+    []
   );
 
   // 认证后获取初始 Database 列表的 Effect
@@ -51,9 +51,11 @@ export const useDatabaseManagement = () => {
   useEffect(() => {
     // 仅当 database 与 auth context 中的值确实不同时才更新
     if (authReq.database !== database && isAuth) {
-      setAuthReq({ ...authReq, database });
+      setAuthReq(prev =>
+        prev.database === database ? prev : { ...prev, database }
+      );
     }
-  }, [isAuth, database, authReq, setAuthReq]);
+  }, [isAuth, database, authReq.database, setAuthReq]);
 
   return {
     databases,

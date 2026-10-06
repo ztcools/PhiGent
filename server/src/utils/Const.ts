@@ -3,9 +3,12 @@ export const ROW_COUNT = 'row_count';
 
 // 用于请求 Header
 export const MILVUS_CLIENT_ID = 'milvus-client-id';
+export const ATTU_DATABASE_HEADER = 'x-attu-database';
+export const MAX_CLIENT_ID_LENGTH = 128;
 
 // 用于 LRU 缓存
 export const CLIENT_TTL = 1000 * 60 * 60 * 24;
+export const CLIENT_CACHE_MAX = 50;
 export const INDEX_TTL = 1000 * 60 * 60;
 
 export enum WS_EVENTS {

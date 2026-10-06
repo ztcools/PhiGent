@@ -23,14 +23,27 @@ export interface CollectionDataProps {
 }
 
 const CollectionData = (props: CollectionDataProps) => {
-  // Props 参数
-  const { queryState, setQueryState } = props;
+  const { queryState } = props;
   const collection = queryState && queryState.collection;
 
   // Collection 不存在，或 Collection 完整对象尚未就绪
   if (!collection || !collection.consistency_level) {
     return <StatusIcon type={LoadingType.CREATING} />;
   }
+
+  return (
+    <CollectionDataInner
+      {...props}
+      collection={collection as CollectionFullObject}
+    />
+  );
+};
+
+const CollectionDataInner = (
+  props: CollectionDataProps & { collection: CollectionFullObject }
+) => {
+  // Props 参数
+  const { queryState, setQueryState, collection } = props;
 
   // UI 状态
   const [tableLoading, setTableLoading] = useState<boolean>(false);

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import * as http from 'http';
 import * as fs from 'fs';
 import { LRUCache } from 'lru-cache';
@@ -11,7 +12,7 @@ import { router as connectRouter } from './milvus';
 import { router as collectionsRouter } from './collections';
 import { router as databasesRouter } from './database';
 import { router as partitionsRouter } from './partitions';
-import { router as cronsRouter } from './crons';
+import { cronsManager, router as cronsRouter } from './crons';
 import { router as userRouter } from './users';
 import {
   TransformResMiddleware,
@@ -19,7 +20,7 @@ import {
   ErrorMiddleware,
   ReqHeaderMiddleware,
 } from './middleware';
-import { CLIENT_TTL, SimpleQueue } from './utils';
+import { CLIENT_CACHE_MAX, CLIENT_TTL } from './utils';
 import { getIp } from './utils/Network';
 import { MilvusClient } from './types';
 import { initWebSocket } from './socket';
@@ -36,11 +37,17 @@ export const clientCache = new LRUCache<
     milvusClient: MilvusClient;
     address: string;
     database: string;
-    collectionsQueue: SimpleQueue<string>;
   }
 >({
+  max: CLIENT_CACHE_MAX,
   ttl: CLIENT_TTL,
   ttlAutopurge: true,
+  dispose: value => {
+    cronsManager.deleteCronJob(value.milvusClient.clientId);
+    void value.milvusClient.closeConnection().catch(error => {
+      console.warn('Failed to close expired Milvus client', error);
+    });
+  },
 });
 
 // 初始化 express 路由
@@ -66,15 +73,35 @@ app.use(cors());
 // 启用 helmet https://github.com/helmetjs/helmet
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", 'data:', 'blob:'],
+        "connect-src": ["'self'", 'http:', 'https:', 'ws:', 'wss:'],
+      },
+    },
     // HTTP(非 HTTPS)内网部署下 COOP 头会被浏览器忽略并告警,直接关闭。
     crossOriginOpenerPolicy: false,
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: false,
   })
 );
-// 限制 JSON 请求体大小
-app.use(express.json({ limit: '256MB' }));
+const connectRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/v1/milvus/connect', connectRateLimit);
+// 大数据写入接口单独放宽 JSON 请求体大小。
+app.use('/api/v1/collections/:name/insert', express.json({ limit: '256MB' }));
+app.use('/api/v1/collections/:name/upsert', express.json({ limit: '256MB' }));
+app.use('/api/v1/collections/:name/importSample', express.json({ limit: '256MB' }));
+// 默认限制 JSON 请求体大小，降低普通接口被大请求打满内存的风险。
+app.use(express.json({ limit: '5MB' }));
 // 响应格式转换拦截器
 app.use(TransformResMiddleware);
 // 日志拦截器

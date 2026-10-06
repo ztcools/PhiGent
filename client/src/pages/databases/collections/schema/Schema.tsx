@@ -1,5 +1,5 @@
 import { Typography, Tooltip, Box } from '@mui/material';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AttuGrid from '@/components/grid/Grid';
 import { ColDefinitionsType } from '@/components/grid/Types';
@@ -59,10 +59,12 @@ const Overview = () => {
     c => c.collection_name === collectionName
   );
 
-  // 若 Collection Schema 尚未加载则拉取
-  if (collection && !collection.schema) {
-    fetchCollection(collectionName);
-  }
+  // 若 Collection Schema 尚未加载则拉取。副作用必须放在 useEffect 中，避免 render 时发请求。
+  useEffect(() => {
+    if (collection && !collection.schema) {
+      fetchCollection(collectionName);
+    }
+  }, [collection, collectionName, fetchCollection]);
 
   // 获取 Field 列表
   const fields = collection?.schema?.fields || [];

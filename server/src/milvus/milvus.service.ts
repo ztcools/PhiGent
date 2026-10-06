@@ -5,11 +5,13 @@ import {
   ClientConfig,
   CONNECT_STATUS,
 } from '@zilliz/milvus2-sdk-node';
-import { DEFAULT_MILVUS_PORT, SimpleQueue, HTTP_STATUS_CODE } from '../utils';
+import { DEFAULT_MILVUS_PORT, HTTP_STATUS_CODE } from '../utils';
 import { clientCache } from '../app';
 import { AuthReq, AuthObject } from '../types';
 import { cronsManager } from '../crons';
 import HttpErrors from 'http-errors';
+
+const connectingClients = new Map<string, Promise<AuthObject>>();
 
 export class MilvusService {
   private DEFAULT_DATABASE = 'default';
@@ -19,12 +21,26 @@ export class MilvusService {
   }
 
   static formatAddress(address: string) {
-    // 去掉地址中的 http 前缀
-    const ip = address.replace(/(http):\/\//, '');
-    return ip.includes(':') ? ip : `${ip}:${DEFAULT_MILVUS_PORT}`;
+    // 支持用户输入 http/https 前缀，Milvus SDK 只需要 host:port。
+    const host = address.trim().replace(/^https?:\/\//i, '');
+    const hasPort = /:\d+$/.test(host);
+    return hasPort ? host : `${host}:${DEFAULT_MILVUS_PORT}`;
   }
 
   async connectMilvus(data: AuthReq): Promise<AuthObject> {
+    const existingConnect = connectingClients.get(data.clientId);
+    if (existingConnect) {
+      return existingConnect;
+    }
+
+    const connectPromise = this.doConnectMilvus(data).finally(() => {
+      connectingClients.delete(data.clientId);
+    });
+    connectingClients.set(data.clientId, connectPromise);
+    return connectPromise;
+  }
+
+  private async doConnectMilvus(data: AuthReq): Promise<AuthObject> {
     // 从 data 中解构出连接所需的信息
     const {
       address,
@@ -128,7 +144,6 @@ export class MilvusService {
         milvusClient,
         address,
         database: db,
-        collectionsQueue: new SimpleQueue<string>(),
       });
 
       // 测试 ListDatabases 权限
@@ -167,7 +182,7 @@ export class MilvusService {
   async getMetrics(clientId: string): Promise<GetMetricsResponse> {
     const { milvusClient } = clientCache.get(clientId);
 
-    const res = milvusClient.getMetric({
+    const res = await milvusClient.getMetric({
       request: { metric_type: 'system_info' },
     });
     return res;
@@ -196,8 +211,8 @@ export class MilvusService {
     const currentDatabase = cache.database;
 
     if (currentDatabase !== db) {
-      // 切换 Database
-      const res = milvusClient.use({
+      // 切换 Database，只有 SDK 调用成功后才更新本地缓存。
+      const res = await milvusClient.use({
         db_name: db,
       });
 

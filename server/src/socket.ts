@@ -2,6 +2,7 @@
 import { Server, Socket } from 'socket.io';
 import * as http from 'http';
 import chalk from 'chalk';
+import { cronsManager } from './crons';
 
 export let io: Server;
 export let clients = new Map<string, Socket>();
@@ -62,6 +63,7 @@ export const initWebSocket = (server: http.Server) => {
         // 记录断开连接事件
         logWebSocketRequest(socket, 'DISCONNECT');
         clients.delete(clientId);
+        cronsManager.deleteCronJob(clientId);
       });
 
       socket.on('error', (error: Error) => {

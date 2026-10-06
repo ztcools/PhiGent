@@ -81,17 +81,6 @@ export type SystemContextType = {
   data?: any;
 };
 
-export type PrometheusContextType = {
-  withPrometheus: boolean;
-  setWithPrometheus: Dispatch<SetStateAction<boolean>>;
-  isPrometheusReady: boolean;
-  prometheusAddress: string;
-  prometheusInstance: string;
-  prometheusNamespace: string;
-  setPrometheusAddress: Dispatch<SetStateAction<string>>;
-  setPrometheusInstance: Dispatch<SetStateAction<string>>;
-  setPrometheusNamespace: Dispatch<SetStateAction<string>>;
-};
 
 export type NavContextType = {
   navInfo: NavInfo;

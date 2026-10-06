@@ -20,7 +20,6 @@ export const ROUTE_PATHS = {
   SYSTEM: 'system',
   INDEX_TREE: 'index-tree',
   GITLAB: 'gitlab',
-  CONNECT: 'connect',
 } as const;
 
 export type RoutePath = (typeof ROUTE_PATHS)[keyof typeof ROUTE_PATHS];
@@ -213,13 +212,6 @@ const otherRoutes: RouteItem[] = [
     },
     showWhenNotManaged: true,
   },
-  {
-    path: ROUTE_PATHS.CONNECT,
-    element: () => null,
-    showInMenu: false,
-    requiresAuth: false,
-    routerType: ROUTE_PATHS.HOME,
-  },
 ];
 
 // 合并所有路由。侧边栏菜单按此顺序渲染（Milvus WebUI 在 getMenuItems 中始终
@@ -235,8 +227,6 @@ export const routes: RouteItem[] = [
   routeByPath(otherRoutes, ROUTE_PATHS.INDEX_TREE),
   ...userRoutes,
   routeByPath(otherRoutes, ROUTE_PATHS.SYSTEM),
-  // 非菜单路由（仅用于路由）
-  routeByPath(otherRoutes, ROUTE_PATHS.CONNECT),
 ];
 
 // 将导航配置与默认值合并的辅助函数

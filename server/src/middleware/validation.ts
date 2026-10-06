@@ -12,28 +12,36 @@ import HttpException from '../exception/HttpException';
  * @param skipMissingProperties
  * @returns
  */
+const flattenValidationErrors = (errors: ValidationError[]): string[] => {
+  return errors.flatMap(error => {
+    const messages = Object.values(error.constraints || {});
+    const childMessages = error.children?.length
+      ? flattenValidationErrors(error.children)
+      : [];
+    return [...messages, ...childMessages];
+  });
+};
+
 export const dtoValidationMiddleware = (
   type: any,
   skipMissingProperties = false
 ): RequestHandler => {
-  return (req, res, next) => {
-    const dtoObj = plainToInstance(type, req.body);
-    validate(dtoObj, { skipMissingProperties }).then(
-      (errors: ValidationError[]) => {
-        if (errors.length > 0) {
-          const dtoErrors = errors
-            .map((error: ValidationError) =>
-              (Object as any).values(error.constraints)
-            )
-            .join(', ');
-          next(new HttpException(400, dtoErrors));
-        } else {
-          // 清洗对象并调用下一个中间件
-          sanitize(dtoObj);
-          req.body = dtoObj;
-          next();
-        }
+  return async (req, res, next) => {
+    try {
+      const dtoObj = plainToInstance(type, req.body);
+      const errors = await validate(dtoObj, { skipMissingProperties });
+
+      if (errors.length > 0) {
+        const dtoErrors = flattenValidationErrors(errors).join(', ');
+        return next(new HttpException(400, dtoErrors));
       }
-    );
+
+      // 清洗对象并调用下一个中间件
+      sanitize(dtoObj);
+      req.body = dtoObj;
+      next();
+    } catch (error) {
+      next(error);
+    }
   };
 };

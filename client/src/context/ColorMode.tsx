@@ -18,9 +18,14 @@ export const ColorModeProvider = (props: { children: React.ReactNode }) => {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   const systemTheme = prefersDarkMode ? 'dark' : 'light';
-  const userThemeMode = localStorage.getItem(ATTU_THEME_MODE) || systemTheme;
 
-  const [mode, setMode] = useState<theme>(userThemeMode as theme);
+  const [mode, setMode] = useState<theme>(() => {
+    try {
+      return (localStorage.getItem(ATTU_THEME_MODE) as theme) || systemTheme;
+    } catch (e) {
+      return systemTheme;
+    }
+  });
 
   const theme = React.useMemo(
     () => createTheme(getCommonThemes(mode) as ThemeOptions),
@@ -33,7 +38,11 @@ export const ColorModeProvider = (props: { children: React.ReactNode }) => {
 
   // 将当前 mode 存入 localStorage
   useEffect(() => {
-    localStorage.setItem(ATTU_THEME_MODE, mode);
+    try {
+      localStorage.setItem(ATTU_THEME_MODE, mode);
+    } catch (e) {
+      // 忽略隐私模式等场景下 localStorage 写入失败。
+    }
   }, [mode]);
 
   return (

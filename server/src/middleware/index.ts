@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import morgan from 'morgan';
 import chalk from 'chalk';
-import { MILVUS_CLIENT_ID, HTTP_STATUS_CODE } from '../utils';
+import {
+  ATTU_DATABASE_HEADER,
+  HTTP_STATUS_CODE,
+  MAX_CLIENT_ID_LENGTH,
+  MILVUS_CLIENT_ID,
+} from '../utils';
 import { HttpError } from 'http-errors';
 import HttpErrors from 'http-errors';
 import { clientCache } from '../app';
@@ -26,18 +31,19 @@ export const ReqHeaderMiddleware = (
   req.clientId = req.headers[MILVUS_CLIENT_ID] as string;
 
   // 合并 Header 中的 database
-  const database = req.headers['x-attu-database'] as string;
+  const database = req.headers[ATTU_DATABASE_HEADER] as string;
   if (database) {
     req.db_name = database;
   }
 
   const bypassURLs = [`/api/v1/milvus/connect`, `/api/v1/milvus/version`];
+  const shouldBypass = bypassURLs.some(url => req.path.startsWith(url));
 
-  if (
-    bypassURLs.indexOf(req.url) === -1 &&
-    milvusClientId &&
-    !clientCache.get(milvusClientId)
-  ) {
+  if (milvusClientId.length > MAX_CLIENT_ID_LENGTH) {
+    throw HttpErrors(HTTP_STATUS_CODE.BAD_REQUEST, 'Invalid client id.');
+  }
+
+  if (shouldBypass === false && milvusClientId && !clientCache.get(milvusClientId)) {
     throw HttpErrors(
       HTTP_STATUS_CODE.UNAUTHORIZED,
       'Can not find your connection, please reconnect.'
@@ -69,6 +75,12 @@ export const TransformResMiddleware = (
  * 在此处处理错误。
  * 通常取决于 milvus service 返回的状态。
  */
+const sanitizeErrorMessage = (message: string = '') => {
+  return message
+    .replace(/(password|token|authorization)([\s:=]+)[^\s,;]+/gi, '$1$2[REDACTED]')
+    .replace(/Bearer\s+[^\s,;]+/gi, 'Bearer [REDACTED]');
+};
+
 export const ErrorMiddleware = (
   err: HttpError,
   req: Request,
@@ -79,7 +91,7 @@ export const ErrorMiddleware = (
   console.log(
     chalk.blue.bold(req.method, req.url),
     chalk.magenta.bold(statusCode),
-    chalk.red.bold(err)
+    chalk.red.bold(sanitizeErrorMessage(`${err}`))
   );
   // 布尔属性，表示应用是否已为响应发送过 HTTP Header。
   // 在此判断是为了避免在 Header 已发送后再发送响应。
@@ -97,7 +109,10 @@ export const ErrorMiddleware = (
   if (err) {
     res
       .status(statusCode)
-      .json({ message: `${err.details || err.message}`, statusCode });
+      .json({
+        message: sanitizeErrorMessage(`${err.details || err.message}`),
+        statusCode,
+      });
   }
   next();
 };

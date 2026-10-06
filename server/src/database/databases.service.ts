@@ -8,7 +8,6 @@ import {
 } from '@zilliz/milvus2-sdk-node';
 import { clientCache } from '../app';
 import { DatabaseObject } from '../types';
-import { SimpleQueue } from '../utils';
 
 export class DatabasesService {
   async createDatabase(clientId: string, data: CreateDatabaseRequest) {
@@ -83,17 +82,9 @@ export class DatabasesService {
   async use(clientId: string, db_name: string) {
     const currentClient = clientCache.get(clientId);
 
-    // 切换 Database 时清空 collectionsQueue
-    currentClient.collectionsQueue.stop();
-    currentClient.collectionsQueue = new SimpleQueue<string>();
-
-    return await await currentClient.milvusClient.use({ db_name });
+    return await currentClient.milvusClient.use({ db_name });
   }
 
-  async hasDatabase(clientId: string, data: string) {
-    const dbs = await this.listDatabase(clientId);
-    return dbs.map(d => d.name).indexOf(data) !== -1;
-  }
 
   async alterDatabase(clientId: string, data: AlterDatabaseRequest) {
     const { milvusClient } = clientCache.get(clientId);

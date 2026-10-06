@@ -273,12 +273,16 @@ const Home = () => {
                   />
                 ))
               : databases.map(db => {
-                  if (db.name === database) {
-                    db.collections = collections.map(c => c.collection_name);
-                  }
+                  const displayDatabase =
+                    db.name === database
+                      ? {
+                          ...db,
+                          collections: collections.map(c => c.collection_name),
+                        }
+                      : db;
                   return (
                     <DatabaseCard
-                      database={db}
+                      database={displayDatabase}
                       isActive={db.name === database}
                       setDatabase={setDatabase}
                       fetchDatabases={fetchDatabases}

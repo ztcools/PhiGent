@@ -79,6 +79,17 @@ const parseFixedConnections = (): Connection[] => {
 // 从环境变量获取固定连接
 const FIXED_CONNECTIONS: Connection[] = parseFixedConnections();
 
+
+const readAuthHistory = (): Connection[] => {
+  try {
+    const value = window.localStorage.getItem(ATTU_AUTH_HISTORY);
+    return value ? JSON.parse(value) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+
 export const AuthForm = () => {
   // Context
   const { openSnackBar } = useContext(rootContext);
@@ -193,9 +204,7 @@ export const AuthForm = () => {
       openSnackBar(successTrans('connect'));
 
       // 获取连接历史
-      const history = JSON.parse(
-        window.localStorage.getItem(ATTU_AUTH_HISTORY) || '[]'
-      );
+      const history = readAuthHistory();
 
       // 把新连接写入历史，并过滤掉相同的连接
       const newHistory = [
@@ -259,9 +268,7 @@ export const AuthForm = () => {
       return;
     }
 
-    const history = JSON.parse(
-      window.localStorage.getItem(ATTU_AUTH_HISTORY) || '[]'
-    ) as Connection[];
+    const history = readAuthHistory();
 
     const newHistory = history.filter(
       item =>
@@ -310,9 +317,7 @@ export const AuthForm = () => {
 
   // 从 localStorage 加载连接
   useEffect(() => {
-    const historyConnections: Connection[] = JSON.parse(
-      window.localStorage.getItem(ATTU_AUTH_HISTORY) || '[]'
-    );
+    const historyConnections: Connection[] = readAuthHistory();
 
     // 先放入固定连接
     const allConnections = [...FIXED_CONNECTIONS];
