@@ -187,7 +187,7 @@ PhiGent 相对 Attu 只有以下差异：
 | **P1-SEC4** | 全项目 | **无 rate limit**：`/milvus/connect` 可被暴力破解 |
 | **P1-SEC5** | `server/src/milvus/milvus.service.ts:63, 106-109, 155-156` | password/token 会随 SDK 原始 error 进日志（gRPC error 包含 authorization metadata） |
 | **P1-SEC6** | `server/src/middleware/index.ts:34-46` | `bypassURLs.indexOf(req.url)` 完整字符串匹配 —— `/api/v1/milvus/version?_=xxx` 被误 401；clientId 无长度上限校验 |
-| **ENV-2** | `client/public/env-config.js:4, 9` | **内网 IP 硬编码入仓**：`MILVUS_URL: '10.50.4.149:19530'`、`GIT_INDEX_HOST: 'http://10.50.4.149:8795'` |
+| **ENV-2** | `client/public/env-config.js:4, 9` | **内网地址硬编码入仓**：`MILVUS_URL: '<SERVER_HOST>:19530'`、`GIT_INDEX_HOST: 'http://<SERVER_HOST>:8795'` |
 
 ---
 
