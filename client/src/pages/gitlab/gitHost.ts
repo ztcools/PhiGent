@@ -7,7 +7,7 @@
  * 并提示该主机期望的令牌类型，这样粘贴错误能立刻暴露，而不是等到建索引时
  * 变成一个语焉不详的失败。
  *
- * 这是 claude-context 仓库中 `packages/git-index-service/src/git-host.ts`
+ * 这是 claude-context 仓库中 `packages/git-indexer/src/git-host.ts`
  * 服务端表的副本 —— 拉取路径也从同一份映射中选取 basic-auth 用户名。
  * 两边请保持同步。这里选择复制识别逻辑而不是调用接口，是为了在输入时就能
  * 即时提示；服务端另外提供 `GET /detect?url=` 作为权威结果。

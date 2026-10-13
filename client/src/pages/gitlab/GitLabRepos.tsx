@@ -27,6 +27,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import { GitIndexService, GitIndexStatus, CurrentProgress } from './service';
 import { detectGitHost, tokenHint, GitHostInfo } from './gitHost';
 import { repoLabel } from '@/utils/codeCollection';
+import { invalidateCodeRepoMap } from '@/utils/codeRepoMap';
 
 const RefreshIcon = icons.refresh;
 const DeleteIcon = icons.delete;
@@ -34,7 +35,7 @@ const AddIcon = icons.add;
 const ExpandIcon = icons.expand;
 const CollapseIcon = icons.dropdown;
 
-const emptyForm = { name: '', url: '', branch: 'main', token: '', protectedBranches: '' };
+const emptyForm = { name: '', url: '', branch: '', token: '', protectedBranches: '' };
 
 const parseBranchList = (text: string): string[] =>
   text
@@ -124,6 +125,7 @@ interface BranchRowProps {
   busy: string;
   running: boolean;
   onIndex: (name: string, branch: string) => void;
+  onFullIndex: (name: string, branch: string) => void;
 }
 
 const BranchRow = ({
@@ -135,6 +137,7 @@ const BranchRow = ({
   busy,
   running,
   onIndex,
+  onFullIndex,
 }: BranchRowProps) => {
   const inProgress = current?.repo === repoName && current?.branch === branch;
   const key = `${repoName}:${branch}`;
@@ -172,7 +175,7 @@ const BranchRow = ({
           {branch}
         </Typography>
         {isMain && (
-          <Chip label="main" size="small" color="primary" variant="outlined" sx={{ flexShrink: 0 }} />
+          <Chip label="主分支" size="small" color="primary" variant="outlined" sx={{ flexShrink: 0 }} />
         )}
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
@@ -223,6 +226,15 @@ const BranchRow = ({
         >
           {busy === key ? '...' : '索引此分支'}
         </Button>
+        <Button
+          size="small"
+          variant="text"
+          color="warning"
+          onClick={() => onFullIndex(repoName, branch)}
+          disabled={!!busy || running}
+        >
+          重建
+        </Button>
       </Box>
     </Box>
   );
@@ -244,7 +256,7 @@ const GitLabRepos = () => {
   const [editing, setEditing] = useState<GitRepo | null>(null);
   const [editForm, setEditForm] = useState({
     url: '',
-    branch: 'main',
+    branch: '',
     token: '',
     useSsh: false,
     protectedBranches: '',
@@ -280,16 +292,21 @@ const GitLabRepos = () => {
   };
 
   const addRepo = async () => {
-    if (!form.name || !form.url) return;
+    const branch = form.branch.trim();
+    if (!form.name || !form.url || !branch) {
+      setError('仓库名称、URL 和主分支都必须填写；服务端不会默认替换成 main/master。');
+      return;
+    }
     setLoading(true);
     try {
       await GitIndexService.addRepo({
         name: form.name.trim(),
         url: form.url.trim(),
-        branch: (form.branch || 'main').trim(),
+        branch,
         protectedBranches: parseBranchList(form.protectedBranches),
         token: form.token.trim() || undefined,
       });
+      invalidateCodeRepoMap();
       setForm({ ...emptyForm });
       await load();
     } catch (e: any) {
@@ -300,9 +317,14 @@ const GitLabRepos = () => {
   };
 
   const removeRepo = async (name: string) => {
+    const ok = window.confirm(
+      `确定删除仓库 ${name} 吗？\n\n这会同时清理该仓库的云端向量索引、commit state、checkout 和运行状态。`,
+    );
+    if (!ok) return;
     setBusy(name);
     try {
       await GitIndexService.deleteRepo(name);
+      invalidateCodeRepoMap();
       await load();
     } catch (e: any) {
       setError(e?.message || String(e));
@@ -327,6 +349,22 @@ const GitLabRepos = () => {
     setBusy(`${name}:${branch}`);
     try {
       await GitIndexService.indexOneBranch(name, branch);
+      await load();
+    } catch (e: any) {
+      setError(e?.message || String(e));
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const fullIndexOneBranch = async (name: string, branch: string) => {
+    const ok = window.confirm(
+      `确定从零重建 ${name}@${branch} 的云端向量索引吗？\n\n这会删除旧 collection 后重新 embedding，用于修复脏索引或 schema 漂移。`,
+    );
+    if (!ok) return;
+    setBusy(`${name}:${branch}`);
+    try {
+      await GitIndexService.indexOneBranch(name, branch, { full: true });
       await load();
     } catch (e: any) {
       setError(e?.message || String(e));
@@ -360,6 +398,11 @@ const GitLabRepos = () => {
 
   const saveEdit = async () => {
     if (!editing) return;
+    const branch = editForm.branch.trim();
+    if (!branch) {
+      setError('主分支不能为空；服务端不会默认替换成 main/master。');
+      return;
+    }
     const payload: {
       url?: string;
       branch?: string;
@@ -367,7 +410,7 @@ const GitLabRepos = () => {
       token?: string;
     } = {
       url: editForm.url.trim(),
-      branch: (editForm.branch || 'main').trim(),
+      branch,
       protectedBranches: parseBranchList(editForm.protectedBranches),
     };
     if (editForm.useSsh) payload.token = '';
@@ -375,6 +418,7 @@ const GitLabRepos = () => {
     setLoading(true);
     try {
       await GitIndexService.updateRepo(editing.name, payload);
+      invalidateCodeRepoMap();
       setEditing(null);
       await load();
     } catch (e: any) {
@@ -456,9 +500,11 @@ const GitLabRepos = () => {
                 color="primary"
                 icon={<CircularProgress size={12} color="inherit" />}
                 label={
-                  status.current
-                    ? `索引中：${status.current.repo}${status.current.branch ? ` · ${status.current.branch}` : ''} · ${status.current.phase} ${status.current.percentage}%`
-                    : '索引进行中'
+                  status.currentAll?.length
+                    ? `索引中：${status.currentAll.length}/${status.concurrency || '?'} 个任务`
+                    : status.current
+                      ? `索引中：${status.current.repo}${status.current.branch ? ` · ${status.current.branch}` : ''} · ${status.current.phase} ${status.current.percentage}%`
+                      : '索引进行中'
                 }
               />
             )}
@@ -580,10 +626,11 @@ const GitLabRepos = () => {
           <>
             {(status?.repos || []).map(r => {
               const isExpanded = expanded.has(r.name);
-              const mainBranch = r.branch || 'main';
+              const mainBranch = r.branch;
               const protectedBranches = r.protectedBranches || [];
               const allBranches = [mainBranch, ...protectedBranches];
-              const current = status?.current;
+              const currentJobs = status?.currentAll?.length ? status.currentAll : (status?.current ? [status.current] : []);
+              const current = currentJobs.find(c => c.repo === r.name) || null;
               const repoBusy = busy === r.name;
 
               return (
@@ -682,15 +729,31 @@ const GitLabRepos = () => {
                       >
                         {repoBusy ? '...' : '索引全部'}
                       </Button>
+                      <Button
+                        size="small"
+                        variant="text"
+                        color="warning"
+                        onClick={async () => {
+                          const ok = window.confirm(`确定从零重建 ${r.name} 的全部分支索引吗？`);
+                          if (!ok) return;
+                          setBusy(r.name);
+                          try { await GitIndexService.indexOne(r.name, { full: true }); await load(); }
+                          catch (e: any) { setError(e?.message || String(e)); }
+                          finally { setBusy(''); }
+                        }}
+                        disabled={!!busy || status?.running}
+                      >
+                        重建全部
+                      </Button>
                       <Button size="small" variant="text" onClick={() => openEdit(r)}>
                         编辑
                       </Button>
-                      <Tooltip title="删除">
+                      <Tooltip title="删除仓库并清理索引">
                         <IconButton
                           size="small"
                           onClick={() => removeRepo(r.name)}
                           disabled={!!busy}
-                          aria-label="删除仓库"
+                          aria-label="删除仓库并清理索引"
                         >
                           <DeleteIcon sx={{ fontSize: 16 }} />
                         </IconButton>
@@ -712,6 +775,7 @@ const GitLabRepos = () => {
                           busy={busy}
                           running={!!status?.running}
                           onIndex={indexOneBranch}
+                          onFullIndex={fullIndexOneBranch}
                         />
                       ))}
                     </Box>

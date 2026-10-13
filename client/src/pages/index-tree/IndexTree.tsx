@@ -190,13 +190,13 @@ const IndexTree = () => {
     for (const [repoUrl, list] of byRepo) {
       const byIdentity = new Map(list.map(s => [s.identity, s]));
 
-      // 仓库根节点始终选配置里的主分支（若存在），这样早于 main 索引的特性分支
-      // （临时根）就不会顶替 main。兜底依次为 base=null 的分支、第一个分支。
+      // 仓库根节点始终选配置里的主分支（若 registry 可用）。不再假设 main/master
+      // 天然是根；兜底依次为 base=null 的分支、第一个分支。
       const root =
         list.find(isMainBranch) || list.find(s => !s.baseIdentity) || list[0];
 
-      // 「次级根」是指非所选根的 base=null（或无父）分支 —— 例如早于 main 索引的
-      // `b`。它的后代重新挂到真正的根上，让索引树以 main 为顶部、其余都在其下。
+      // 「次级根」是指非所选根的 base=null（或无父）分支。它的后代重新挂到
+      // 配置主分支根上，让索引树以仓库管理的主分支为顶部。
       const resolvedParent = (s: BranchState): string | null =>
         s.parentIdentity && byIdentity.has(s.parentIdentity) && s.parentIdentity !== s.identity
           ? s.parentIdentity
@@ -241,7 +241,7 @@ const IndexTree = () => {
     <PageContainer>
       <PageHeader
         title={navTrans('indexTree')}
-        subtitle="每个仓库的 main（顶级）为根，特性分支按追踪关系缩进。分支只存相对 main 的 delta。"
+        subtitle="每个仓库以仓库管理中配置的主分支为根；其余保护分支缩进展示。每个分支对应独立完整 collection。"
         actions={
           <Button
             size="small"

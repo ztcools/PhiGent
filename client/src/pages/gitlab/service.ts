@@ -55,7 +55,11 @@ export interface CurrentProgress {
 
 export interface GitIndexStatus {
   running: boolean;
+  /** 兼容旧服务端：只返回最早开始的一个任务。 */
   current: CurrentProgress | null;
+  /** 新服务端：并发索引时返回所有进行中的任务。 */
+  currentAll?: CurrentProgress[];
+  concurrency?: number;
   lastPassAt: number | null;
   schedule: { dailyHour: number | null; intervalMs: number; nextRunAt: number | null };
   repos: (GitRepo & { lastRuns?: Record<string, RepoRunStatus | null> })[];
@@ -100,7 +104,7 @@ export const GitIndexService = {
   addRepo: (repo: {
     name: string;
     url: string;
-    branch?: string;
+    branch: string;
     protectedBranches?: string[];
     token?: string;
   }) =>
@@ -125,8 +129,14 @@ export const GitIndexService = {
       body: JSON.stringify(repo),
     }).then(json),
 
-  deleteRepo: (name: string) =>
-    fetch(`${base()}/repos/${encodeURIComponent(name)}`, { method: 'DELETE' }).then(json),
+  /**
+   * 删除仓库。git-index-service 新语义：默认同时清理云端索引（collection + commit state）
+   * 与 checkout/run 状态；只有 keepIndex=true 才保留索引数据。
+   */
+  deleteRepo: (name: string, opts?: { keepIndex?: boolean }) => {
+    const qs = opts?.keepIndex ? '?keepIndex=1' : '';
+    return fetch(`${base()}/repos/${encodeURIComponent(name)}${qs}`, { method: 'DELETE' }).then(json);
+  },
 
   setSchedule: (schedule: { dailyHour?: number | null; intervalMs?: number }) =>
     fetch(`${base()}/schedule`, {
@@ -135,13 +145,20 @@ export const GitIndexService = {
       body: JSON.stringify(schedule),
     }).then(json),
 
-  indexAll: () => fetch(`${base()}/index`, { method: 'POST' }).then(json),
+  indexAll: (opts?: { full?: boolean }) => {
+    const qs = opts?.full ? '?full=1' : '';
+    return fetch(`${base()}/index${qs}`, { method: 'POST' }).then(json);
+  },
 
-  indexOne: (name: string) =>
-    fetch(`${base()}/index/${encodeURIComponent(name)}`, { method: 'POST' }).then(json),
+  indexOne: (name: string, opts?: { full?: boolean }) => {
+    const qs = opts?.full ? '?full=1' : '';
+    return fetch(`${base()}/index/${encodeURIComponent(name)}${qs}`, { method: 'POST' }).then(json);
+  },
 
-  indexOneBranch: (name: string, branch: string) =>
-    fetch(`${base()}/index/${encodeURIComponent(name)}/${encodeURIComponent(branch)}`, {
+  indexOneBranch: (name: string, branch: string, opts?: { full?: boolean }) => {
+    const qs = opts?.full ? '?full=1' : '';
+    return fetch(`${base()}/index/${encodeURIComponent(name)}/${encodeURIComponent(branch)}${qs}`, {
       method: 'POST',
-    }).then(json),
+    }).then(json);
+  },
 };

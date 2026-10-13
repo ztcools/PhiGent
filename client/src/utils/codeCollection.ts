@@ -4,10 +4,10 @@
  * claude-context 的向量 collection 命名约定：
  *   collection = (hcc|cc)_<slug32>_<md5(identity)[:8]>
  *   identity   = normalizeGitUrl(repoUrl) + ':' + branch
- * description 形如 `codebasePath:<identity>|tracks:<branch>`，是权威的 identity 来源。
+ * description 形如 `codebasePath:<identity>`，是兜底 identity 来源；权威分支映射来自 git-indexer `/repos` 返回的 `branches`。
  *
- * 集合页/索引树需要把 collection 归组为「仓库(main) → 各分支」，本模块提供
- * 从 description / collection 名解析 repo + branch 的统一入口。
+ * 集合页/索引树需要把 collection 归组为「仓库主分支 → 各保护分支」，本模块提供
+ * 从 registry / description / collection 名解析 repo + branch 的统一入口。
  */
 
 export interface CodeCollectionInfo {
@@ -39,6 +39,8 @@ export type RepoRefLookup = (collectionName: string) =>
   | { repo: string; branch: string; isMain: boolean; repoUrl?: string; identity?: string }
   | undefined;
 
+// registry 映射命中时，服务端返回的 isMain 才是权威主分支。ROOT_BRANCHES 只用于
+// 没有 registry、只能从旧 description 兜底解析的孤儿 collection 排序。
 const ROOT_BRANCHES = new Set(['main', 'master']);
 
 /**
@@ -225,25 +227,16 @@ export function groupByRepo<T extends CodeCollectionInfo & { rowCount?: number }
   }
   const groups = Array.from(map.values());
   for (const g of groups) {
-    // main/master 必须始终在顶层，无论仓库配置的主分支是什么。
-    // 一些仓库 HEAD 指向了 dev/release 等分支，但真正"重要"的是 main/master——
-    // 它们应该作为主行显示，非主分支退到子行。
-    if (g.root && !ROOT_BRANCHES.has(g.root.branch)) {
-      const canon = g.branches.find(b => ROOT_BRANCHES.has(b.branch));
-      if (canon) {
-        g.branches = g.branches.filter(b => b !== canon);
-        if (g.root) g.branches.push(g.root);
-        g.branches.sort((a, b) => a.branch.localeCompare(b.branch));
-        g.root = canon;
-      }
-    }
+    // 不再强行把 main/master 提到根行：仓库管理里配置的 repo.branch 才是权威主分支。
+    // registry 命中时 item.isRoot 已由服务端给出；孤儿 collection（description/slug 兜底）
+    // 没有配置来源，才按解析结果自然排序。
     g.branches.sort((a, b) => a.branch.localeCompare(b.branch));
   }
-  // 排序：有 main/master 做根的仓库优先，同组内按名称。
+  // 排序：有权威主行的仓库优先，同组内按名称。
   groups.sort((a, b) => {
-    const aCanon = a.root && ROOT_BRANCHES.has(a.root.branch) ? 0 : 1;
-    const bCanon = b.root && ROOT_BRANCHES.has(b.root.branch) ? 0 : 1;
-    if (aCanon !== bCanon) return aCanon - bCanon;
+    const aRoot = a.root ? 0 : 1;
+    const bRoot = b.root ? 0 : 1;
+    if (aRoot !== bRoot) return aRoot - bRoot;
     return a.repo.localeCompare(b.repo);
   });
   return groups;
